@@ -1,0 +1,59 @@
+HELP.md
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+### IntelliJ IDEA ###
+.idea
+.run
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### VS Code ###
+.vscode/
+
+### Kotlin ###
+.kotlin
+
+
+### Node.js ###
+**/.turbo/
+**/node_modules/
+**/continuum-workbench/lib/
+**/continuum-workbench-thin/lib/
+**/workflow-editor-extension/lib/
+**/continuum-core/dist/
+
+.continuum-cache/
+.knime-workflows/
+.knime-workspace/
+continuum-frontend/continuum-workbench/gen-webpack.config.js
+continuum-frontend/continuum-workbench/gen-webpack.node.config.js
+continuum-frontend/continuum-workbench-thin/gen-webpack.config.js
+unsloth-trainer/venv/
+unsloth-trainer/.venv/
