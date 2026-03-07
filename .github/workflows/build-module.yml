@@ -1,0 +1,24 @@
+name: Build Module
+
+on:
+  workflow_dispatch:
+    inputs:
+      module:
+        description: 'Select a Gradle module to build.'
+        required: true
+        type: choice
+        options:
+          - all
+          - continuum-workbench
+      release:
+        description: 'Publish as a release build (immutable version, no SNAPSHOT suffix)'
+        required: true
+        type: boolean
+        default: false
+
+jobs:
+  build-module:
+    uses: ./.github/workflows/generic-module-builder.yml
+    with:
+      module-name: ${{ github.event.inputs.module }}
+      release: ${{ github.event.inputs.release == 'true' }}
