@@ -269,8 +269,8 @@ export default class NodeExplorerWidget extends BaseWidget {
     protected handleNodeDoubleClick(node: NodeExplorerLeafNode): void {
         if (node.nodeData) {
             const nodeRepoItem = {
-                id: node.id,
-                name: node.nodeData.title || node.id,
+                id: node.nodeData.id,
+                name: node.nodeData.title || node.nodeData.id,
                 nodeInfo: node.nodeData
             };
             const syntheticEvent = new MouseEvent('dblclick');
@@ -286,8 +286,8 @@ export default class NodeExplorerWidget extends BaseWidget {
         if (node.nodeData) {
             console.log('[NodeExplorerWidget] handleNodeDragEnd at:', mouseEvent.clientX, mouseEvent.clientY);
             const nodeRepoItem = {
-                id: node.id,
-                name: node.nodeData.title || node.id,
+                id: node.nodeData.id,
+                name: node.nodeData.title || node.nodeData.id,
                 nodeInfo: node.nodeData
             };
             this.workflowEditorWidgetFactory.activeWidget?.addNewNode(mouseEvent, nodeRepoItem);

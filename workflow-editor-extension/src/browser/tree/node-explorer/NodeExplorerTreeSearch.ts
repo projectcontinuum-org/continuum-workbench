@@ -90,16 +90,21 @@ export class NodeExplorerTreeSearch extends TreeSearch {
         }
 
         try {
-            // Call backend API to search all nodes (including not-yet-loaded ones)
-            const searchResults = await this.nodeExplorerService.search(pattern);
             const root = this.tree.root;
-
+            
+            // If no root or root is not the expected type, we can't proceed with filtering
             if (!root || !NodeExplorerRootNode.is(root)) {
                 (this as any)._filteredNodes = [];
                 (this as any).fireFilteredNodesChanged([]);
                 return [];
             }
 
+            // Call backend API to search all nodes (including not-yet-loaded ones).
+            // The SPI returns a tree structure; flatten it to a leaf-node list
+            // so the existing parent-path expansion logic works unchanged.
+            const searchTree = await this.nodeExplorerService.search(pattern);
+            const searchResults = this.flattenTree(searchTree);
+            console.log(`[NodeExplorerTreeSearch] Search for "${pattern}" returned ${searchResults.length} results`, searchTree, searchResults);
             // Build the set of node IDs that should be visible
             const filteredSet = (this as any)._filteredNodesAndParents as Set<string>;
             const parentPaths = new Set<string>();
@@ -122,7 +127,7 @@ export class NodeExplorerTreeSearch extends TreeSearch {
             await this.expandParentCategories(parentPaths);
 
             // Build result nodes for Theia's search navigation (prev/next)
-            const nodes = searchResults.map(item => this.toTreeNode(item, root));
+            const nodes = searchResults.map((item: INodeExplorerTreeItem) => this.toTreeNode(item, root));
 
             // Update base class state and notify listeners
             (this as any)._filteredNodes = nodes;
@@ -158,6 +163,35 @@ export class NodeExplorerTreeSearch extends TreeSearch {
             paths.push(currentPath);
         }
         return paths;
+    }
+
+    /**
+     * Flatten a tree response from the search SPI into a flat list of NODE items
+     * with path-prefixed IDs.
+     *
+     * The search SPI returns nodes nested under their category hierarchy. Category
+     * IDs are already full paths (e.g. "Transform/Scripting"), while NODE IDs are
+     * their own identifiers (e.g. "org.example.FooNodeModel"). This method walks
+     * the tree and prefixes each NODE's ID with its parent category path, producing
+     * e.g. "Transform/Scripting/org.example.FooNodeModel".
+     *
+     * The rest of the filter logic relies on these path-based IDs to derive parent
+     * paths via splitting on "/".
+     */
+    protected flattenTree(items: INodeExplorerTreeItem[]): INodeExplorerTreeItem[] {
+        const result: INodeExplorerTreeItem[] = [];
+        const collect = (nodes: INodeExplorerTreeItem[], parentCategoryId: string): void => {
+            for (const node of nodes) {
+                if (node.children && node.children.length > 0) {
+                    collect(node.children, node.id);
+                } else if (node.type !== 'CATEGORY') {
+                    const fullId = parentCategoryId ? `${parentCategoryId}/${node.id}` : node.id;
+                    result.push({ ...node, id: fullId });
+                }
+            }
+        };
+        collect(items, '');
+        return result;
     }
 
     /**

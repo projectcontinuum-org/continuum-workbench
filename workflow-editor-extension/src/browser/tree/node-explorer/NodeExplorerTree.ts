@@ -114,8 +114,14 @@ export class NodeExplorerTree extends TreeImpl {
             return node;
         }
 
+        // Prefix leaf node ID with parent category path to ensure uniqueness
+        // and consistency with the path-based IDs used by search/filtering.
+        // The API returns raw node IDs; the original ID is preserved in nodeData.id.
+        const parentId = NodeExplorerRootNode.is(parent) ? '' : parent.id;
+        const fullId = parentId ? `${parentId}/${item.id}` : item.id;
+
         const node: NodeExplorerLeafNode = {
-            id: item.id,
+            id: fullId,
             name: item.name,
             parent,
             visible: true,

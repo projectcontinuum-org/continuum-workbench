@@ -8,4 +8,5 @@ export default interface INodeExplorerTreeItem {
     nodeInfo?: IBaseNodeData;
     hasChildren: boolean;
     type: NodeExplorerItemType;
+    children?: INodeExplorerTreeItem[];
 }
