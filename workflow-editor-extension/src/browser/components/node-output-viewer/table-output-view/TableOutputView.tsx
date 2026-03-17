@@ -4,6 +4,8 @@ import React, { useCallback, useEffect, useState } from "react";
 import DataService from "../../../service/DataService";
 import { JsonCellRenderer } from "./JsonCellRenderer";
 import { JsonViewerDialog } from "./JsonViewerDialog";
+import { SvgCellRenderer } from "./SvgCellRenderer";
+import { SvgViewerDialog } from "./SvgViewerDialog";
 
 const dataService = new DataService();
 
@@ -20,6 +22,8 @@ export function TableOutputView({outputData}: TableOutputViewProps) {
     const [loading, setLoading] = React.useState<boolean>(true);
     const [jsonViewerOpen, setJsonViewerOpen] = useState(false);
     const [selectedJsonValue, setSelectedJsonValue] = useState<any>(null);
+    const [svgViewerOpen, setSvgViewerOpen] = useState(false);
+    const [selectedSvgContent, setSelectedSvgContent] = useState<string | null>(null);
 
     const deserializeCell = (cell: any): any => {
         // Decode base64 value to string
@@ -40,6 +44,8 @@ export function TableOutputView({outputData}: TableOutputViewProps) {
                 return valueString.toLowerCase() === "true";
             case "application/json":
                 return JSON.parse(valueString);
+            case "image/svg+xml":
+                return { __type: "svg", content: valueString };
             default:
                 console.warn(`Unsupported content type: ${cell.contentType}`);
                 return valueString;
@@ -64,6 +70,16 @@ export function TableOutputView({outputData}: TableOutputViewProps) {
                     flex: 1,
                     minWidth: 150,
                     renderCell: (params: any) => {
+                        // Render SVG content with expand button
+                        if (typeof params.value === 'object' && params.value !== null && params.value.__type === 'svg') {
+                            return <SvgCellRenderer
+                                svgContent={params.value.content}
+                                onClick={(svg) => {
+                                    setSelectedSvgContent(svg);
+                                    setSvgViewerOpen(true);
+                                }}
+                            />;
+                        }
                         if (typeof params.value === 'object' && params.value !== null) {
                             return <JsonCellRenderer
                                 value={params.value}
@@ -130,6 +146,11 @@ export function TableOutputView({outputData}: TableOutputViewProps) {
                 open={jsonViewerOpen}
                 value={selectedJsonValue}
                 onClose={() => setJsonViewerOpen(false)}
+            />
+            <SvgViewerDialog
+                open={svgViewerOpen}
+                svgContent={selectedSvgContent}
+                onClose={() => setSvgViewerOpen(false)}
             />
         </>
     );
