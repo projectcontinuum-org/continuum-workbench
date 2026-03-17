@@ -6,7 +6,6 @@ import { Box, CircularProgress } from "@mui/material";
 import ReactFlow, { Controls, Node, Panel } from "reactflow";
 import BaseNode from '../node/BaseNode';
 import BaseEdge from '../node/BaseEdge';
-import NodeDialog, { NodeDialogProps } from '../node-dialog/NodeDialog';
 import { IBaseNodeData, IJobUpdate, INodeOutputs, INodeToOutputsMap, IWorkflow } from '@continuum/core';
 import LockClockIcon from '@mui/icons-material/LockClock';
 import HourglassTopSharpIcon from '@mui/icons-material/HourglassTopSharp';
@@ -36,30 +35,17 @@ export interface WorkflowViewerProps {
 
 export default function WorkflowViewer({ workflowSnapshot, executionStatus, nodeToOutputsMap }: WorkflowViewerProps) {
     const ref = useRef<HTMLDivElement | null>(null);
-    const [nodeDialogProps, setNodeDialogProps] = React.useState<NodeDialogProps | null>(null);
     const [theme] = useMUIThemeStore((state)=>([state.theme]));
     const [nodeOutputs, setNodeOutputs] = React.useState<INodeOutputs | null>(null);
-
-    const onNodeDialogClose = React.useCallback(()=>{
-        setNodeDialogProps(null);
-    }, [setNodeDialogProps]);
 
     const onNodeOutputClose = React.useCallback(()=>{
         setNodeOutputs(null);
     }, [setNodeOutputs]);
 
     const onNodeDoubleClick = React.useCallback((event: React.MouseEvent, clickedNode: Node<IBaseNodeData>) => {
-        console.log("onNodeDoubleClick", event, clickedNode);
-        // setNodeDialogProps({
-        //     open: true,
-        //     onClose: onNodeDialogClose,
-        //     onSave: ()=>{},
-        //     initialData: clickedNode.data.properties || {} ,
-        //     dataSchema: clickedNode.data.propertiesSchema || {},
-        //     uiSchema: clickedNode.data.propertiesUISchema || {}
-        // });
+        console.debug("WorkflowViewer: onNodeDoubleClick", event, clickedNode, nodeToOutputsMap);
         setNodeOutputs(nodeToOutputsMap[clickedNode.id]);
-    }, [setNodeDialogProps, onNodeDialogClose, setNodeOutputs]);
+    }, [setNodeOutputs, nodeToOutputsMap]);
 
     return (
         <Box
@@ -95,9 +81,6 @@ export default function WorkflowViewer({ workflowSnapshot, executionStatus, node
                     <QuestionMarkSharpIcon fontSize='small' color="warning"/>): <LockClockIcon/>}
                 </Panel>
             </ReactFlow>
-            {nodeDialogProps && <NodeDialog
-                {...nodeDialogProps!!}
-                readOnly={true}/>}
             {nodeOutputs && <NodeOutputViewer
                 open={true}
                 onClose={onNodeOutputClose}
