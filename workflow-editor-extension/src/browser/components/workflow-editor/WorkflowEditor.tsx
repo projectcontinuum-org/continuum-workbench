@@ -25,7 +25,6 @@ const defaultEdgeOptions = {
 
 export interface WorkflowEditorProps {
     workflow: IWorkflow,
-    userId: string,
     onChange: (workflow: IWorkflow)=>void,
     onContextMenu?: (event: React.MouseEvent, selectedNodeId?: string)=>void,
     onHistoryChange?: ()=>void,
@@ -37,9 +36,9 @@ export interface WorkflowEditorRef {
     openNodeSettings: () => void;
 }
 
-const WorkflowEditor = forwardRef<WorkflowEditorRef, WorkflowEditorProps>(({ workflow, userId, onChange, onContextMenu, onHistoryChange, onRunSuccess }, ref) => {
+const WorkflowEditor = forwardRef<WorkflowEditorRef, WorkflowEditorProps>(({ workflow, onChange, onContextMenu, onHistoryChange, onRunSuccess }, ref) => {
     const reactFlowRef = useRef<HTMLDivElement | null>(null);
-    const workflowService = React.useMemo(() => new WorkflowService(userId), [userId]);
+    const workflowService = React.useMemo(() => new WorkflowService(), []);
     const [flowEdges, setFlowEdges] = React.useState(workflow.edges);
     const [flowNodes, setFlowNodes] = React.useState(workflow.nodes);
     const [isActive, _setIsActive] = React.useState(workflow.active);

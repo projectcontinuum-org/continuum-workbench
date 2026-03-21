@@ -5,12 +5,9 @@ export default class WorkflowService {
 
     private readonly apiBaseUrl: string = 'http://localhost:8080/api/v1/workflow';
 
-    constructor(private readonly userId: string) {}
-
     private get headers(): Record<string, string> {
         return {
-            'Content-type': 'application/json; charset=UTF-8',
-            'x-continuum-user-id': this.userId
+            'Content-type': 'application/json; charset=UTF-8'
         };
     }
 
