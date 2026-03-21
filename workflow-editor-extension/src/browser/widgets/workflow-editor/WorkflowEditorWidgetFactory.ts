@@ -1,7 +1,7 @@
 import { MaybePromise, MessageService, URI } from "@theia/core";
 import { RemoteFileSystemProvider } from "@theia/filesystem/lib/common/remote-file-system-provider"
 import WorkflowEditorWidget, { WorkflowEditorWidgetOptions } from "./WorkflowEditorWidget";
-import { LabelProvider, Widget, WidgetFactory } from "@theia/core/lib/browser";
+import { LabelProvider, OpenerService, Widget, WidgetFactory } from "@theia/core/lib/browser";
 import { inject, injectable } from "@theia/core/shared/inversify";
 import { ColorRegistry } from "@theia/core/lib/browser/color-registry";
 import { FileDialogService } from "@theia/filesystem/lib/browser";
@@ -48,7 +48,9 @@ export default class WorkflowEditorWidgetFactory implements WidgetFactory {
         @inject(WorkflowClipboardService)
         protected readonly clipboardService: WorkflowClipboardService,
         @inject(EnvVariablesServer)
-        protected readonly envVariablesServer: EnvVariablesServer
+        protected readonly envVariablesServer: EnvVariablesServer,
+        @inject(OpenerService)
+        protected readonly openerService: OpenerService
     ) {
         this.envVariablesServer.getValue('CONTINUUM_USER_ID').then(envVar => {
             if (envVar?.value) {
@@ -94,7 +96,8 @@ export default class WorkflowEditorWidgetFactory implements WidgetFactory {
             this.contextMenuRenderer,
             this.contextKeyService,
             this.clipboardService,
-            this.userId);
+            this.userId,
+            this.openerService);
         editor.initLabel();
         return editor;
     }

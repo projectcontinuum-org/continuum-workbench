@@ -28,7 +28,8 @@ export interface WorkflowEditorProps {
     userId: string,
     onChange: (workflow: IWorkflow)=>void,
     onContextMenu?: (event: React.MouseEvent, selectedNodeId?: string)=>void,
-    onHistoryChange?: ()=>void
+    onHistoryChange?: ()=>void,
+    onRunSuccess?: (workflowId: string)=>void
 }
 
 export interface WorkflowEditorRef {
@@ -36,12 +37,12 @@ export interface WorkflowEditorRef {
     openNodeSettings: () => void;
 }
 
-const WorkflowEditor = forwardRef<WorkflowEditorRef, WorkflowEditorProps>(({ workflow, userId, onChange, onContextMenu, onHistoryChange }, ref) => {
+const WorkflowEditor = forwardRef<WorkflowEditorRef, WorkflowEditorProps>(({ workflow, userId, onChange, onContextMenu, onHistoryChange, onRunSuccess }, ref) => {
     const reactFlowRef = useRef<HTMLDivElement | null>(null);
     const workflowService = React.useMemo(() => new WorkflowService(userId), [userId]);
     const [flowEdges, setFlowEdges] = React.useState(workflow.edges);
     const [flowNodes, setFlowNodes] = React.useState(workflow.nodes);
-    const [isActive, setIsActive] = React.useState(workflow.active);
+    const [isActive, _setIsActive] = React.useState(workflow.active);
     const [nodeDialogProps, setNodeDialogProps] = React.useState<NodeDialogProps | null>(null);
     const [selectedNode, setSelectedNode] = React.useState<Node<IBaseNodeData> | null>(null);
 
@@ -114,18 +115,18 @@ const WorkflowEditor = forwardRef<WorkflowEditorRef, WorkflowEditorProps>(({ wor
     const onRun = React.useCallback(async () => {
         console.log({ flowNodes, flowEdges });
         try {
-            await workflowService.activateWorkflow({
+            const response = await workflowService.activateWorkflow({
                 id: workflow.id,
                 name: workflow.name,
                 active: true,
                 edges: flowEdges,
                 nodes: flowNodes,
             });
-            // setIsActive(true);
+            onRunSuccess?.(response.workflowId);
         } catch (error) {
             console.error(error);
         }
-    }, [flowEdges, flowNodes, setIsActive]);
+    }, [flowEdges, flowNodes, onRunSuccess]);
 
     const onNodeDialogClose = React.useCallback(()=>{
         setNodeDialogProps(null);

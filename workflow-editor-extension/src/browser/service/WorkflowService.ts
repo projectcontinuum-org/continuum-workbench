@@ -1,4 +1,5 @@
 import { IWorkflow } from "@continuum/core";
+import { IStartWorkflowResponse } from "@continuum/core";
 
 export default class WorkflowService {
 
@@ -13,13 +14,20 @@ export default class WorkflowService {
         };
     }
 
-    async activateWorkflow(workflow: IWorkflow) {
-        const response = await fetch(this.apiBaseUrl, {
-            method: 'POST',
-            body: JSON.stringify(workflow),
-            headers: this.headers
+    async activateWorkflow(workflow: IWorkflow): Promise<IStartWorkflowResponse> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const response = await fetch(this.apiBaseUrl, {
+                    method: 'POST',
+                    body: JSON.stringify(workflow),
+                    headers: this.headers
+                });
+                const data: IStartWorkflowResponse = await response.json();
+                resolve(data);
+            } catch (error) {
+                reject(error);
+            }
         });
-        return response;
     }
 
     async getActiveWorkflows(): Promise<string[]> {

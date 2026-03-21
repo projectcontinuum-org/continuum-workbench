@@ -3,7 +3,7 @@ import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 
-import { Message, Navigatable, ReactWidget, SaveableSource, StatefulWidget, Widget } from '@theia/core/lib/browser';
+import { Message, Navigatable, OpenerService, ReactWidget, SaveableSource, StatefulWidget, Widget } from '@theia/core/lib/browser';
 import { ReactNode } from "react";
 import React, { useEffect } from "react";
 import { MessageService, UNTITLED_SCHEME, URI } from "@theia/core";
@@ -57,7 +57,8 @@ export default class WorkflowEditorWidget extends ReactWidget implements Navigat
         protected readonly contextMenuRenderer: ContextMenuRenderer,
         protected readonly contextKeyService: ContextKeyService,
         protected readonly clipboardService: WorkflowClipboardService,
-        protected readonly userId: string
+        protected readonly userId: string,
+        protected readonly openerService: OpenerService
     ) {
         super(options);
         this._uri = new URI(options.uri);
@@ -316,6 +317,29 @@ export default class WorkflowEditorWidget extends ReactWidget implements Navigat
         this.workflowEditorRef.current?.runWorkflow();
     }
 
+    protected handleRunSuccess = async (workflowId: string): Promise<void> => {
+        const action = await this.messageService.info(
+            'Workflow scheduled successfully.',
+            'Open Viewer'
+        );
+        if (action === 'Open Viewer') {
+            this.openWorkflowViewer(workflowId);
+        }
+    }
+
+    protected openWorkflowViewer(workflowId: string): void {
+        const uri = new URI(`continuum-execution-watch://${workflowId}`);
+        this.openerService.getOpener(uri).then(opener => {
+            opener.open(uri, {
+                execution: {
+                    id: workflowId,
+                    workflowId: workflowId,
+                    status: 'SCHEDULED'
+                }
+            });
+        });
+    }
+
     openNodeSettings(): void {
         this.workflowEditorRef.current?.openNodeSettings();
     }
@@ -462,6 +486,7 @@ export default class WorkflowEditorWidget extends ReactWidget implements Navigat
                     onChange={this.onChange}
                     onContextMenu={this.handleContextMenu}
                     onHistoryChange={this.onHistoryChange}
+                    onRunSuccess={this.handleRunSuccess}
                     setReactflow={(rFlow)=>{this.reactFlow = rFlow}}
                     colorRegistry={this.colorRegistry}
                     workflowEditorRef={this.workflowEditorRef}/>
@@ -478,6 +503,7 @@ interface WorkflowEditorWidgetHOCProps {
     onChange: (workflow: IWorkflow)=>void;
     onContextMenu: (event: React.MouseEvent, selectedNodeId?: string)=>void;
     onHistoryChange: ()=>void;
+    onRunSuccess: (workflowId: string)=>void;
     workflowEditorRef: React.RefObject<WorkflowEditorRef>;
 }
 
@@ -489,6 +515,7 @@ function WorkflowEditorWidgetHOC({
         onChange,
         onContextMenu,
         onHistoryChange,
+        onRunSuccess,
         workflowEditorRef
     }: WorkflowEditorWidgetHOCProps
 ) {
@@ -512,7 +539,8 @@ function WorkflowEditorWidgetHOC({
                 workflow={workflow}
                 userId={userId}
                 onContextMenu={onContextMenu}
-                onHistoryChange={onHistoryChange}/>}
+                onHistoryChange={onHistoryChange}
+                onRunSuccess={onRunSuccess}/>}
         </ThemeProvider>
     );
 }

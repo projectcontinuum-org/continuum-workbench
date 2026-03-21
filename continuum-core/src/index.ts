@@ -18,6 +18,7 @@ import ITreeItem from "./types/ITreeItem.js"
 import IExecution from "./types/IExecution.js"
 import INodeExplorerTreeItem, { NodeExplorerItemType } from "./types/INodeExplorerTreeItem.js"
 import IWorkflowRunItem, { PageResponse } from "./types/IWorkflowRun.js"
+import { IStartWorkflowResponse } from "./types/IStartWorkflowResponse.js";
 
 export {
     MimeTypes,
@@ -50,5 +51,6 @@ export {
     type INodeExplorerTreeItem,
     type NodeExplorerItemType,
     type IWorkflowRunItem,
-    type PageResponse
+    type PageResponse,
+    type IStartWorkflowResponse
 }
