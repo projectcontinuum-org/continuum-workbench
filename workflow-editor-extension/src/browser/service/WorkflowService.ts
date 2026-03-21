@@ -4,19 +4,28 @@ export default class WorkflowService {
 
     private readonly apiBaseUrl: string = 'http://localhost:8080/api/v1/workflow';
 
+    constructor(private readonly userId: string) {}
+
+    private get headers(): Record<string, string> {
+        return {
+            'Content-type': 'application/json; charset=UTF-8',
+            'x-continuum-user-id': this.userId
+        };
+    }
+
     async activateWorkflow(workflow: IWorkflow) {
         const response = await fetch(this.apiBaseUrl, {
             method: 'POST',
             body: JSON.stringify(workflow),
-            headers: {
-                'Content-type': 'application/json; charset=UTF-8',
-            }
+            headers: this.headers
         });
         return response;
     }
 
     async getActiveWorkflows(): Promise<string[]> {
-        const response = await fetch(`${this.apiBaseUrl}/active`);
+        const response = await fetch(`${this.apiBaseUrl}/active`, {
+            headers: this.headers
+        });
         return response.json();
     }
 }

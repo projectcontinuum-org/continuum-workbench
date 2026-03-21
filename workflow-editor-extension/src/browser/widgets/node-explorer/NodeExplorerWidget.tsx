@@ -46,9 +46,10 @@ import { ExpandableTreeNode, CompositeTreeNode, TreeNode } from '@theia/core/lib
 import { NodeExplorerTreeWidget } from '../../tree/node-explorer/NodeExplorerTreeWidget';
 import { NodeExplorerRootNode, NodeExplorerLeafNode } from '../../tree/node-explorer/NodeExplorerTree';
 import WorkflowEditorWidgetFactory from '../workflow-editor/WorkflowEditorWidgetFactory';
-import { IconButton, Tooltip, Box } from '@mui/material';
+import { IconButton, Tooltip, Box, CircularProgress } from '@mui/material';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import { ThemeProvider, experimental_extendTheme, Experimental_CssVarsProvider as CssVarsProvider } from '@mui/material';
 import { useMUIThemeStore } from '../../store/MUIThemeStore';
 import NodeDragOverlay from './NodeDragOverlay';
@@ -62,10 +63,14 @@ import NodeDragOverlay from './NodeDragOverlay';
  */
 function NodeExplorerToolbarContent({
     onExpandAll,
-    onCollapseAll
+    onCollapseAll,
+    onRefresh,
+    loading
 }: {
     onExpandAll: () => void;
     onCollapseAll: () => void;
+    onRefresh: () => void;
+    loading: boolean;
 }) {
     // Get the current MUI theme from the global store
     const [theme] = useMUIThemeStore((state) => [state.theme]);
@@ -79,6 +84,7 @@ function NodeExplorerToolbarContent({
                     gap: 0.5,
                     padding: '4px 8px',
                     borderBottom: '1px solid var(--theia-sideBarSectionHeader-border)',
+                    backgroundColor: 'var(--theia-sideBarSectionHeader-background)',
                     alignItems: 'center',
                     justifyContent: 'flex-end'
                 }}>
@@ -100,6 +106,15 @@ function NodeExplorerToolbarContent({
                             <UnfoldLessIcon fontSize="small" />
                         </IconButton>
                     </Tooltip>
+                    {loading ? (
+                        <CircularProgress size={16} sx={{ margin: '6px', color: 'var(--theia-icon-foreground)' }} />
+                    ) : (
+                        <Tooltip title="Refresh">
+                            <IconButton size="small" onClick={onRefresh} sx={{ padding: '4px' }}>
+                                <RefreshIcon fontSize="small" />
+                            </IconButton>
+                        </Tooltip>
+                    )}
                 </Box>
             </ThemeProvider>
         </CssVarsProvider>
@@ -116,22 +131,25 @@ function NodeExplorerToolbarContent({
 class NodeExplorerToolbar extends ReactWidget {
     protected onExpandAll: () => void = () => {};
     protected onCollapseAll: () => void = () => {};
+    protected onRefresh: () => void = () => {};
+    protected _loading: boolean = false;
 
     constructor() {
         super();
         this.addClass('node-explorer-toolbar');
-        // Ensure toolbar doesn't collapse to zero height in flex layout
         this.node.style.minHeight = '36px';
         this.node.style.flexShrink = '0';
     }
 
-    /**
-     * Set the callback handlers for toolbar buttons.
-     * Must be called after construction to wire up the parent widget's methods.
-     */
-    setHandlers(onExpandAll: () => void, onCollapseAll: () => void): void {
+    setHandlers(onExpandAll: () => void, onCollapseAll: () => void, onRefresh: () => void): void {
         this.onExpandAll = onExpandAll;
         this.onCollapseAll = onCollapseAll;
+        this.onRefresh = onRefresh;
+        this.update();
+    }
+
+    setLoading(loading: boolean): void {
+        this._loading = loading;
         this.update();
     }
 
@@ -141,6 +159,8 @@ class NodeExplorerToolbar extends ReactWidget {
                 <NodeExplorerToolbarContent
                     onExpandAll={this.onExpandAll}
                     onCollapseAll={this.onCollapseAll}
+                    onRefresh={this.onRefresh}
+                    loading={this._loading}
                 />
                 <NodeDragOverlay />
             </>
@@ -196,7 +216,8 @@ export default class NodeExplorerWidget extends BaseWidget {
         this.toolbar = new NodeExplorerToolbar();
         this.toolbar.setHandlers(
             () => this.expandAll(),
-            () => this.collapseAll()
+            () => this.collapseAll(),
+            () => this.refresh()
         );
 
         // Set up vertical layout: toolbar on top, tree below
@@ -260,6 +281,15 @@ export default class NodeExplorerWidget extends BaseWidget {
         if (root && CompositeTreeNode.is(root)) {
             await this.treeWidget.model.collapseAll(root);
         }
+    }
+
+    protected refresh(): void {
+        this.toolbar.setLoading(true);
+        this.treeWidget.model.root = NodeExplorerRootNode.create();
+        const listener = this.treeWidget.model.onChanged(() => {
+            this.toolbar.setLoading(false);
+            listener.dispose();
+        });
     }
 
     /**

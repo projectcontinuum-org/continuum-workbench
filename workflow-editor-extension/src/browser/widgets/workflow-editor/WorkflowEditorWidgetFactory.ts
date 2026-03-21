@@ -9,6 +9,7 @@ import ContinuumNodeDialog from "../../dialog/node-dialog/ContinuumNodeDialog";
 import { ContextMenuRenderer } from "@theia/core/lib/browser/context-menu-renderer";
 import { ContextKeyService } from "@theia/core/lib/browser/context-key-service";
 import { WorkflowClipboardService } from "../../service/WorkflowClipboardService";
+import { EnvVariablesServer } from "@theia/core/lib/common/env-variables";
 
 @injectable()
 export default class WorkflowEditorWidgetFactory implements WidgetFactory {
@@ -24,6 +25,8 @@ export default class WorkflowEditorWidgetFactory implements WidgetFactory {
     opennedWidgets: {[id:string]: WorkflowEditorWidget | undefined} = {};
 
     activeWidget?: WorkflowEditorWidget
+
+    protected userId: string = 'anonymous';
 
     constructor(
         @inject(LabelProvider)
@@ -43,8 +46,16 @@ export default class WorkflowEditorWidgetFactory implements WidgetFactory {
         @inject(ContextKeyService)
         protected readonly contextKeyService: ContextKeyService,
         @inject(WorkflowClipboardService)
-        protected readonly clipboardService: WorkflowClipboardService
-    ) {}
+        protected readonly clipboardService: WorkflowClipboardService,
+        @inject(EnvVariablesServer)
+        protected readonly envVariablesServer: EnvVariablesServer
+    ) {
+        this.envVariablesServer.getValue('CONTINUUM_USER_ID').then(envVar => {
+            if (envVar?.value) {
+                this.userId = envVar.value;
+            }
+        });
+    }
 
     createWidget(options: WorkflowEditorWidgetOptions): MaybePromise<Widget> {
         return new Promise(async (resolve, reject)=>{
@@ -82,7 +93,8 @@ export default class WorkflowEditorWidgetFactory implements WidgetFactory {
             this.continuumNodeDialog,
             this.contextMenuRenderer,
             this.contextKeyService,
-            this.clipboardService);
+            this.clipboardService,
+            this.userId);
         editor.initLabel();
         return editor;
     }

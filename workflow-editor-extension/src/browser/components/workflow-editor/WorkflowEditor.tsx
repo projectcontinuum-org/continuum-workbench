@@ -13,8 +13,6 @@ import WorkflowService from "../../service/WorkflowService";
 import LockClockIcon from '@mui/icons-material/LockClock';
 import SendIcon from '@mui/icons-material/Send';
 
-const workflowService = new WorkflowService();
-
 const nodeTypes = {
   BaseNode
 };
@@ -27,6 +25,7 @@ const defaultEdgeOptions = {
 
 export interface WorkflowEditorProps {
     workflow: IWorkflow,
+    userId: string,
     onChange: (workflow: IWorkflow)=>void,
     onContextMenu?: (event: React.MouseEvent, selectedNodeId?: string)=>void,
     onHistoryChange?: ()=>void
@@ -37,8 +36,9 @@ export interface WorkflowEditorRef {
     openNodeSettings: () => void;
 }
 
-const WorkflowEditor = forwardRef<WorkflowEditorRef, WorkflowEditorProps>(({ workflow, onChange, onContextMenu, onHistoryChange }, ref) => {
+const WorkflowEditor = forwardRef<WorkflowEditorRef, WorkflowEditorProps>(({ workflow, userId, onChange, onContextMenu, onHistoryChange }, ref) => {
     const reactFlowRef = useRef<HTMLDivElement | null>(null);
+    const workflowService = React.useMemo(() => new WorkflowService(userId), [userId]);
     const [flowEdges, setFlowEdges] = React.useState(workflow.edges);
     const [flowNodes, setFlowNodes] = React.useState(workflow.nodes);
     const [isActive, setIsActive] = React.useState(workflow.active);

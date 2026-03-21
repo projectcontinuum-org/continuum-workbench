@@ -31,6 +31,13 @@ import { createNodeExplorerTreeContainer } from './tree/node-explorer/NodeExplor
 import { NodeExplorerTree } from './tree/node-explorer/NodeExplorerTree';
 import { NodeExplorerTreeWidget } from './tree/node-explorer/NodeExplorerTreeWidget';
 import NodeExplorerService from './service/NodeExplorerService';
+import WorkflowRunsService from './service/WorkflowRunsService';
+import WorkflowRunsWidget from './widgets/workflow-runs/WorkflowRunsWidget';
+import WorkflowRunsWidgetFactory from './widgets/workflow-runs/WorkflowRunsWidgetFactory';
+import { WorkflowRunsViewContribution } from './widgets/workflow-runs/WorkflowRunsViewContribution';
+import { createWorkflowRunsTreeContainer } from './tree/workflow-runs/WorkflowRunsTreeContainer';
+import { WorkflowRunsTree } from './tree/workflow-runs/WorkflowRunsTree';
+import { WorkflowRunsTreeWidget } from './tree/workflow-runs/WorkflowRunsTreeWidget';
 
 export default new ContainerModule((bind) => {
     bind(ContinuumThemeService).toSelf().inSingletonScope();
@@ -95,6 +102,29 @@ export default new ContainerModule((bind) => {
     bind(NodeExplorerWidgetFactory).toSelf().inSingletonScope();
     bind(WidgetFactory).toService(NodeExplorerWidgetFactory);
     bindViewContribution(bind, NodeExplorerViewContribution);
+
+    // WorkflowRuns widget - using Theia TreeWidget
+    bind(WorkflowRunsService).toSelf().inSingletonScope();
+
+    const WorkflowRunsTreeContainer = Symbol('WorkflowRunsTreeContainer');
+    bind(WorkflowRunsTreeContainer).toDynamicValue((ctx: interfaces.Context) => {
+        return createWorkflowRunsTreeContainer(ctx.container);
+    }).inSingletonScope();
+
+    bind(WorkflowRunsTree).toDynamicValue((ctx: interfaces.Context) => {
+        const container = ctx.container.get<interfaces.Container>(WorkflowRunsTreeContainer);
+        return container.get<WorkflowRunsTree>(Tree);
+    }).inSingletonScope();
+
+    bind(WorkflowRunsTreeWidget).toDynamicValue((ctx: interfaces.Context) => {
+        const container = ctx.container.get<interfaces.Container>(WorkflowRunsTreeContainer);
+        return container.get<WorkflowRunsTreeWidget>(WorkflowRunsTreeWidget);
+    }).inSingletonScope();
+
+    bind(WorkflowRunsWidget).toSelf().inSingletonScope();
+    bind(WorkflowRunsWidgetFactory).toSelf().inSingletonScope();
+    bind(WidgetFactory).toService(WorkflowRunsWidgetFactory);
+    bindViewContribution(bind, WorkflowRunsViewContribution);
 
     // FrontendViewContribution
     bind(ContinuumFrontendApplicationContribution).toSelf().inSingletonScope();

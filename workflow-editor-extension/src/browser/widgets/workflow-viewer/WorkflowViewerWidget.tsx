@@ -9,6 +9,7 @@ import { useMUIThemeStore } from "../../store/MUIThemeStore";
 import { ColorRegistry } from "@theia/core/lib/browser/color-registry";
 import ExecutionService, { IExecutionMessage, WatchEventHandler } from "../../service/ExecutionService";
 import { Disposable } from "@theia/core/shared/vscode-languageserver-protocol";
+import WorkflowRunsService from "../../service/WorkflowRunsService";
 
 export const WorkflowViewerWidgetOptions = Symbol('WorkflowViewerWidgetOptions');
 export interface WorkflowViewerWidgetOptions {
@@ -39,8 +40,28 @@ export default class WorkflowViewerWidget extends ReactWidget {
 
     async initLabel(): Promise<void> {
         this.id = `${WorkflowViewerWidget.ID}:${this.options.uri}`;
-        this.title.label = new Date(this.options.execution.createdAtTimestampUtc).toLocaleString();
-        this.title.caption = `${this.options.execution.workflow_snapshot?.name}`;
+
+        // If the execution was opened from the Workflow Runs tree, it only has
+        // summary data (no workflow_snapshot/nodeToOutputsMap). Fetch the full
+        // entity from the API to get the `data` column.
+        if (!this.options.execution.workflow_snapshot) {
+            try {
+                const executionId = this.options.execution.id || this.options.execution.workflowId;
+                const workflowRunsService = new WorkflowRunsService();
+                const fullRun = await workflowRunsService.getRunById(executionId);
+                this.workflow = fullRun.data?.workflowSnapshot;
+                this.executionStatus = fullRun.status as IJobUpdate["status"];
+                this.nodeToOutputsMap = fullRun.data?.nodeToOutputMap || {};
+                this.title.label = new Date(fullRun.createdAt).toLocaleString();
+                this.title.caption = this.workflow?.name || executionId;
+            } catch (error) {
+                console.error('[WorkflowViewerWidget] Failed to fetch full workflow run:', error);
+            }
+        } else {
+            this.title.label = new Date(this.options.execution.createdAtTimestampUtc).toLocaleString();
+            this.title.caption = `${this.options.execution.workflow_snapshot?.name}`;
+        }
+
         this.title.iconClass = 'fa fa-eye';
         this.ws = this.executionService.watch(this.options.execution.id);
         this.mounted = true;

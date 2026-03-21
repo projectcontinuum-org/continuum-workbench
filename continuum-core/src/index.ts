@@ -17,6 +17,7 @@ import INodePackageExport, {INodeModelExport} from "./types/INodePackageExport.j
 import ITreeItem from "./types/ITreeItem.js"
 import IExecution from "./types/IExecution.js"
 import INodeExplorerTreeItem, { NodeExplorerItemType } from "./types/INodeExplorerTreeItem.js"
+import IWorkflowRunItem, { PageResponse } from "./types/IWorkflowRun.js"
 
 export {
     MimeTypes,
@@ -47,5 +48,7 @@ export {
     type IExecution,
     type INodeProgress,
     type INodeExplorerTreeItem,
-    type NodeExplorerItemType
+    type NodeExplorerItemType,
+    type IWorkflowRunItem,
+    type PageResponse
 }

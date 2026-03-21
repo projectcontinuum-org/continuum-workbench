@@ -56,7 +56,8 @@ export default class WorkflowEditorWidget extends ReactWidget implements Navigat
         protected readonly continuumNodeDialog: ContinuumNodeDialog,
         protected readonly contextMenuRenderer: ContextMenuRenderer,
         protected readonly contextKeyService: ContextKeyService,
-        protected readonly clipboardService: WorkflowClipboardService
+        protected readonly clipboardService: WorkflowClipboardService,
+        protected readonly userId: string
     ) {
         super(options);
         this._uri = new URI(options.uri);
@@ -457,6 +458,7 @@ export default class WorkflowEditorWidget extends ReactWidget implements Navigat
             <ReactFlowProvider>
                 <WorkflowEditorWidgetHOC
                     workflow={this.workflow}
+                    userId={this.userId}
                     onChange={this.onChange}
                     onContextMenu={this.handleContextMenu}
                     onHistoryChange={this.onHistoryChange}
@@ -470,6 +472,7 @@ export default class WorkflowEditorWidget extends ReactWidget implements Navigat
 
 interface WorkflowEditorWidgetHOCProps {
     workflow?: IWorkflow;
+    userId: string;
     setReactflow: (reactflow: ReactFlowInstance)=>void;
     colorRegistry: ColorRegistry;
     onChange: (workflow: IWorkflow)=>void;
@@ -480,6 +483,7 @@ interface WorkflowEditorWidgetHOCProps {
 
 function WorkflowEditorWidgetHOC({
         workflow,
+        userId,
         setReactflow,
         colorRegistry,
         onChange,
@@ -506,6 +510,7 @@ function WorkflowEditorWidgetHOC({
                 ref={workflowEditorRef}
                 onChange={onChange}
                 workflow={workflow}
+                userId={userId}
                 onContextMenu={onContextMenu}
                 onHistoryChange={onHistoryChange}/>}
         </ThemeProvider>
