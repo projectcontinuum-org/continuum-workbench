@@ -47,6 +47,9 @@ jobs:
           restore-keys: |
             gradle-${{ runner.os }}-
 
+      - name: Install native build dependencies
+        run: sudo apt-get update && sudo apt-get install -y libsecret-1-dev
+
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
