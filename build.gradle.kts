@@ -7,9 +7,7 @@ plugins {
 // Read version from package.json
 val packageJsonFile = file("package.json")
 val packageJson = groovy.json.JsonSlurper().parseText(packageJsonFile.readText()) as Map<*, *>
-val baseVersion = packageJson["version"] ?: throw GradleException("Unable to read version from package.json")
-val isRelease = System.getenv("IS_RELEASE_BUILD")?.toBoolean() ?: false
-version = if (isRelease) baseVersion else "$baseVersion-SNAPSHOT"
+version = packageJson["version"] ?: throw GradleException("Unable to read version from package.json")
 
 node {
     version.set("22.12.0") // Specify the Node.js version
