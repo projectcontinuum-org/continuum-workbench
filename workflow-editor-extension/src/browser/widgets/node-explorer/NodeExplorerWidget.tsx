@@ -205,7 +205,7 @@ export default class NodeExplorerWidget extends BaseWidget {
         this.title.label = NodeExplorerWidget.LABEL;
         this.title.caption = NodeExplorerWidget.LABEL;
         this.title.closable = false;
-        this.title.iconClass = 'continuum continuum-widget fa fa-solid fa-folder-tree';
+        this.title.iconClass = 'continuum continuum-widget workflow-file-icon fa fa-solid fa-compass-drafting';
 
         // Make this widget fill available space using flexbox
         this.node.style.display = 'flex';
