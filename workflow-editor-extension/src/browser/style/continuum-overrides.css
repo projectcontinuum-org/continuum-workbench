@@ -1,0 +1,50 @@
+/* Continuum Workbench — Global CSS Overrides */
+
+/* Override Theia preload background to match Continuum dark theme */
+.theia-preload {
+    background-color: #292D3E !important;
+}
+
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #705697;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #9273c2;
+}
+
+/* Sidebar section header refinement */
+.theia-sidepanel-title {
+    font-weight: 500;
+    letter-spacing: 0.3px;
+}
+
+/* Status bar brand styling */
+.area.left .element#status-bar-continuum-brand {
+    font-weight: 500;
+    letter-spacing: 1px;
+    opacity: 0.9;
+}
+
+/* About dialog Continuum overrides */
+.continuum-about-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 0;
+}
+
+.continuum-about-header img {
+    border-radius: 8px;
+}

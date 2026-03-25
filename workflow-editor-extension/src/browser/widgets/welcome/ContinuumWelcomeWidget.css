@@ -1,0 +1,149 @@
+.continuum-welcome-widget {
+    overflow-y: auto;
+}
+
+.continuum-welcome-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 48px 32px;
+    font-family: var(--theia-ui-font-family);
+}
+
+/* Header */
+.continuum-welcome-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.continuum-welcome-logo {
+    width: 80px;
+    margin-bottom: 16px;
+    filter: drop-shadow(0 4px 12px rgba(196, 168, 255, 0.3));
+}
+
+.continuum-welcome-title {
+    font-size: 28px;
+    font-weight: 300;
+    letter-spacing: 2px;
+    margin: 0 0 8px 0;
+    color: var(--theia-foreground);
+}
+
+.continuum-welcome-subtitle {
+    font-size: 14px;
+    opacity: 0.6;
+    margin: 0;
+    letter-spacing: 1px;
+    color: var(--theia-foreground);
+}
+
+/* Sections */
+.continuum-welcome-section {
+    width: 100%;
+    margin-bottom: 32px;
+}
+
+.continuum-welcome-section-title {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin: 0 0 16px 0;
+    opacity: 0.5;
+    color: var(--theia-foreground);
+}
+
+/* Action Buttons */
+.continuum-welcome-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.continuum-welcome-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 16px;
+    border: 1px solid var(--theia-panel-border, rgba(255, 255, 255, 0.1));
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 0.15s, border-color 0.15s;
+    color: var(--theia-foreground);
+}
+
+.continuum-welcome-action-btn:hover {
+    background: var(--theia-list-hoverBackground, rgba(255, 255, 255, 0.05));
+    border-color: var(--theia-focusBorder, #705697);
+}
+
+.continuum-welcome-action-icon {
+    font-size: 18px;
+    width: 24px;
+    text-align: center;
+    color: var(--theia-activityBar-foreground);
+    flex-shrink: 0;
+}
+
+.continuum-welcome-action-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.continuum-welcome-action-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--theia-foreground);
+}
+
+.continuum-welcome-action-desc {
+    font-size: 12px;
+    opacity: 0.5;
+    color: var(--theia-foreground);
+}
+
+/* Documentation Links */
+.continuum-welcome-links {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.continuum-welcome-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 0;
+    cursor: pointer;
+    color: var(--theia-foreground);
+}
+
+.continuum-welcome-link:hover .continuum-welcome-link-label {
+    color: var(--theia-activityBar-foreground);
+}
+
+.continuum-welcome-link-icon {
+    font-size: 14px;
+    width: 20px;
+    text-align: center;
+    color: var(--theia-activityBar-foreground);
+    opacity: 0.7;
+}
+
+.continuum-welcome-link-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--theia-activityBar-foreground);
+}
+
+.continuum-welcome-link-desc {
+    font-size: 13px;
+    opacity: 0.5;
+    color: var(--theia-foreground);
+}

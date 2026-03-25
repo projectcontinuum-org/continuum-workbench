@@ -8,9 +8,25 @@
         "frontend": {
             "config": {
                 "applicationName": "Continuum",
+                "defaultTheme": {
+                    "light": "continuum-light",
+                    "dark": "continuum-dark"
+                },
+                "defaultIconTheme": "theia-file-icons",
+                "reloadOnReconnect": true,
                 "preferences": {
                     "files.enableTrash": false
                 }
+            }
+        },
+        "backend": {
+            "config": {
+                "configurationFolder": ".continuum"
+            }
+        },
+        "generator": {
+            "config": {
+                "preloadTemplate": "resources/preload.html"
             }
         }
     },

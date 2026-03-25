@@ -25,13 +25,6 @@ export default class ContinuumThemeService {
         this.monacoThemeService.registerParsedTheme(ContinuumLightTheme);
         this.monacoThemeService.registerParsedTheme(ContinuumDarkTheme);
 
-        // Set the Continuum theme based on OS preference on first load
-        if (!window.localStorage.getItem('continuum-theme-initialized')) {
-            window.localStorage.setItem('continuum-theme-initialized', 'true');
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            this.themeService.setCurrentTheme(prefersDark ? 'continuum-dark' : 'continuum-light');
-        }
-
         // Initialize Monaco instance in the store so React components can use Theia's Monaco
         useMUIThemeStore.setState({ monaco: monaco });
 

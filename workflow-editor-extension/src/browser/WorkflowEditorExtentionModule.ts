@@ -1,6 +1,7 @@
 import { ContainerModule, interfaces } from '@theia/core/shared/inversify';
 import { FrontendApplicationContribution, KeybindingContribution, LabelProviderContribution, OpenHandler, WidgetFactory, bindViewContribution } from '@theia/core/lib/browser';
 import { Tree } from '@theia/core/lib/browser/tree';
+import { AboutDialog, AboutDialogProps } from '@theia/core/lib/browser/about-dialog';
 import WorkflowEditorOpenHandler from './handlers/WorkflowEditorOpenHandler';
 import WorkflowEditorWidgetFactory from './widgets/workflow-editor/WorkflowEditorWidgetFactory';
 import NodeRepoWidgetFactory from './widgets/node-repo/NodeRepoWidgetFactory';
@@ -14,6 +15,7 @@ import { CommandContribution, MenuContribution } from '@theia/core';
 import ContinuumCommandcontribution from './contribution/ContinuumCommandContribution';
 import ContinuumMenuContribution from './contribution/ContinuumMenuContribution';
 import ContinuumNodeDialog, { ContinuumNodeDialogProps } from './dialog/node-dialog/ContinuumNodeDialog';
+import { ContinuumAboutDialog } from './dialog/about/ContinuumAboutDialog';
 import WorkflowViewerWidgetFactory from './widgets/workflow-viewer/WorkflowViewerWidgetFactory';
 import WorkflowViewerOpenHandler from './handlers/WorkflowViewerOpenHandler';
 import { MonacoLanguageRegistration } from './language/MonacoLanguageRegistration';
@@ -35,8 +37,10 @@ import { WorkflowRunsViewContribution } from './widgets/workflow-runs/WorkflowRu
 import { createWorkflowRunsTreeContainer } from './tree/workflow-runs/WorkflowRunsTreeContainer';
 import { WorkflowRunsTree } from './tree/workflow-runs/WorkflowRunsTree';
 import { WorkflowRunsTreeWidget } from './tree/workflow-runs/WorkflowRunsTreeWidget';
+import { ContinuumWelcomeWidget } from './widgets/welcome/ContinuumWelcomeWidget';
+import { ContinuumWelcomeContribution } from './widgets/welcome/ContinuumWelcomeContribution';
 
-export default new ContainerModule((bind) => {
+export default new ContainerModule((bind, unbind, isBound, rebind) => {
     bind(ContinuumThemeService).toSelf().inSingletonScope();
     bind(MonacoLanguageRegistration).toSelf().inSingletonScope();
     bind(WorkflowClipboardService).toSelf().inSingletonScope();
@@ -51,6 +55,10 @@ export default new ContainerModule((bind) => {
     // Dialogs
     bind(ContinuumNodeDialog).toSelf().inSingletonScope();
     bind(ContinuumNodeDialogProps).toConstantValue({title: "Node Dialog"});
+
+    // About dialog — rebind to Continuum-branded version
+    rebind(AboutDialogProps).toConstantValue({ title: 'Continuum' });
+    rebind(AboutDialog).to(ContinuumAboutDialog).inSingletonScope();
 
     // LabelProvider
     bind(LabelProviderContribution).to(ContinuumFileTreeLabelProviderContribution);
@@ -133,4 +141,13 @@ export default new ContainerModule((bind) => {
     bind(CommandContribution).to(WorkflowEditorCommandContribution);
     bind(MenuContribution).to(WorkflowEditorMenuContribution);
     bind(KeybindingContribution).to(WorkflowEditorKeybindingContribution);
+
+    // Welcome widget
+    bind(ContinuumWelcomeWidget).toSelf().inSingletonScope();
+    bind(WidgetFactory).toDynamicValue(ctx => ({
+        id: ContinuumWelcomeWidget.ID,
+        createWidget: () => ctx.container.get(ContinuumWelcomeWidget)
+    })).inSingletonScope();
+    bind(ContinuumWelcomeContribution).toSelf().inSingletonScope();
+    bind(FrontendApplicationContribution).toService(ContinuumWelcomeContribution);
 });

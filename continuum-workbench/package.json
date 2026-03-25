@@ -31,6 +31,27 @@
     "watch": "yarn rebuild && theia build --watch --mode development"
   },
   "theia": {
-    "target": "browser"
+    "target": "browser",
+    "frontend": {
+      "config": {
+        "applicationName": "Continuum",
+        "defaultTheme": {
+          "light": "continuum-light",
+          "dark": "continuum-dark"
+        },
+        "defaultIconTheme": "theia-file-icons",
+        "reloadOnReconnect": true
+      }
+    },
+    "backend": {
+      "config": {
+        "configurationFolder": ".continuum"
+      }
+    },
+    "generator": {
+      "config": {
+        "preloadTemplate": "resources/preload.html"
+      }
+    }
   }
 }
