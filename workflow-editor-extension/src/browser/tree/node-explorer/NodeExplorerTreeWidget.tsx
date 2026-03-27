@@ -1,8 +1,9 @@
 import * as React from 'react';
 import SVG from 'react-inlinesvg';
 import { TreeWidget, TreeProps, TreeNode, NodeProps, TreeModel } from '@theia/core/lib/browser/tree';
-import { ContextMenuRenderer } from '@theia/core/lib/browser';
+import { ContextMenuRenderer, OpenerService } from '@theia/core/lib/browser';
 import { injectable, inject, postConstruct } from '@theia/core/shared/inversify';
+import { URI } from '@theia/core';
 import { NodeExplorerCategoryNode, NodeExplorerLeafNode, NodeExplorerNode } from './NodeExplorerTree';
 import { Emitter, Event } from '@theia/core/lib/common';
 import { useNodeDragStore } from '../../store/NodeDragStore';
@@ -36,7 +37,8 @@ export class NodeExplorerTreeWidget extends TreeWidget {
     constructor(
         @inject(TreeProps) props: TreeProps,
         @inject(TreeModel) override readonly model: TreeModel,
-        @inject(ContextMenuRenderer) contextMenuRenderer: ContextMenuRenderer
+        @inject(ContextMenuRenderer) contextMenuRenderer: ContextMenuRenderer,
+        @inject(OpenerService) protected readonly openerService: OpenerService
     ) {
         super(props, model, contextMenuRenderer);
     }
@@ -133,6 +135,50 @@ export class NodeExplorerTreeWidget extends TreeWidget {
             return node.name;
         }
         return super.getCaptionChildren(node, props);
+    }
+
+    /**
+     * Add info icon button on the right of leaf nodes to open documentation
+     */
+    protected override renderTailDecorations(node: TreeNode, props: NodeProps): React.ReactNode {
+        const baseDecorations = super.renderTailDecorations(node, props);
+        if (!NodeExplorerLeafNode.is(node)) {
+            return baseDecorations;
+        }
+        return <React.Fragment>
+            {baseDecorations}
+            <span
+                className="theia-tree-node-segment theia-tree-node-tail node-docs-info-button"
+                title="View Documentation"
+                onClick={e => {
+                    e.stopPropagation();
+                    this.openNodeDocumentation(node);
+                }}
+                style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    cursor: 'pointer',
+                    marginLeft: 4,
+                    padding: '0 4px',
+                    opacity: 0.6
+                }}
+            >
+                <span className="fa fa-info-circle" style={{ fontSize: '14px' }} />
+            </span>
+        </React.Fragment>;
+    }
+
+    /**
+     * Open node documentation widget via opener service
+     */
+    protected openNodeDocumentation(node: NodeExplorerLeafNode): void {
+        const nodeId = node.nodeData.id;
+        const uri = new URI(`continuum-node-docs://${nodeId}`);
+        this.openerService.getOpener(uri).then(opener => {
+            opener.open(uri);
+        }).catch(err => {
+            console.error('[NodeExplorerTreeWidget] Failed to open node documentation:', err);
+        });
     }
 
     /**

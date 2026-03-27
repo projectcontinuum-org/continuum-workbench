@@ -92,6 +92,7 @@ export class ContinuumWelcomeWidget extends ReactWidget {
         return React.createElement('div', { className: 'continuum-welcome-section' },
             React.createElement('h2', { className: 'continuum-welcome-section-title' }, 'Help'),
             React.createElement('div', { className: 'continuum-welcome-links' },
+                this.renderLink('fa fa-globe', 'Official Website', 'https://projectcontinuum.org', 'https://projectcontinuum.org'),
                 this.renderLink('fa fa-book', 'Documentation', 'Learn how to build workflows'),
                 this.renderLink('fa fa-keyboard', 'Keyboard Shortcuts', 'View available shortcuts'),
                 this.renderLink('fa fa-puzzle-piece', 'Node Development', 'Create custom workflow nodes')
@@ -99,13 +100,22 @@ export class ContinuumWelcomeWidget extends ReactWidget {
         );
     }
 
-    private renderLink(iconClass: string, label: string, description: string): React.ReactNode {
-        return React.createElement('div', { className: 'continuum-welcome-link' },
+    private renderLink(iconClass: string, label: string, description: string, href?: string): React.ReactNode {
+        const content = [
             React.createElement('i', { className: `continuum-welcome-link-icon ${iconClass}` }),
             React.createElement('div', null,
                 React.createElement('span', { className: 'continuum-welcome-link-label' }, label),
                 React.createElement('span', { className: 'continuum-welcome-link-desc' }, ` — ${description}`)
             )
-        );
+        ];
+        if (href) {
+            return React.createElement('a', {
+                className: 'continuum-welcome-link',
+                href,
+                target: '_blank',
+                rel: 'noopener noreferrer'
+            }, ...content);
+        }
+        return React.createElement('div', { className: 'continuum-welcome-link' }, ...content);
     }
 }

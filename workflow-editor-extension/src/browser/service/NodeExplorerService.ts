@@ -15,6 +15,15 @@ export default class NodeExplorerService {
         return response.json();
     }
 
+    async getDocumentation(nodeId: string): Promise<string> {
+        const url = `${this.apiBaseUrl}/nodes/${encodeURIComponent(nodeId)}/documentation`;
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Documentation not found: ${response.status} ${response.statusText}`);
+        }
+        return response.text();
+    }
+
     async search(query: string): Promise<INodeExplorerTreeItem[]> {
         if (!query.trim()) return [];
         const url = new URL(`${this.apiBaseUrl}/search`);

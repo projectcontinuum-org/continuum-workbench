@@ -48,3 +48,31 @@
 .continuum-about-header img {
     border-radius: 8px;
 }
+
+/* Node docs info button — visible on row hover */
+.theia-TreeNode:hover .node-docs-info-button {
+    opacity: 1 !important;
+}
+
+.node-docs-info-button:hover {
+    color: var(--theia-focusBorder);
+}
+
+/* Node docs markdown table styling */
+.node-docs-content table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 12px 0;
+}
+
+.node-docs-content th,
+.node-docs-content td {
+    border: 1px solid var(--theia-editorGroup-border, rgba(255, 255, 255, 0.18));
+    padding: 8px 12px;
+    text-align: left;
+}
+
+.node-docs-content th {
+    background: var(--theia-editor-background, rgba(255, 255, 255, 0.05));
+    font-weight: 600;
+}

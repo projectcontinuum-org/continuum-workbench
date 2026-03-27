@@ -18,6 +18,8 @@ import ContinuumNodeDialog, { ContinuumNodeDialogProps } from './dialog/node-dia
 import { ContinuumAboutDialog } from './dialog/about/ContinuumAboutDialog';
 import WorkflowViewerWidgetFactory from './widgets/workflow-viewer/WorkflowViewerWidgetFactory';
 import WorkflowViewerOpenHandler from './handlers/WorkflowViewerOpenHandler';
+import NodeDocsWidgetFactory from './widgets/node-docs/NodeDocsWidgetFactory';
+import NodeDocsOpenHandler from './handlers/NodeDocsOpenHandler';
 import { MonacoLanguageRegistration } from './language/MonacoLanguageRegistration';
 import { WorkflowEditorCommandContribution } from './contribution/WorkflowEditorCommandContribution';
 import { WorkflowEditorMenuContribution } from './contribution/WorkflowEditorMenuContribution';
@@ -70,6 +72,11 @@ export default new ContainerModule((bind, unbind, isBound, rebind) => {
     // WorkflowViewerWidget
     bind(WorkflowViewerWidgetFactory).toSelf().inSingletonScope();
     bind(WidgetFactory).toService(WorkflowViewerWidgetFactory);
+
+    // NodeDocsWidget
+    bind(OpenHandler).to(NodeDocsOpenHandler).inSingletonScope();
+    bind(NodeDocsWidgetFactory).toSelf().inSingletonScope();
+    bind(WidgetFactory).toService(NodeDocsWidgetFactory);
 
     // NodeRepo widget
     bind(NodeRepoWidget).toSelf().inSingletonScope();

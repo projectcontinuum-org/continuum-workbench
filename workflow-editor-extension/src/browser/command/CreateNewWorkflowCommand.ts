@@ -1,6 +1,6 @@
 import { inject, injectable } from "@theia/core/shared/inversify";
 import IContinuumCommand from "./IContinuumCommand";
-import { CommonCommands, OpenerService, open } from "@theia/core/lib/browser";
+import { CommonCommands, OpenerService } from "@theia/core/lib/browser";
 import { UntitledResourceResolver } from "@theia/core";
 import { UserWorkingDirectoryProvider } from "@theia/core/lib/browser/user-working-directory-provider";
 
@@ -25,7 +25,11 @@ export default class CreateNewWorkflowCommand implements IContinuumCommand {
     async execute(...args: any[]) {
         const untitledUri = this.untitledResourceResolver.createUntitledURI('.cwf', await this.workingDirProvider.getUserWorkingDir());
         this.untitledResourceResolver.resolve(untitledUri);
-        open(this.openerService, untitledUri);
+        this.openerService.getOpeners(untitledUri).then(openers => {
+            if (openers.length > 0) {
+                openers[0].open(untitledUri);
+            }
+        });
         console.log("CreateNewWorkflowCommand executed");
     }
 }

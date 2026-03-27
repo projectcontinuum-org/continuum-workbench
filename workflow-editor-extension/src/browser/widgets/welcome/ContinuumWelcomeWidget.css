@@ -122,6 +122,7 @@
     padding: 6px 0;
     cursor: pointer;
     color: var(--theia-foreground);
+    text-decoration: none;
 }
 
 .continuum-welcome-link:hover .continuum-welcome-link-label {

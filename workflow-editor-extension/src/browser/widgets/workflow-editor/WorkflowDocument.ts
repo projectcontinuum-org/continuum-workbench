@@ -52,9 +52,17 @@ export default class WorkflowDocument implements Saveable {
             resolve();
         });
     }
-    
+
+    createSnapshot(): Saveable.Snapshot {
+        const workflow = this.unsavedWorkflow ?? this.originalWorkflow;
+        const content = workflow ? JSON.stringify(workflow, null, 4) : '{}';
+        return { value: content };
+    }
+
     async revert(options?: Saveable.RevertOptions | undefined): Promise<void> {
-        console.log("revert", options);
-        return
+        if (!options?.soft) {
+            this.unsavedWorkflow = undefined;
+        }
+        this.setDirty(false);
     }
 }
