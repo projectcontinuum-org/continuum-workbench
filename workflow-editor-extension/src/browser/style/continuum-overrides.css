@@ -58,6 +58,11 @@
     color: var(--theia-focusBorder);
 }
 
+/* Node docs preview tab — italic label (like VS Code preview editors) */
+.p-TabBar-tab.continuum-node-docs-preview .p-TabBar-tabLabel {
+    font-style: italic;
+}
+
 /* Node docs markdown table styling */
 .node-docs-content table {
     border-collapse: collapse;

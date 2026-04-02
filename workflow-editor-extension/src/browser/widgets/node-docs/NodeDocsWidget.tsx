@@ -1,6 +1,7 @@
 import React, { ReactNode } from "react";
 import { Message, ReactWidget } from "@theia/core/lib/browser";
 import { URI } from "@theia/core";
+import { Emitter, Event } from "@theia/core/lib/common";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import NodeExplorerService from "../../service/NodeExplorerService";
@@ -9,6 +10,7 @@ export const NodeDocsWidgetOptions = Symbol('NodeDocsWidgetOptions');
 export interface NodeDocsWidgetOptions {
     uri: URI;
     nodeId: string;
+    preview?: boolean;
 }
 
 export default class NodeDocsWidget extends ReactWidget {
@@ -18,16 +20,54 @@ export default class NodeDocsWidget extends ReactWidget {
     protected loading: boolean = true;
     protected error: string | undefined;
     protected nodeExplorerService = new NodeExplorerService();
+    private _nodeId: string;
+    private _preview: boolean;
 
-    constructor(private readonly options: NodeDocsWidgetOptions) {
+    private readonly onDidPinEmitter = new Emitter<void>();
+    readonly onDidPin: Event<void> = this.onDidPinEmitter.event;
+
+    constructor(private options: NodeDocsWidgetOptions) {
         super();
+        this._preview = options.preview ?? false;
+        this._nodeId = options.nodeId;
         this.id = `${NodeDocsWidget.ID}:${this.options.uri}`;
-        const nodeId = this.options.nodeId;
+        this.updateTitle();
+    }
+
+    get preview(): boolean {
+        return this._preview;
+    }
+
+    /**
+     * Pin this widget so it is no longer reused as a preview.
+     */
+    pin(): void {
+        if (!this._preview) {
+            return;
+        }
+        this._preview = false;
+        this.updateTitle();
+        this.onDidPinEmitter.fire();
+    }
+
+    /**
+     * Replace the displayed node documentation (used in preview mode).
+     */
+    showNode(options: NodeDocsWidgetOptions): void {
+        this.options = options;
+        this._nodeId = options.nodeId;
+        this.updateTitle();
+        this.fetchDocumentation();
+    }
+
+    private updateTitle(): void {
+        const nodeId = this._nodeId;
         const shortName = nodeId.includes('.') ? nodeId.substring(nodeId.lastIndexOf('.') + 1) : nodeId;
         this.title.label = `Docs: ${shortName}`;
         this.title.caption = nodeId;
         this.title.closable = true;
         this.title.iconClass = 'fa fa-book';
+        this.title.className = this._preview ? 'continuum-node-docs-preview' : '';
     }
 
     protected onAfterAttach(msg: Message): void {
