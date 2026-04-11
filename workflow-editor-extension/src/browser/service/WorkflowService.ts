@@ -1,9 +1,10 @@
 import { IWorkflow } from "@continuum/core";
 import { IStartWorkflowResponse } from "@continuum/core";
+import { API_SERVER_BASE } from "./ApiConfig";
 
 export default class WorkflowService {
 
-    private readonly apiBaseUrl: string = 'http://localhost:8080/api/v1/workflow';
+    private readonly apiBaseUrl: string = `${API_SERVER_BASE}/api/v1/workflow`;
 
     private get headers(): Record<string, string> {
         return {

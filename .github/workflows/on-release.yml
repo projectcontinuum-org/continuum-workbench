@@ -38,12 +38,9 @@ jobs:
 
       - name: Build
         run: ./gradlew build --no-daemon
-        env:
-          IS_RELEASE_BUILD: true
 
       - name: Push container image to Docker Hub
         run: ./gradlew jib --no-daemon
         env:
-          IS_RELEASE_BUILD: true
           DOCKER_REPO_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
           DOCKER_REPO_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}

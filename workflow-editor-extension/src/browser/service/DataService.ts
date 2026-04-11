@@ -1,3 +1,5 @@
+import { API_SERVER_BASE } from "./ApiConfig";
+
 export interface DataPage {
     data: any[];
     currentPage: number;
@@ -9,7 +11,7 @@ export interface DataPage {
 }
 
 export default class DataService {
-    private readonly apiBaseUrl: string = 'http://localhost:8080/api/v1/data';
+    private readonly apiBaseUrl: string = `${API_SERVER_BASE}/api/v1/data`;
 
     async getNodeData(
       filePath: string,

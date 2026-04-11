@@ -1,5 +1,6 @@
 import { injectable } from "@theia/core/shared/inversify";
 import { IWorkflowRunItem, PageResponse } from "@continuum/core";
+import { API_SERVER_BASE } from "./ApiConfig";
 
 /** Full workflow run entity including the heavy `data` JSONB column */
 export interface WorkflowRunFull extends IWorkflowRunItem {
@@ -12,7 +13,7 @@ export interface WorkflowRunFull extends IWorkflowRunItem {
 @injectable()
 export default class WorkflowRunsService {
 
-    private readonly apiBaseUrl: string = 'http://localhost:8080/api/v1/workflow-runs';
+    private readonly apiBaseUrl: string = `${API_SERVER_BASE}/api/v1/workflow-runs`;
 
     private get headers(): Record<string, string> {
         return {
@@ -21,7 +22,7 @@ export default class WorkflowRunsService {
     }
 
     async getDistinctWorkflows(filter?: string, page = 0, size = 50): Promise<PageResponse<string>> {
-        const url = new URL(`${this.apiBaseUrl}/distinct-workflows`);
+        const url = new URL(`${this.apiBaseUrl}/distinct-workflows`, window.location.origin);
         url.searchParams.append('page', page.toString());
         url.searchParams.append('size', size.toString());
         if (filter) {
@@ -35,7 +36,7 @@ export default class WorkflowRunsService {
     }
 
     async getRunsByWorkflowUri(workflowUri: string, timeFilter?: string, page = 0, size = 50): Promise<PageResponse<IWorkflowRunItem>> {
-        const url = new URL(this.apiBaseUrl);
+        const url = new URL(this.apiBaseUrl, window.location.origin);
         url.searchParams.append('page', page.toString());
         url.searchParams.append('size', size.toString());
 
@@ -58,7 +59,7 @@ export default class WorkflowRunsService {
      * (workflowSnapshot + nodeToOutputMap). Used by the execution viewer.
      */
     async getRunById(workflowId: string): Promise<WorkflowRunFull> {
-        const url = new URL(`${this.apiBaseUrl}/${workflowId}`);
+        const url = new URL(`${this.apiBaseUrl}/${workflowId}`, window.location.origin);
         const response = await fetch(url.toString(), { headers: this.headers });
         if (!response.ok) {
             throw new Error(`Failed to fetch workflow run: ${response.status} ${response.statusText}`);

@@ -1,8 +1,9 @@
 import { ITreeItem, IExecution } from "@continuum/core";
+import { API_SERVER_BASE } from "./ApiConfig";
 
 export default class ExecutionTreeService {
 
-    private readonly apiBaseUrl: string = "http://localhost:8080/api/v1/execution-tree";
+    private readonly apiBaseUrl: string = `${API_SERVER_BASE}/api/v1/execution-tree`;
 
     async getPendingExecutions(baseDir: string, workflowId?: string): Promise<ITreeItem<IExecution>[]> {
         try {

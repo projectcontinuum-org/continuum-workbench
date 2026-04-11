@@ -1,8 +1,9 @@
 import { ITreeItem, IExecution } from "@continuum/core";
+import { API_SERVER_BASE } from "./ApiConfig";
 
 export default class WorkflowTreeService {
 
-    private readonly apiBaseUrl: string = "http://localhost:8080/api/v1/workflow";
+    private readonly apiBaseUrl: string = `${API_SERVER_BASE}/api/v1/workflow`;
 
     async getWorflows(baseDir: string, query: string): Promise<ITreeItem<IExecution>[]> {
         try {

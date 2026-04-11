@@ -48,11 +48,10 @@ tasks.register<Exec>("jib") {
   group = "Jib tasks"
   val dockerRepoName = "docker.io/${(System.getenv("GITHUB_REPOSITORY") ?: property("repoName").toString()).lowercase()}"
   val imageName = "$dockerRepoName:${project.version}"
-  val latestImageName = "$dockerRepoName:latest"
+  val latestName = "$dockerRepoName:latest"
   commandLine("bash", "-c",
-    "docker build -t $imageName -t $latestImageName . --progress=plain && " +
+    "docker build -t $imageName -t $latestName . --progress=plain && " +
         "docker login docker.io --username ${System.getenv("DOCKER_REPO_USERNAME")} --password ${System.getenv("DOCKER_REPO_PASSWORD")} && " +
-        "docker push $imageName && " +
-        "docker push $latestImageName"
+        "docker push $imageName && docker push $latestName"
   )
 }

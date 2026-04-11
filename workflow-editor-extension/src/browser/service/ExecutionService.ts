@@ -1,5 +1,6 @@
 import { IJobUpdate } from "@continuum/core";
 import mqtt from 'mqtt/dist/mqtt.esm'
+import { API_SERVER_BASE } from "./ApiConfig";
 
 export interface IExecutionMessage {
     jobId: string; 
@@ -14,7 +15,7 @@ export interface WatchEventHandler {
 
 export default class ExecutionService {
     
-    private readonly apiBaseUrl: string = 'http://localhost:8080/api/v1/execution';
+    private readonly apiBaseUrl: string = `${API_SERVER_BASE}/api/v1/execution`;
     private readonly mqttBaseUrl: string = 'ws://localhost:31884/mqtt';
     private readonly MQTT_TOPIC_PREFIX = "continuum/workflow/execution"
 

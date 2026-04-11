@@ -2,26 +2,44 @@ name: Build Module
 
 on:
   workflow_dispatch:
-    inputs:
-      module:
-        description: 'Select a Gradle module to build.'
-        required: true
-        type: choice
-        options:
-          - all
-          - continuum-workbench
-      release:
-        description: 'Publish as a release build (immutable version, no SNAPSHOT suffix)'
-        required: true
-        type: boolean
-        default: false
 
 jobs:
-  build-module:
-    uses: ./.github/workflows/generic-module-builder.yml
-    with:
-      module-name: ${{ github.event.inputs.module }}
-      release: ${{ github.event.inputs.release == 'true' }}
-    secrets:
-      DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
-      DOCKER_HUB_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
+  build:
+    permissions:
+      contents: read
+      packages: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      - name: Install native build dependencies
+        run: sudo apt-get update && sudo apt-get install -y libsecret-1-dev
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+
+      - name: Build
+        run: ./gradlew build --no-daemon
+
+      - name: Push container image to Docker Hub
+        run: ./gradlew jib --no-daemon
+        env:
+          DOCKER_REPO_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+          DOCKER_REPO_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
