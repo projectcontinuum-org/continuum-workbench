@@ -20,9 +20,67 @@ import {
   categorizationHasCategory,
   Categorization,
   Category,
-  LayoutProps
+  LayoutProps,
+  GroupLayout
 } from '@jsonforms/core';
 import CodeEditorControl, { codeEditorTester } from './CodeEditorRenderer';
+
+/**
+ * Custom Group Layout Renderer
+ * Renders a group that stretches horizontally to fill parent but shrinks vertically to fit children
+ */
+const MaterialGroupLayoutRenderer = (props: LayoutProps) => {
+  const { uischema, schema, path, visible, renderers, cells } = props;
+
+  const groupLayout = uischema as GroupLayout;
+  const label = groupLayout.label;
+
+  if (!visible) {
+    return null;
+  }
+
+  return (
+    <Box
+      sx={{
+        mb: 2,
+        p: 2,
+        border: '1px solid',
+        borderColor: 'divider',
+        borderRadius: 1,
+        width: '100%',
+      }}
+    >
+      {label && (
+        <Typography variant="subtitle1" sx={{ mb: 1.5, fontWeight: 600 }}>
+          {label}
+        </Typography>
+      )}
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+        {groupLayout.elements?.map((element, index) => (
+          <JsonFormsDispatch
+            key={`${path}-group-${index}`}
+            uischema={element}
+            schema={schema}
+            path={path}
+            renderers={renderers}
+            cells={cells}
+          />
+        ))}
+      </Box>
+    </Box>
+  );
+};
+
+// Wrap with JSON Forms HOC to inject props
+const MaterialGroupLayout = withJsonFormsLayoutProps(MaterialGroupLayoutRenderer);
+
+/**
+ * Custom tester for Group layout.
+ */
+const groupTester = rankWith(
+  6, // Higher rank than default renderers
+  uiTypeIs('Group')
+);
 
 /**
  * Custom Tab Panel component for categorization layout
@@ -181,6 +239,7 @@ const MIN_DIALOG_HEIGHT = 300;
 const customRenderers = [
   { tester: codeEditorTester, renderer: CodeEditorControl },
   { tester: categorizationTester, renderer: MaterialCategorizationLayout },
+  { tester: groupTester, renderer: MaterialGroupLayout },
   ...materialRenderers,
 ];
 
