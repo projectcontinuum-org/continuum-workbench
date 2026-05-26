@@ -9,4 +9,5 @@
 
 const isBehindGateway = /^\/workbench\/[^/]+\/open(\/|$)/.test(window.location.pathname);
 
-export const API_SERVER_BASE = isBehindGateway ? '/api-server' : '';
+export const API_SERVER_BASE = isBehindGateway ? '/api-server' : 'http://localhost:8080/api-server';
+export const CREDENTIALS_MANAGER_BASE = isBehindGateway ? '/credentials-manager': 'http://localhost:8080/credentials-manager';

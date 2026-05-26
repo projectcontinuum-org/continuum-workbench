@@ -24,6 +24,7 @@ import {
   GroupLayout
 } from '@jsonforms/core';
 import CodeEditorControl, { codeEditorTester } from './CodeEditorRenderer';
+import CredentialControl, { credentialTester } from './CredentialRenderer';
 
 /**
  * Custom Group Layout Renderer
@@ -236,8 +237,11 @@ const ResizeHandle = styled('div')(({ theme }) => ({
 const MIN_DIALOG_WIDTH = 400;
 const MIN_DIALOG_HEIGHT = 300;
 
+console.log('[NodeDialog] Registering custom renderers including CredentialControl');
+
 const customRenderers = [
   { tester: codeEditorTester, renderer: CodeEditorControl },
+  { tester: credentialTester, renderer: CredentialControl },
   { tester: categorizationTester, renderer: MaterialCategorizationLayout },
   { tester: groupTester, renderer: MaterialGroupLayout },
   ...materialRenderers,
