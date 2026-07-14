@@ -37,7 +37,7 @@ export default class NodeDocsOpenHandler extends WidgetOpenHandler<NodeDocsWidge
         if (isPreview && this.previewWidget && !this.previewWidget.isDisposed && this.previewWidget.preview) {
             const widgetOptions = this.createWidgetOptions(uri, options);
             this.previewWidget.showNode(widgetOptions);
-            await this.doOpen(this.previewWidget, options);
+            await this.doOpen(this.previewWidget, uri, options);
             return this.previewWidget;
         }
 
@@ -48,12 +48,12 @@ export default class NodeDocsOpenHandler extends WidgetOpenHandler<NodeDocsWidge
             this.trackPreviewWidget(widget);
         }
 
-        await this.doOpen(widget, options);
+        await this.doOpen(widget, uri, options);
         return widget;
     }
 
-    protected async doOpen(widget: NodeDocsWidget, options?: WidgetOpenerOptions): Promise<void> {
-        return super.doOpen(widget, {
+    protected async doOpen(widget: NodeDocsWidget, uri: URI, options?: WidgetOpenerOptions): Promise<void> {
+        return super.doOpen(widget, uri, {
             ...options,
             widgetOptions: options?.widgetOptions ?? { area: 'bottom' }
         });

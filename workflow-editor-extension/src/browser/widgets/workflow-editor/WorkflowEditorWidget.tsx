@@ -306,6 +306,7 @@ export default class WorkflowEditorWidget extends ReactWidget implements Navigat
         this.contextMenuRenderer.render({
             menuPath: WORKFLOW_EDITOR_CONTEXT_MENU,
             anchor: { x: event.clientX, y: event.clientY },
+            context: this.node,
             args: [this],
             onHide: () => { this.pendingSelectedNodeId = undefined; }
         });

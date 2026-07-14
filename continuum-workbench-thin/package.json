@@ -52,6 +52,7 @@
     },
     "devDependencies": {
         "@theia/cli": "latest",
-        "monaco-editor-webpack-plugin": "^7.1.0"
+        "monaco-editor-webpack-plugin": "^7.1.0",
+        "terser-webpack-plugin": "5.3.10"
     }
 }
