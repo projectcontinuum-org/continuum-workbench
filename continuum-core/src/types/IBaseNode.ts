@@ -23,6 +23,15 @@ export interface IBaseNodeData {
     nodeModel: string;
     status?: "ACTIVE" | "CONFIGURED" | "BUSY" | "SUCCESS" | "FAILED" | "WARNING" | "PRE-PROCESSING" | "POST-PROCESSING";
     nodeProgress?: INodeProgress;
+    retryOptions?: IRetryOptions;
+}
+
+export interface IRetryOptions {
+    initialIntervalSeconds?: number;
+    backoffCoefficient?: number;
+    maximumIntervalSeconds?: number;
+    maximumAttempts?: number;
+    doNotRetry?: string[];
 }
 
 export interface INodeProgress {

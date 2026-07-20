@@ -1,6 +1,6 @@
 import IWorkflowExecutionContext from "./types/IWorkflowExecutionContext.js"
 import { MimeTypes } from "./model/MimeTypes.js";
-import IBaseNodeModel, { IBaseNodeData, IData, INodeInputs, INodeOutputs, IPortProps, IPorts, INodeProgress, StageStatus } from "./types/IBaseNode.js"
+import IBaseNodeModel, { IBaseNodeData, IData, INodeInputs, INodeOutputs, IPortProps, IPorts, INodeProgress, StageStatus, IRetryOptions } from "./types/IBaseNode.js"
 import Workflow from "./model/Workflow.js"
 import INodeToOutputsMap from "./types/INodeToOutputsMap.js"
 import IJobData from "./types/IJobData.js"
@@ -34,6 +34,7 @@ export {
     type IJobData,
     type IJobUpdate,
     type IBaseNodeData,
+    type IRetryOptions,
     type IData,
     type INodeInputs,
     type INodeOutputs,

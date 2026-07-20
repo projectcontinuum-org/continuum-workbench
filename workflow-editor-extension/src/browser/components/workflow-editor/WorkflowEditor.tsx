@@ -7,7 +7,7 @@ import ReactFlow, { Connection, Controls, EdgeChange, Node, NodeChange, Panel, a
 import BaseNode from '../node/BaseNode';
 import BaseEdge from '../node/BaseEdge';
 import { Box, Button, IconButton } from '@mui/material';
-import { IBaseNodeData, IWorkflow } from "@continuum/core";
+import { IBaseNodeData, IRetryOptions, IWorkflow } from "@continuum/core";
 import NodeDialog, { NodeDialogProps } from "../node-dialog/NodeDialog";
 import WorkflowService from "../../service/WorkflowService";
 import LockClockIcon from '@mui/icons-material/LockClock';
@@ -131,12 +131,13 @@ const WorkflowEditor = forwardRef<WorkflowEditorRef, WorkflowEditorProps>(({ wor
         setNodeDialogProps(null);
     }, [setNodeDialogProps]);
 
-    const onNodeDialogSaved = React.useCallback((properties: any)=>{
+    const onNodeDialogSaved = React.useCallback((properties: any, retryOptions?: IRetryOptions)=>{
         setNodeDialogProps(null);
         console.log("selectedNode ", selectedNode);
         if(selectedNode) {
             console.log("Saving ", properties, "to node ", selectedNode);
             selectedNode.data.properties = properties;
+            selectedNode.data.retryOptions = retryOptions;
             setFlowNodes(flowNodes);
         }
     }, [setNodeDialogProps, selectedNode, flowNodes, setFlowNodes]);
@@ -150,7 +151,8 @@ const WorkflowEditor = forwardRef<WorkflowEditorRef, WorkflowEditorProps>(({ wor
                 onSave: onNodeDialogSaved,
                 initialData: selected.data.properties || {},
                 dataSchema: selected.data.propertiesSchema || {},
-                uiSchema: selected.data.propertiesUISchema || {}
+                uiSchema: selected.data.propertiesUISchema || {},
+                initialRetryOptions: selected.data.retryOptions || {}
             });
             setSelectedNode(selected);
         }
@@ -170,7 +172,8 @@ const WorkflowEditor = forwardRef<WorkflowEditorRef, WorkflowEditorProps>(({ wor
             onSave: onNodeDialogSaved,
             initialData: clickedNode.data.properties || {} ,
             dataSchema: clickedNode.data.propertiesSchema || {},
-            uiSchema: clickedNode.data.propertiesUISchema || {}
+            uiSchema: clickedNode.data.propertiesUISchema || {},
+            initialRetryOptions: clickedNode.data.retryOptions || {}
         });
         setSelectedNode(clickedNode);
     }, [setNodeDialogProps, onNodeDialogSaved, onNodeDialogClose, setSelectedNode]);
