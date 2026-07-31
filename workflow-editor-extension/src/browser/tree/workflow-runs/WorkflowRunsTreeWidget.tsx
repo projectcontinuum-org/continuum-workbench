@@ -15,7 +15,9 @@ const STATUS_ICON_MAP: Record<string, { icon: string; color: string }> = {
     'FINISHED': { icon: 'codicon codicon-pass-filled', color: 'var(--theia-testing-iconPassed, #2ea043)' },
     'FAILED': { icon: 'codicon codicon-error', color: 'var(--theia-testing-iconFailed)' },
     'TIMED_OUT': { icon: 'codicon codicon-watch', color: 'var(--theia-editorWarning-foreground)' },
-    'CANCELED': { icon: 'codicon codicon-circle-slash', color: 'var(--theia-descriptionForeground)' },
+    'CANCELLING': { icon: 'codicon codicon-sync codicon-modifier-spin', color: 'var(--theia-editorWarning-foreground)' },
+    'CANCELLED': { icon: 'codicon codicon-circle-slash', color: 'var(--theia-descriptionForeground)' },
+    'TERMINATING': { icon: 'codicon codicon-sync codicon-modifier-spin', color: 'var(--theia-editorWarning-foreground)' },
     'TERMINATED': { icon: 'codicon codicon-stop', color: 'var(--theia-testing-iconFailed)' }
 };
 

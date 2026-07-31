@@ -2,7 +2,7 @@ import "reactflow/dist/base.css";
 import './WorkflowViewer.css';
 
 import React, { useRef } from 'react';
-import { Box, CircularProgress } from "@mui/material";
+import { Box, Button, CircularProgress } from "@mui/material";
 import ReactFlow, { Controls, Node, Panel } from "reactflow";
 import BaseNode from '../node/BaseNode';
 import BaseEdge from '../node/BaseEdge';
@@ -12,6 +12,9 @@ import HourglassTopSharpIcon from '@mui/icons-material/HourglassTopSharp';
 import ChecklistRtlSharpIcon from '@mui/icons-material/ChecklistRtlSharp';
 import ClearSharpIcon from '@mui/icons-material/ClearSharp';
 import QuestionMarkSharpIcon from '@mui/icons-material/QuestionMarkSharp';
+import CancelIcon from '@mui/icons-material/Cancel';
+import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
+import StopCircleIcon from '@mui/icons-material/StopCircle';
 import { hourglass } from 'ldrs'
 import { useMUIThemeStore } from "../../store/MUIThemeStore";
 import NodeOutputViewer from "../node-output-viewer/NodeOutputViewer";
@@ -27,13 +30,18 @@ const edgeTypes = {
 const defaultEdgeOptions = {
     type: "BaseEdge"
 };
+
+const TERMINAL_STATUSES: ReadonlySet<string> = new Set(['FINISHED', 'FAILED', 'CANCELLED', 'TERMINATED']);
+
 export interface WorkflowViewerProps {
     workflowSnapshot: IWorkflow;
     executionStatus?: IJobUpdate["status"];
     nodeToOutputsMap: INodeToOutputsMap
+    onCancelRequest: () => void;
+    onTerminateRequest: () => void;
 }
 
-export default function WorkflowViewer({ workflowSnapshot, executionStatus, nodeToOutputsMap }: WorkflowViewerProps) {
+export default function WorkflowViewer({ workflowSnapshot, executionStatus, nodeToOutputsMap, onCancelRequest, onTerminateRequest }: WorkflowViewerProps) {
     const ref = useRef<HTMLDivElement | null>(null);
     const [theme] = useMUIThemeStore((state)=>([state.theme]));
     const [nodeOutputs, setNodeOutputs] = React.useState<INodeOutputs | null>(null);
@@ -46,6 +54,8 @@ export default function WorkflowViewer({ workflowSnapshot, executionStatus, node
         console.debug("WorkflowViewer: onNodeDoubleClick", event, clickedNode, nodeToOutputsMap);
         setNodeOutputs(nodeToOutputsMap[clickedNode.id]);
     }, [setNodeOutputs, nodeToOutputsMap]);
+
+    const isTerminal = !!executionStatus && TERMINAL_STATUSES.has(executionStatus);
 
     return (
         <Box
@@ -73,13 +83,24 @@ export default function WorkflowViewer({ workflowSnapshot, executionStatus, node
                 fitView>
                 <Controls />
                 <Panel position="top-right">
-                    {executionStatus ? (executionStatus == "PENDING" ? <HourglassTopSharpIcon fontSize='small' color="warning"/> : 
-                    executionStatus == "RUNNING" ? <CircularProgress size={20} color="info"/> : 
-                    executionStatus == "FINISHED" ? <ChecklistRtlSharpIcon fontSize='small' color="success"/> : 
-                    executionStatus == "FAILED" ? <ClearSharpIcon fontSize='small' color="error"/> : 
+                    {executionStatus ? (executionStatus == "PENDING" ? <HourglassTopSharpIcon fontSize='small' color="warning"/> :
+                    executionStatus == "RUNNING" ? <CircularProgress size={20} color="info"/> :
+                    executionStatus == "FINISHED" ? <ChecklistRtlSharpIcon fontSize='small' color="success"/> :
+                    executionStatus == "FAILED" ? <ClearSharpIcon fontSize='small' color="error"/> :
                     executionStatus == "UPLOADING_RESULTS" ? <l-hourglass color={theme.palette.primary.main}/> :
+                    executionStatus == "CANCELLING" || executionStatus == "TERMINATING" ? <CircularProgress size={20} color="warning"/> :
+                    executionStatus == "CANCELLED" ? <CancelIcon fontSize='small' color="disabled"/> :
+                    executionStatus == "TERMINATED" ? <PowerSettingsNewIcon fontSize='small' color="disabled"/> :
                     <QuestionMarkSharpIcon fontSize='small' color="warning"/>): <LockClockIcon/>}
                 </Panel>
+                {!isTerminal && (
+                    <Panel position="bottom-center">
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                            <Button variant="outlined" color="warning" onClick={onCancelRequest} startIcon={<StopCircleIcon />}>Cancel</Button>
+                            <Button variant="outlined" color="error" onClick={onTerminateRequest} startIcon={<PowerSettingsNewIcon />}>Terminate</Button>
+                        </Box>
+                    </Panel>
+                )}
             </ReactFlow>
             {nodeOutputs && <NodeOutputViewer
                 open={true}

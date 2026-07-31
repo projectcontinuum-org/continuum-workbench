@@ -65,7 +65,7 @@ export default class WorkflowViewerWidgetFactory implements WidgetFactory {
     }
 
     contructEditor(options: WorkflowViewerWidgetOptions): WorkflowViewerWidget {
-        const editor = new WorkflowViewerWidget(options, this.colorRegistry);
+        const editor = new WorkflowViewerWidget(options, this.colorRegistry, this.messageService);
         editor.initLabel();
         return editor;
     }

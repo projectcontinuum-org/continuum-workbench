@@ -1,6 +1,7 @@
 import React, { ReactNode, useEffect } from "react";
 import { Message, ReactWidget } from "@theia/core/lib/browser";
-import { URI } from "@theia/core";
+import { ConfirmDialog } from "@theia/core/lib/browser/dialogs";
+import { MessageService, URI } from "@theia/core";
 import { IExecution, IJobUpdate, INodeToOutputsMap, IWorkflow } from "@continuum/core";
 import { CssBaseline, Experimental_CssVarsProvider as CssVarsProvider, experimental_extendTheme, ThemeProvider } from "@mui/material";
 import WorkflowViewer from "../../components/workflow-viewer/WorkflowViewer";
@@ -8,8 +9,11 @@ import { ReactFlowInstance, ReactFlowProvider, useReactFlow } from "reactflow";
 import { useMUIThemeStore } from "../../store/MUIThemeStore";
 import { ColorRegistry } from "@theia/core/lib/browser/color-registry";
 import ExecutionService, { IExecutionMessage, WatchEventHandler } from "../../service/ExecutionService";
+import WorkflowService from "../../service/WorkflowService";
 import { Disposable } from "@theia/core/shared/vscode-languageserver-protocol";
 import WorkflowRunsService from "../../service/WorkflowRunsService";
+
+export const TERMINAL_STATUSES: ReadonlySet<string> = new Set(['FINISHED', 'FAILED', 'CANCELLED', 'TERMINATED']);
 
 export const WorkflowViewerWidgetOptions = Symbol('WorkflowViewerWidgetOptions');
 export interface WorkflowViewerWidgetOptions {
@@ -25,11 +29,13 @@ export default class WorkflowViewerWidget extends ReactWidget {
     protected reactFlow: ReactFlowInstance;
     protected ws?: WatchEventHandler;
     protected executionService = new ExecutionService();
+    protected workflowService = new WorkflowService();
     protected mounted: boolean = false;
 
     constructor(
         private readonly options: WorkflowViewerWidgetOptions,
-        private readonly colorRegistry: ColorRegistry
+        private readonly colorRegistry: ColorRegistry,
+        private readonly messageService: MessageService
     ) {
         super();
         this.title.closable = true;
@@ -95,6 +101,44 @@ export default class WorkflowViewerWidget extends ReactWidget {
         super.onAfterAttach(msg);
     }
 
+    protected handleCancelRequest = async (): Promise<void> => {
+        const confirmed = await new ConfirmDialog({
+            title: 'Cancel Workflow',
+            msg: 'This will request a graceful cancellation of the running workflow. Continue?'
+        }).open();
+        if (!confirmed) {
+            return;
+        }
+        try {
+            await this.workflowService.cancelWorkflow(this.options.execution.workflowId);
+            this.messageService.info('Cancellation requested.');
+        } catch (error) {
+            this.messageService.error(`Failed to cancel workflow: ${error}`);
+        }
+    }
+
+    protected handleTerminateRequest = async (): Promise<void> => {
+        const confirmed = await new ConfirmDialog({
+            title: 'Terminate Workflow',
+            msg: 'This will immediately kill the workflow with no cleanup. This cannot be undone. Continue?'
+        }).open();
+        if (!confirmed) {
+            return;
+        }
+        try {
+            await this.workflowService.terminateWorkflow(this.options.execution.workflowId);
+            this.messageService.info('Workflow terminated.');
+            // Temporal's terminate() kills the workflow with no further code execution,
+            // so no final WorkflowUpdateEvent will ever arrive over MQTT for this path.
+            this.executionStatus = 'TERMINATED';
+            if (this.mounted) {
+                this.update();
+            }
+        } catch (error) {
+            this.messageService.error(`Failed to terminate workflow: ${error}`);
+        }
+    }
+
     protected render(): ReactNode {
         return (
             <ReactFlowProvider>
@@ -103,7 +147,9 @@ export default class WorkflowViewerWidget extends ReactWidget {
                     executionStatus={this.executionStatus}
                     nodeToOutputsMap={this.nodeToOutputsMap}
                     setReactflow={(rFlow)=>{this.reactFlow = rFlow}}
-                    colorRegistry={this.colorRegistry}/>
+                    colorRegistry={this.colorRegistry}
+                    onCancelRequest={this.handleCancelRequest}
+                    onTerminateRequest={this.handleTerminateRequest}/>
             </ReactFlowProvider>
         );
     }
@@ -115,14 +161,18 @@ interface WorkflowViewerWidgetHOCProps {
     colorRegistry: ColorRegistry;
     executionStatus?: IJobUpdate["status"];
     nodeToOutputsMap: INodeToOutputsMap;
+    onCancelRequest: () => void;
+    onTerminateRequest: () => void;
 }
 
 function WorkflowViewerWidgetHOC({
-    workflow, 
+    workflow,
     setReactflow,
     colorRegistry,
     executionStatus,
-    nodeToOutputsMap
+    nodeToOutputsMap,
+    onCancelRequest,
+    onTerminateRequest
 }: WorkflowViewerWidgetHOCProps) {
 
     const [theme] = useMUIThemeStore((state)=>([state.theme]))
@@ -142,7 +192,9 @@ function WorkflowViewerWidgetHOC({
             {workflow && <WorkflowViewer
                 workflowSnapshot={workflow}
                 executionStatus={executionStatus}
-                nodeToOutputsMap={nodeToOutputsMap}/>}
+                nodeToOutputsMap={nodeToOutputsMap}
+                onCancelRequest={onCancelRequest}
+                onTerminateRequest={onTerminateRequest}/>}
         </ThemeProvider>
     );
 }

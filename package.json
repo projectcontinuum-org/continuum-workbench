@@ -3,6 +3,8 @@
   "private": true,
   "version": "0.0.9",
   "scripts": {
+    "preinstall": "node scripts/sync-versions.js",
+    "sync-versions": "node scripts/sync-versions.js",
     "build": "turbo build",
     "rebuild": "turbo build --no-cache --force",
     "dev": "turbo dev",

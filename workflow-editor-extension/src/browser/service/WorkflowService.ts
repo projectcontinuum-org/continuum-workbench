@@ -34,4 +34,32 @@ export default class WorkflowService {
         });
         return response.json();
     }
+
+    async cancelWorkflow(workflowId: string, reason?: string): Promise<void> {
+        const url = new URL(`${this.apiBaseUrl}/${workflowId}/cancel`, window.location.origin);
+        if (reason) {
+            url.searchParams.append('reason', reason);
+        }
+        const response = await fetch(url.toString(), {
+            method: 'POST',
+            headers: this.headers
+        });
+        if (!response.ok) {
+            throw new Error(`Failed to cancel workflow: ${response.status} ${response.statusText}`);
+        }
+    }
+
+    async terminateWorkflow(workflowId: string, reason?: string): Promise<void> {
+        const url = new URL(`${this.apiBaseUrl}/${workflowId}/terminate`, window.location.origin);
+        if (reason) {
+            url.searchParams.append('reason', reason);
+        }
+        const response = await fetch(url.toString(), {
+            method: 'POST',
+            headers: this.headers
+        });
+        if (!response.ok) {
+            throw new Error(`Failed to terminate workflow: ${response.status} ${response.statusText}`);
+        }
+    }
 }
