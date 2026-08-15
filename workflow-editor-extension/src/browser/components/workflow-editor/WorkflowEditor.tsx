@@ -6,12 +6,14 @@ import { useRef, useCallback } from 'react';
 import ReactFlow, { Connection, Controls, EdgeChange, Node, NodeChange, Panel, addEdge, applyEdgeChanges, applyNodeChanges, getOutgoers } from 'reactflow';
 import BaseNode from '../node/BaseNode';
 import BaseEdge from '../node/BaseEdge';
-import { Box, Button, IconButton } from '@mui/material';
+import { Box, Button, ButtonGroup, IconButton, Menu, MenuItem } from '@mui/material';
 import { IBaseNodeData, IRetryOptions, IWorkflow } from "@continuum/core";
 import NodeDialog, { NodeDialogProps } from "../node-dialog/NodeDialog";
+import ScheduleWorkflowDialog from "../schedule-workflow-dialog/ScheduleWorkflowDialog";
 import WorkflowService from "../../service/WorkflowService";
 import LockClockIcon from '@mui/icons-material/LockClock';
 import SendIcon from '@mui/icons-material/Send';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 
 const nodeTypes = {
   BaseNode
@@ -34,6 +36,7 @@ export interface WorkflowEditorProps {
 export interface WorkflowEditorRef {
     runWorkflow: () => void;
     openNodeSettings: () => void;
+    openScheduleDialog: (initialTab?: 0 | 1) => void;
 }
 
 const WorkflowEditor = forwardRef<WorkflowEditorRef, WorkflowEditorProps>(({ workflow, onChange, onContextMenu, onHistoryChange, onRunSuccess }, ref) => {
@@ -44,6 +47,8 @@ const WorkflowEditor = forwardRef<WorkflowEditorRef, WorkflowEditorProps>(({ wor
     const [isActive, _setIsActive] = React.useState(workflow.active);
     const [nodeDialogProps, setNodeDialogProps] = React.useState<NodeDialogProps | null>(null);
     const [selectedNode, setSelectedNode] = React.useState<Node<IBaseNodeData> | null>(null);
+    const [scheduleMenuAnchor, setScheduleMenuAnchor] = React.useState<HTMLElement | null>(null);
+    const [scheduleDialogState, setScheduleDialogState] = React.useState<{ open: boolean; initialTab: 0 | 1 }>({ open: false, initialTab: 0 });
 
     React.useEffect(()=>{
         if(workflow) {
@@ -127,6 +132,23 @@ const WorkflowEditor = forwardRef<WorkflowEditorRef, WorkflowEditorProps>(({ wor
         }
     }, [flowEdges, flowNodes, onRunSuccess]);
 
+    const onOpenScheduleMenu = React.useCallback((event: React.MouseEvent<HTMLElement>) => {
+        setScheduleMenuAnchor(event.currentTarget);
+    }, []);
+
+    const onCloseScheduleMenu = React.useCallback(() => {
+        setScheduleMenuAnchor(null);
+    }, []);
+
+    const openScheduleDialog = React.useCallback((initialTab: 0 | 1 = 0) => {
+        setScheduleMenuAnchor(null);
+        setScheduleDialogState({ open: true, initialTab });
+    }, []);
+
+    const onScheduleDialogClose = React.useCallback(() => {
+        setScheduleDialogState(s => ({ ...s, open: false }));
+    }, []);
+
     const onNodeDialogClose = React.useCallback(()=>{
         setNodeDialogProps(null);
     }, [setNodeDialogProps]);
@@ -161,8 +183,9 @@ const WorkflowEditor = forwardRef<WorkflowEditorRef, WorkflowEditorProps>(({ wor
     // Expose methods via ref
     useImperativeHandle(ref, () => ({
         runWorkflow: onRun,
-        openNodeSettings
-    }), [onRun, openNodeSettings]);
+        openNodeSettings,
+        openScheduleDialog
+    }), [onRun, openNodeSettings, openScheduleDialog]);
 
     const onNodeDoubleClick = React.useCallback((event: React.MouseEvent, clickedNode: Node<IBaseNodeData>) => {
         console.log("onNodeDoubleClick", event, clickedNode);
@@ -228,7 +251,26 @@ const WorkflowEditor = forwardRef<WorkflowEditorRef, WorkflowEditorProps>(({ wor
                 fitView>
                 <Controls />
                 <Panel position="bottom-center">
-                    <Button variant="contained" onClick={onRun} endIcon={<SendIcon />}>Run</Button>
+                    <ButtonGroup variant="contained">
+                        <Button onClick={onRun} endIcon={<SendIcon />}>Run</Button>
+                        <Button
+                            size="small"
+                            aria-label="schedule workflow options"
+                            aria-haspopup="menu"
+                            onClick={onOpenScheduleMenu}
+                            sx={{ px: 0.5 }}>
+                            <ArrowDropDownIcon />
+                        </Button>
+                    </ButtonGroup>
+                    <Menu
+                        anchorEl={scheduleMenuAnchor}
+                        open={Boolean(scheduleMenuAnchor)}
+                        onClose={onCloseScheduleMenu}
+                        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                        transformOrigin={{ vertical: 'bottom', horizontal: 'right' }}>
+                        <MenuItem onClick={() => openScheduleDialog(0)}>Schedule Workflow...</MenuItem>
+                        <MenuItem onClick={() => openScheduleDialog(1)}>Manage Schedules...</MenuItem>
+                    </Menu>
                 </Panel>
                 {isActive && <Panel position="top-right">
                     <IconButton aria-label="delete">
@@ -241,6 +283,14 @@ const WorkflowEditor = forwardRef<WorkflowEditorRef, WorkflowEditorProps>(({ wor
                 onSave={onNodeDialogSaved}
                 onClose={onNodeDialogClose}
                 readOnly={isActive}/>}
+            {scheduleDialogState.open && <ScheduleWorkflowDialog
+                open={scheduleDialogState.open}
+                workflowId={workflow.id}
+                workflowName={workflow.name}
+                nodes={flowNodes}
+                edges={flowEdges}
+                initialTab={scheduleDialogState.initialTab}
+                onClose={onScheduleDialogClose}/>}
         </Box>
     );
 });

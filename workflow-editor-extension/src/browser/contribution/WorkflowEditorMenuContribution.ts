@@ -46,6 +46,14 @@ export class WorkflowEditorMenuContribution implements MenuContribution {
             commandId: WorkflowEditorCommands.RUN_WORKFLOW.id,
             order: '1'
         });
+        registry.registerMenuAction(WorkflowEditorContextMenu.EXECUTION, {
+            commandId: WorkflowEditorCommands.SCHEDULE_WORKFLOW.id,
+            order: '2'
+        });
+        registry.registerMenuAction(WorkflowEditorContextMenu.EXECUTION, {
+            commandId: WorkflowEditorCommands.MANAGE_WORKFLOW_SCHEDULES.id,
+            order: '3'
+        });
 
         // Configuration group
         registry.registerMenuAction(WorkflowEditorContextMenu.CONFIGURATION, {

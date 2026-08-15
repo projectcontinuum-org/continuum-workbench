@@ -19,6 +19,8 @@ import IExecution from "./types/IExecution.js"
 import INodeExplorerTreeItem, { NodeExplorerItemType } from "./types/INodeExplorerTreeItem.js"
 import IWorkflowRunItem, { PageResponse } from "./types/IWorkflowRun.js"
 import { IStartWorkflowResponse } from "./types/IStartWorkflowResponse.js";
+import { IWorkflowSchedule } from "./types/IWorkflowSchedule.js";
+import { ICreateWorkflowScheduleRequest } from "./types/ICreateWorkflowScheduleRequest.js";
 
 export {
     MimeTypes,
@@ -53,5 +55,7 @@ export {
     type NodeExplorerItemType,
     type IWorkflowRunItem,
     type PageResponse,
-    type IStartWorkflowResponse
+    type IStartWorkflowResponse,
+    type IWorkflowSchedule,
+    type ICreateWorkflowScheduleRequest
 }

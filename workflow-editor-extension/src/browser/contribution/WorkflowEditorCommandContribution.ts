@@ -23,6 +23,20 @@ export class WorkflowEditorCommandContribution implements CommandContribution {
             isVisible: () => this.hasActiveWorkflowEditor() && !this.hasSelectedNodes()
         });
 
+        // Schedule Workflow
+        registry.registerCommand(WorkflowEditorCommands.SCHEDULE_WORKFLOW, {
+            execute: () => this.getActiveWorkflowEditor()?.openScheduleDialog(),
+            isEnabled: () => this.hasActiveWorkflowEditor() && !this.hasSelectedNodes(),
+            isVisible: () => this.hasActiveWorkflowEditor() && !this.hasSelectedNodes()
+        });
+
+        // Manage Schedules
+        registry.registerCommand(WorkflowEditorCommands.MANAGE_WORKFLOW_SCHEDULES, {
+            execute: () => this.getActiveWorkflowEditor()?.openManageSchedulesDialog(),
+            isEnabled: () => this.hasActiveWorkflowEditor() && !this.hasSelectedNodes(),
+            isVisible: () => this.hasActiveWorkflowEditor() && !this.hasSelectedNodes()
+        });
+
         // Copy Nodes
         registry.registerCommand(WorkflowEditorCommands.COPY_NODES, {
             execute: () => this.getActiveWorkflowEditor()?.copySelectedNodes(),

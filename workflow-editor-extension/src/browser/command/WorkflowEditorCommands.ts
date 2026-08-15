@@ -10,6 +10,20 @@ export namespace WorkflowEditorCommands {
         iconClass: 'fa fa-play'
     };
 
+    export const SCHEDULE_WORKFLOW: Command = {
+        id: 'workflow-editor.schedule',
+        label: 'Schedule Workflow',
+        category: WORKFLOW_EDITOR_CATEGORY,
+        iconClass: 'fa fa-clock-o'
+    };
+
+    export const MANAGE_WORKFLOW_SCHEDULES: Command = {
+        id: 'workflow-editor.manageSchedules',
+        label: 'Manage Schedules',
+        category: WORKFLOW_EDITOR_CATEGORY,
+        iconClass: 'fa fa-list-ul'
+    };
+
     export const COPY_NODES: Command = {
         id: 'workflow-editor.copy',
         label: 'Copy',

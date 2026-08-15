@@ -317,9 +317,17 @@ export default class WorkflowEditorWidget extends ReactWidget implements Navigat
         this.workflowEditorRef.current?.runWorkflow();
     }
 
+    openScheduleDialog(): void {
+        this.workflowEditorRef.current?.openScheduleDialog(0);
+    }
+
+    openManageSchedulesDialog(): void {
+        this.workflowEditorRef.current?.openScheduleDialog(1);
+    }
+
     protected handleRunSuccess = async (workflowId: string): Promise<void> => {
         const action = await this.messageService.info(
-            'Workflow scheduled successfully.',
+            'Workflow started successfully.',
             'Open Viewer'
         );
         if (action === 'Open Viewer') {
