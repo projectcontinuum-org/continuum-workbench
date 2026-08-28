@@ -28,6 +28,15 @@ export const useMUIThemeStore = create<MUIThemeState>((set)=>({
                 }),
               },
             },
+            MuiCard: {
+              styleOverrides: {
+                root: ({ theme }) => ({
+                  border: '1px solid',
+                  borderColor: theme.palette.divider,
+                  boxShadow: 'none',
+                }),
+              },
+            },
         }
     }),
     monacoTheme: 'continuum-dark',

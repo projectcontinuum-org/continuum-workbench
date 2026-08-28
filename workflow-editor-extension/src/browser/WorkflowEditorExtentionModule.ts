@@ -4,12 +4,9 @@ import { Tree } from '@theia/core/lib/browser/tree';
 import { AboutDialog, AboutDialogProps } from '@theia/core/lib/browser/about-dialog';
 import WorkflowEditorOpenHandler from './handlers/WorkflowEditorOpenHandler';
 import WorkflowEditorWidgetFactory from './widgets/workflow-editor/WorkflowEditorWidgetFactory';
-import NodeRepoWidgetFactory from './widgets/node-repo/NodeRepoWidgetFactory';
 import ContinuumThemeService from './theme/ContinuumThemeService';
 import { ContinuumFrontendApplicationContribution } from './contribution/ContinuumFrontendApplicationContribution';
 import ContinuumFileTreeLabelProviderContribution from './contribution/ContinuumLabelProviderContribution';
-import { NodeRepoViewContribution } from './widgets/node-repo/NodeRepoViewContribution';
-import NodeRepoWidget from './widgets/node-repo/NodeRepoWidget';
 import CreateNewWorkflowCommand from './command/CreateNewWorkflowCommand';
 import { CommandContribution, MenuContribution } from '@theia/core';
 import ContinuumCommandcontribution from './contribution/ContinuumCommandContribution';
@@ -79,10 +76,10 @@ export default new ContainerModule((bind, unbind, isBound, rebind) => {
     bind(WidgetFactory).toService(NodeDocsWidgetFactory);
 
     // NodeRepo widget
-    bind(NodeRepoWidget).toSelf().inSingletonScope();
-    bind(NodeRepoWidgetFactory).toSelf().inSingletonScope();
-    bind(WidgetFactory).toService(NodeRepoWidgetFactory);
-    bindViewContribution(bind, NodeRepoViewContribution);
+    // bind(NodeRepoWidget).toSelf().inSingletonScope();
+    // bind(NodeRepoWidgetFactory).toSelf().inSingletonScope();
+    // bind(WidgetFactory).toService(NodeRepoWidgetFactory);
+    // bindViewContribution(bind, NodeRepoViewContribution);
 
     // WorkflowStatus widget
     // bind(WorkflowStatusWidget).toSelf().inSingletonScope();

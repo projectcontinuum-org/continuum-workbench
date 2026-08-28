@@ -10,7 +10,7 @@ import MaximizeIcon from '@mui/icons-material/Fullscreen';
 import RestoreIcon from '@mui/icons-material/FullscreenExit';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import { JsonForms, JsonFormsDispatch, withJsonFormsLayoutProps } from '@jsonforms/react';
+import { JsonForms } from '@jsonforms/react';
 import {
   materialCells,
   materialRenderers
@@ -18,79 +18,14 @@ import {
 import {
   JsonFormsCore,
   JsonSchema,
-  UISchemaElement,
-  rankWith,
-  uiTypeIs,
-  and,
-  categorizationHasCategory,
-  Categorization,
-  Category,
-  LayoutProps,
-  GroupLayout
+  UISchemaElement
 } from '@jsonforms/core';
 import CodeEditorControl, { codeEditorTester } from './CodeEditorRenderer';
 import CredentialControl, { credentialTester } from './CredentialRenderer';
 import { IRetryOptions } from '@continuum/core';
 
 /**
- * Custom Group Layout Renderer
- * Renders a group that stretches horizontally to fill parent but shrinks vertically to fit children
- */
-const MaterialGroupLayoutRenderer = (props: LayoutProps) => {
-  const { uischema, schema, path, visible, renderers, cells } = props;
-
-  const groupLayout = uischema as GroupLayout;
-  const label = groupLayout.label;
-
-  if (!visible) {
-    return null;
-  }
-
-  return (
-    <Box
-      sx={{
-        mb: 2,
-        p: 2,
-        border: '1px solid',
-        borderColor: 'divider',
-        borderRadius: 1,
-        width: '100%',
-      }}
-    >
-      {label && (
-        <Typography variant="subtitle1" sx={{ mb: 1.5, fontWeight: 600 }}>
-          {label}
-        </Typography>
-      )}
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-        {groupLayout.elements?.map((element, index) => (
-          <JsonFormsDispatch
-            key={`${path}-group-${index}`}
-            uischema={element}
-            schema={schema}
-            path={path}
-            renderers={renderers}
-            cells={cells}
-          />
-        ))}
-      </Box>
-    </Box>
-  );
-};
-
-// Wrap with JSON Forms HOC to inject props
-const MaterialGroupLayout = withJsonFormsLayoutProps(MaterialGroupLayoutRenderer);
-
-/**
- * Custom tester for Group layout.
- */
-const groupTester = rankWith(
-  6, // Higher rank than default renderers
-  uiTypeIs('Group')
-);
-
-/**
- * Custom Tab Panel component for categorization layout
+ * Custom Tab Panel component for the dialog's own top-level Properties/Retry Policy tabs
  */
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -107,87 +42,13 @@ function TabPanel(props: TabPanelProps) {
       hidden={!isActive}
       id={`categorization-tabpanel-${index}`}
       aria-labelledby={`categorization-tab-${index}`}
-      style={isActive ? { display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'auto' } : undefined}
+      style={isActive ? { display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, minHeight: 0, overflowY: 'auto', overflowX: 'auto' } : undefined}
       {...other}
     >
-      {isActive && <Box sx={{ pt: 2 }}>{children}</Box>}
+      {isActive && <Box sx={{ pt: 2, minWidth: 0 }}>{children}</Box>}
     </div>
   );
 }
-
-/**
- * Custom Material Categorization Layout Renderer
- * Renders categories as MUI Tabs with proper tab panel content
- */
-const MaterialCategorizationLayoutRenderer = (props: LayoutProps) => {
-  const { uischema, schema, path, visible, renderers, cells } = props;
-  const [activeTab, setActiveTab] = React.useState(0);
-
-  const categorization = uischema as Categorization;
-  // Get all Category elements from the categorization
-  const categories = (categorization.elements || []).filter(
-    (el): el is Category => el.type === 'Category'
-  );
-
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
-    setActiveTab(newValue);
-  };
-
-  if (!visible) {
-    return null;
-  }
-
-  return (
-    <Box sx={{ width: '100%' }}>
-      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs
-          value={activeTab}
-          onChange={handleTabChange}
-          variant="scrollable"
-          scrollButtons="auto"
-        >
-          {categories.map((category: Category, index: number) => (
-            <Tab
-              key={index}
-              label={category.label || `Tab ${index + 1}`}
-              id={`categorization-tab-${index}`}
-              aria-controls={`categorization-tabpanel-${index}`}
-            />
-          ))}
-        </Tabs>
-      </Box>
-      {categories.map((category: Category, index: number) => (
-        <TabPanel key={index} value={activeTab} index={index}>
-          {category.elements?.map((element, elementIndex) => (
-            <JsonFormsDispatch
-              key={`${path}-${index}-${elementIndex}`}
-              uischema={element}
-              schema={schema}
-              path={path}
-              renderers={renderers}
-              cells={cells}
-            />
-          ))}
-        </TabPanel>
-      ))}
-    </Box>
-  );
-};
-
-// Wrap with JSON Forms HOC to inject props
-const MaterialCategorizationLayout = withJsonFormsLayoutProps(MaterialCategorizationLayoutRenderer);
-
-/**
- * Custom tester for Categorization layout.
- * Checks if the UI schema is a Categorization with at least one Category element.
- */
-const categorizationTester = rankWith(
-  6, // Higher rank than default renderers
-  and(
-    uiTypeIs('Categorization'),
-    categorizationHasCategory
-  )
-);
 
 const WORKFLOW_DEFAULT_RETRY = {
   maximumAttempts: 500,
@@ -273,7 +134,7 @@ const StyledDialog = styled(Dialog, {
       maxWidth: 'none',
       maxHeight: 'none',
       position: 'relative',
-      overflow: 'visible',
+      overflow: 'hidden',
     },
     '& .MuiDialogContent-root': {
       padding: theme.spacing(2),
@@ -317,8 +178,6 @@ console.log('[NodeDialog] Registering custom renderers including CredentialContr
 const customRenderers = [
   { tester: codeEditorTester, renderer: CodeEditorControl },
   { tester: credentialTester, renderer: CredentialControl },
-  { tester: categorizationTester, renderer: MaterialCategorizationLayout },
-  { tester: groupTester, renderer: MaterialGroupLayout },
   ...materialRenderers,
 ];
 
@@ -469,7 +328,7 @@ export default function NodeDialog({ onClose, onSave, readOnly=false, open, init
                 }}>
                 <CloseIcon />
             </IconButton>
-            <DialogContent dividers sx={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <DialogContent dividers sx={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
                 <Tabs
                     value={activeTopTab}
                     onChange={(_, v) => setActiveTopTab(v)}
@@ -479,46 +338,103 @@ export default function NodeDialog({ onClose, onSave, readOnly=false, open, init
                 </Tabs>
                 <TabPanel value={activeTopTab} index={0}>
                     <Box sx={{
-                        minWidth: "500px",
-                        flex: 1,
+                        width: '100%',
+                        minWidth: 0,
+                        boxSizing: 'border-box',
                         display: 'flex',
                         flexDirection: 'column',
-                        overflow: 'auto',
                         p: 2,
-                        // Ensure JsonForms categorization layout takes full space
-                        '& > div': {
-                          display: 'flex',
-                          flexDirection: 'column',
-                          flex: 1,
-                        },
-                        // Style MUI Tabs for the categorization
-                        '& .MuiTabs-root': {
-                          minHeight: 'auto',
-                          borderBottom: 1,
-                          borderColor: 'divider',
-                        },
-                        // Ensure tab panels display correctly
-                        '& .MuiBox-root[role="tabpanel"]': {
-                          flex: 1,
-                          overflow: 'auto',
-                          pt: 2,
-                        },
-                        // Fix for hidden tab panels
-                        '& .MuiBox-root[role="tabpanel"][hidden]': {
-                          display: 'none',
-                        },
                       }}>
-                        <JsonForms
-                            schema={dataSchema}
-                            uischema={uiSchema}
-                            data={data}
-                            renderers={customRenderers}
-                            cells={materialCells}
-                            onChange={onDataChange}/>
+                        <Box sx={{
+                            width: '100%',
+                            minWidth: 0,
+                            boxSizing: 'border-box',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            // Some renderers (notably the stock MaterialTableControl used for
+                            // plain array-of-objects Controls) render a bare <Table> with no
+                            // wrapping <TableContainer>, so a wide row (long free-text cell
+                            // value, many columns) sizes to its own content width instead of
+                            // shrinking to the dialog. `hidden` here would silently clip that
+                            // content (or, for descendants whose containing block escapes this
+                            // box, let it render outside the dialog's bounds); `auto` instead
+                            // gives the dialog its own contained horizontal scrollbar.
+                            overflowX: 'auto',
+                            // Setting only overflowX makes browsers implicitly promote
+                            // overflowY to 'auto' too (CSS overflow computed-value rule), which
+                            // stacks a 3rd nested auto-scroll container on top of this Box's own
+                            // parent (overflowY: 'auto') and the outer `tabpanel` div (also
+                            // overflow: auto). Competing "scroll into view" adjustments from
+                            // multiple ancestors on focus is what clips/shifts a field's
+                            // floating label when you click into it. `tabpanel` is the single,
+                            // correctly height-bounded scroll owner -- keep this box (and its
+                            // parent, above) as non-scrolling so there's only one.
+                            overflowY: 'visible',
+                            // JsonForms' stock MaterialLayoutRenderer renders every layout's
+                            // Grid container without `wrap="nowrap"`, so column-direction
+                            // (VerticalLayout/Group) containers default to flexWrap: 'wrap'.
+                            // That's semantically wrong for a single stacked column and is what
+                            // inflates item heights; row-direction (HorizontalLayout) containers
+                            // are left alone since their wrap is the intended responsive reflow.
+                            '& .MuiGrid-container[class*="MuiGrid-direction-xs-column"]': {
+                              flexWrap: 'nowrap',
+                            },
+                            // MaterialGroupLayoutRenderer forwards a `direction` prop that
+                            // JsonForms' own dispatch never actually supplies (only Vertical/
+                            // HorizontalLayout hardcode their own), so it's always undefined and
+                            // MUI Grid's own default (direction: 'row', wrap: 'wrap') silently
+                            // applies to every Group's content instead of a stacked column.
+                            '& .MuiCardContent-root > .MuiGrid-container': {
+                              flexDirection: 'column',
+                              flexWrap: 'nowrap',
+                            },
+                            // @jsonforms/material-renderers@3.7.0's ArrayLayoutToolbar (array
+                            // control title bar) and TableToolbar (plain table control title
+                            // row) both render their label as
+                            // `<Grid container spacing={2}><Grid><Typography variant="h6">`.
+                            // That markup targets material-renderers' actual peer dependency,
+                            // @mui/material@^7 (its `Grid` has no `item` prop and spaces
+                            // children with plain `gap`), but this app pins
+                            // @mui/material@^5.15.6, whose *classic* Grid still implements
+                            // `spacing` via a negative `margin-left`/oversized `width` on the
+                            // container -- applied unconditionally whenever `container` is set,
+                            // regardless of whether children carry the compensating
+                            // `.MuiGrid-item` class. Since material-renderers' own children never
+                            // pass `item` (that's the v7-only API it was written against), the
+                            // compensating padding never lands, so the title bleeds
+                            // `-theme.spacing(2)` (16px by default) to the left of the
+                            // container with nothing to counteract it. Under `overflowX:
+                            // 'hidden'` that overflowing paint was still visible; now that this
+                            // box is a real scroll container (`overflowX: 'auto'`, needed to fix
+                            // wide-table overflow above), content left of the padding box at
+                            // scrollLeft 0 is genuinely clipped, cropping the first character(s)
+                            // of the label (e.g. "Workflow Variables" -> "orkflow Variables").
+                            // Neutralize just the uncompensated bleed on these two specific,
+                            // known-mispaired Grids (Toolbar for array-with-detail/accordion
+                            // controls, TableCell for plain array-of-objects tables) and restore
+                            // the intended gap between the label and its optional validation
+                            // icon with `columnGap` instead, rather than touching `.MuiGrid-
+                            // container` globally (which would also affect legitimately-paired
+                            // container+item Grids elsewhere that still rely on this negative-
+                            // margin/padding compensation to align correctly).
+                            '& .MuiToolbar-root .MuiGrid-container[class*="MuiGrid-spacing-xs-"], & .MuiTableCell-root .MuiGrid-container[class*="MuiGrid-spacing-xs-"]': {
+                              marginLeft: 0,
+                              width: '100%',
+                              columnGap: 2,
+                            },
+                          }}>
+                            <JsonForms
+                                schema={dataSchema}
+                                uischema={uiSchema}
+                                data={data}
+                                renderers={customRenderers}
+                                cells={materialCells}
+                                onChange={onDataChange}/>
+                        </Box>
                     </Box>
                 </TabPanel>
                 <TabPanel value={activeTopTab} index={1}>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, p: 2, minWidth: "500px" }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, p: 2, width: '100%', boxSizing: 'border-box' }}>
                         <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
                             <Button size="small" onClick={resetRetryToDefaults} disabled={readOnly}>
                                 Reset to workflow defaults
