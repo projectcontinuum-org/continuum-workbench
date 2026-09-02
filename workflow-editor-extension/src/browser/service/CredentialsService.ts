@@ -19,6 +19,13 @@ export class CredentialsServiceError extends Error {
   }
 }
 
+// Caps how much of a non-JSON error response body (e.g. an HTML error page
+// from a misconfigured proxy/base URL) can end up as the error message a
+// renderer displays. Without this, CredentialRenderer's FormHelperText would
+// render the full body verbatim, inflating that array item's layout height
+// by however many wrapped lines the raw text takes.
+const MAX_ERROR_MESSAGE_LENGTH = 300;
+
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const errorText = await response.text();
@@ -27,7 +34,15 @@ async function handleResponse<T>(response: Response): Promise<T> {
       const errorJson = JSON.parse(errorText);
       if (errorJson.error) message = errorJson.error;
     } catch {
-      // use raw text
+      // Not JSON. If it looks like an HTML page (e.g. a dev-server 404
+      // fallback from a misconfigured base URL), it's not useful to a user
+      // and can be arbitrarily long - fall back to a generic message.
+      if (errorText.trimStart().startsWith('<')) {
+        message = `HTTP ${response.status}`;
+      }
+    }
+    if (message.length > MAX_ERROR_MESSAGE_LENGTH) {
+      message = `${message.slice(0, MAX_ERROR_MESSAGE_LENGTH)}…`;
     }
     throw new CredentialsServiceError(response.status, message);
   }

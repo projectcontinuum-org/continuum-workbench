@@ -125,7 +125,11 @@ interface StyledDialogProps {
 const StyledDialog = styled(Dialog, {
     shouldForwardProp: (prop) => prop !== 'customWidth' && prop !== 'customHeight',
 })<StyledDialogProps>(({ theme, customWidth, customHeight }) => ({
-    '& .MuiPaper-root': {
+    // Scoped to `.MuiDialog-paper` (not the generic `.MuiPaper-root`) - the
+    // latter is a plain descendant selector that also matches any nested
+    // Paper-based component (e.g. workflowCredentials' Accordion items, which
+    // are MuiPaper-root too), forcing them to the dialog's own width/height.
+    '& .MuiDialog-paper': {
       backgroundColor: theme.palette.background.paper || theme.palette.background.default || '#1e1e1e',
       backgroundImage: 'none',
       opacity: 1,
@@ -370,6 +374,17 @@ export default function NodeDialog({ onClose, onSave, readOnly=false, open, init
                             // correctly height-bounded scroll owner -- keep this box (and its
                             // parent, above) as non-scrolling so there's only one.
                             overflowY: 'visible',
+                            // Per CSS's overflow computed-value rule, `overflowX: 'auto'` above
+                            // forces this box's computed overflowY to 'auto' too (the 'visible'
+                            // set immediately above is not the resolved value) -- so despite the
+                            // comment above wanting this box non-scrolling, it still establishes
+                            // a real clipping/scroll container. The topmost field's outlined
+                            // label floats ~9px above its own input's border (MUI's standard
+                            // `translate(x, -9px) scale(0.75)`), which pokes above this box's own
+                            // top edge and gets clipped by it with zero top padding. `pt: 1.5`
+                            // gives that first label room without affecting the gap between
+                            // fields (handled separately below).
+                            pt: 1.5,
                             // JsonForms' stock MaterialLayoutRenderer renders every layout's
                             // Grid container without `wrap="nowrap"`, so column-direction
                             // (VerticalLayout/Group) containers default to flexWrap: 'wrap'.
@@ -378,6 +393,19 @@ export default function NodeDialog({ onClose, onSave, readOnly=false, open, init
                             // are left alone since their wrap is the intended responsive reflow.
                             '& .MuiGrid-container[class*="MuiGrid-direction-xs-column"]': {
                               flexWrap: 'nowrap',
+                            },
+                            // MaterialLayoutRenderer (util/layout.tsx) hardcodes
+                            // `spacing={direction === 'row' ? 2 : 0}` - VerticalLayout/Group
+                            // columns get literally zero gap between their stacked children, and
+                            // MaterialInputControl's own FormControl has no margin either. Every
+                            // outlined field's shrunk label sits ~9px above its own input border,
+                            // so with zero gap it renders flush against (visually overlapping)
+                            // the bottom border of the field stacked above it. Restore a real gap
+                            // between stacked column children (top-level dialog fields, and
+                            // array-item `detail` fields alike) with a margin the row-direction
+                            // case doesn't need, since its own `spacing={2}` already works.
+                            '& .MuiGrid-container[class*="MuiGrid-direction-xs-column"] > .MuiGrid-root + .MuiGrid-root': {
+                              mt: 2,
                             },
                             // MaterialGroupLayoutRenderer forwards a `direction` prop that
                             // JsonForms' own dispatch never actually supplies (only Vertical/
@@ -421,6 +449,34 @@ export default function NodeDialog({ onClose, onSave, readOnly=false, open, init
                               marginLeft: 0,
                               width: '100%',
                               columnGap: 2,
+                            },
+                            // ExpandPanelRenderer (the per-item accordion header rendered by
+                            // @jsonforms/material-renderers' array-with-detail control, e.g.
+                            // workflowCredentials/workflowVariables) lays out its
+                            // AccordionSummary as two Grid "columns" (item label+index vs.
+                            // move-up/move-down/delete icons) using the v7-only Grid2 `size`
+                            // prop. `size` isn't a prop @mui/material@^5's classic Grid
+                            // understands, so neither column gets its intended ~70/30 or
+                            // ~90/10 width split -- both fall back to content-based flex
+                            // sizing and can crowd or overlap, especially once
+                            // `showSortButtons: true` adds a third icon button competing for
+                            // space with the item's label. Force the header row to stay
+                            // side-by-side without wrapping, let the now-unsized "item" Grids
+                            // (they carry .MuiGrid-root but never .MuiGrid-item, since `item`
+                            // is likewise never passed) shrink instead of overflowing, and
+                            // ellipsize the label span itself so a long computed label loses
+                            // characters gracefully rather than colliding with the icons.
+                            '& .MuiAccordionSummary-root .MuiGrid-container': {
+                              flexWrap: 'nowrap',
+                            },
+                            '& .MuiAccordionSummary-root .MuiGrid-root:not(.MuiGrid-container)': {
+                              minWidth: 0,
+                              flex: '0 1 auto',
+                            },
+                            '& .MuiAccordionSummary-root span[id^="expand-panel"]': {
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
                             },
                           }}>
                             <JsonForms

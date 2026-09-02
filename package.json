@@ -1,7 +1,7 @@
 {
   "name": "continuum-frontend",
   "private": true,
-  "version": "0.0.11",
+  "version": "0.0.12",
   "scripts": {
     "preinstall": "node scripts/sync-versions.js",
     "sync-versions": "node scripts/sync-versions.js",
