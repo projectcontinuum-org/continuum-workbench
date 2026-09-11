@@ -4,6 +4,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 ADD . .
+ENV PUPPETEER_SKIP_DOWNLOAD=true
 RUN yarn install
 RUN yarn run build
 
