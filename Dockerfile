@@ -1,11 +1,17 @@
-FROM node:22-alpine AS builder
-RUN apk add --no-cache git python3 py3-setuptools make g++ pkgconfig libsecret-dev
+FROM node:24-slim AS builder
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git python3 make g++ pkg-config libsecret-1-dev && \
+    rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 ADD . .
+ENV PUPPETEER_SKIP_DOWNLOAD=true
 RUN yarn install
 RUN yarn run build
 
-FROM node:22-alpine AS production
+FROM node:24-slim AS production
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libsecret-1-0 && \
+    rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/continuum-workbench ./
