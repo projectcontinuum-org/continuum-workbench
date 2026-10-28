@@ -1,6 +1,6 @@
 <div align="center">
   <h1>Continuum Workbench</h1>
-  <strong>Browser-native IDE for building visual workflows in <a href="https://github.com/projectcontinuum/Continuum">Project Continuum</a></strong>
+  <strong>Browser-native IDE for building visual workflows in <a href="https://github.com/projectcontinuum-org/continuum-platform-core">Project Continuum</a></strong>
 </div>
 
 <div align="center">
@@ -15,7 +15,7 @@
 
 ## 🌐 Part of Project Continuum
 
-This is the **frontend** for [Project Continuum](https://github.com/projectcontinuum/Continuum) — a distributed, crash-proof workflow execution platform. The workbench gives you a full IDE experience in the browser for designing, configuring, and monitoring data processing workflows.
+This is the **frontend** for [Project Continuum](https://github.com/projectcontinuum-org/continuum-platform-core) — a distributed, crash-proof workflow execution platform. The workbench gives you a full IDE experience in the browser for designing, configuring, and monitoring data processing workflows.
 
 ---
 
@@ -62,12 +62,12 @@ A Turborepo monorepo containing the browser-based workflow editor and IDE for Pr
 
 - **Node.js >= 20**
 - **Yarn 1.22+**
-- **Backend services running** — see the [Continuum](https://github.com/projectcontinuum/Continuum) repo for Docker Compose setup
+- **Backend services running** — see the [Continuum](https://github.com/projectcontinuum-org/continuum-platform-core) repo for Docker Compose setup
 
 ### Development
 
 ```bash
-git clone https://github.com/projectcontinuum/continuum-workbench.git
+git clone https://github.com/projectcontinuum-org/continuum-workbench.git
 cd continuum-workbench
 
 # Install dependencies
@@ -126,8 +126,8 @@ continuum-workbench/
 
 | Repository | Description |
 |-----------|-------------|
-| [Continuum](https://github.com/projectcontinuum/Continuum) | Core backend — API server, worker framework, shared libraries |
+| [Continuum](https://github.com/projectcontinuum-org/continuum-platform-core) | Core backend — API server, worker framework, shared libraries |
 | **continuum-workbench** (this repo) | Browser IDE — Eclipse Theia + React Flow workflow editor |
-| [continuum-feature-base](https://github.com/projectcontinuum/continuum-feature-base) | Base analytics nodes — data transforms, REST, scripting, anomaly detection |
-| [continuum-feature-ai](https://github.com/projectcontinuum/continuum-feature-ai) | AI/ML nodes — LLM fine-tuning with Unsloth + LoRA |
-| [continuum-feature-template](https://github.com/projectcontinuum/continuum-feature-template) | Template — scaffold your own custom worker with nodes |
+| [continuum-feature-base](https://github.com/projectcontinuum-org/continuum-feature-base) | Base analytics nodes — data transforms, REST, scripting, anomaly detection |
+| [continuum-feature-ai](https://github.com/projectcontinuum-org/continuum-feature-ai) | AI/ML nodes — LLM fine-tuning with Unsloth + LoRA |
+| [continuum-feature-template](https://github.com/projectcontinuum-org/continuum-feature-template) | Template — scaffold your own custom worker with nodes |
