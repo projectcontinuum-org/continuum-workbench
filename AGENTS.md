@@ -1,6 +1,6 @@
 # Continuum Workbench — Frontend
 
-> Full ecosystem blueprint: see the [Continuum repo CLAUDE.md](https://github.com/projectcontinuum-org/continuum-platform-core/blob/main/CLAUDE.md) for the complete architecture reference.
+> Full ecosystem blueprint: see the [Continuum repo AGENTS.md](https://github.com/projectcontinuum-org/continuum-platform-core/blob/main/AGENTS.md) for the complete architecture reference.
 
 ## This Repo
 

@@ -131,3 +131,7 @@ continuum-workbench/
 | [continuum-feature-base](https://github.com/projectcontinuum-org/continuum-feature-base) | Base analytics nodes — data transforms, REST, scripting, anomaly detection |
 | [continuum-feature-ai](https://github.com/projectcontinuum-org/continuum-feature-ai) | AI/ML nodes — LLM fine-tuning with Unsloth + LoRA |
 | [continuum-feature-template](https://github.com/projectcontinuum-org/continuum-feature-template) | Template — scaffold your own custom worker with nodes |
+
+## 📄 License
+
+[Apache 2.0](LICENSE)
