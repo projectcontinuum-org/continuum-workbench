@@ -50,15 +50,7 @@
           "dark": "continuum-dark"
         },
         "defaultIconTheme": "theia-file-icons",
-        "reloadOnReconnect": true,
-        "preferences": {
-          "ai-features.mcp.mcpServers": {
-            "continuum": {
-              "serverUrl": "http://localhost:8080/api-server/mcp",
-              "autostart": true
-            }
-          }
-        }
+        "reloadOnReconnect": true
       }
     },
     "backend": {

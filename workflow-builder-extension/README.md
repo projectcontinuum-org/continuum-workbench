@@ -12,15 +12,26 @@ It uses whichever model is selected in the chat box (the agent asks for `default
 
 ## MCP server setup
 
-`continuum-workbench/package.json` ships a default preference:
+The extension registers the api-server MCP server as an application default under the key `continuum`. Its URL comes from an environment variable of the **Theia backend** process, so it can be set per deployment:
 
-```json
-"ai-features.mcp.mcpServers": { "continuum": { "serverUrl": "http://localhost:8080/api-server/mcp", "autostart": true } }
+| Variable | Default | Meaning |
+|----------|---------|---------|
+| `CONTINUUM_API_SERVER_MCP_URL` | `http://localhost:8080/mcp` | Full URL of the api-server MCP endpoint (streamable HTTP) |
+
+```bash
+# Docker / Kubernetes: set it on the workbench container, e.g.
+CONTINUUM_API_SERVER_MCP_URL=http://continuum-api-server:8080/mcp
 ```
 
-The MCP client runs in the **Theia backend**, so the URL must be reachable from there, not from the browser. For a gateway or cluster deployment override the preference in the user or workspace settings with the in-cluster URL. Keep the server key `continuum`: the agent prompt references `mcp_continuum_*`. Check *AI Configuration > MCP* that the server shows as started with three tools.
+- The MCP client runs in the Theia backend, so the URL must be reachable from there, not from the browser.
+- A blank or non-http(s) value is ignored with a warning in the backend log, and the default is used.
+- The variable is read when the workbench frontend starts. Restart the workbench after changing it.
+- Settings win: an `ai-features.mcp.mcpServers` entry in user or workspace settings overrides this default.
+- Keep the server key `continuum`: the agent prompt references the tools as `mcp_continuum_*`. Check *AI Configuration > MCP* that the server shows as started with three tools.
 
 If the MCP server is not reachable the agent cannot discover nodes and will say so; `createContinuumWorkflow` still rejects anything not in the registry.
+
+The node catalog and documentation tool use the workbench's existing REST base (`API_SERVER_BASE`, see `workflow-editor-extension/src/browser/service/ApiConfig.ts`), which is not changed by this variable.
 
 ## Develop
 
