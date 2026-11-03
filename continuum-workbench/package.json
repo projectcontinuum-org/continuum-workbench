@@ -22,6 +22,8 @@
     "@theia/ai-core-ui": "latest",
     "@theia/ai-history": "latest",
     "@theia/ai-ollama": "latest",
+    "@theia/ai-openai": "latest",
+    "@theia/ai-anthropic": "latest",
     "@theia/ai-ide": "latest",
     "@continuum/core": "*",
     "@continuum/workflow-editor-extension": "*",
