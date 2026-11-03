@@ -37,6 +37,7 @@ A Turborepo monorepo containing the browser-based workflow editor and IDE for Pr
 |-----------|---------|-------------|
 | `continuum-core` | `@continuum/core` | Shared React library — models, types, React Flow node components |
 | `workflow-editor-extension` | `@continuum/workflow-editor-extension` | Eclipse Theia extension — workflow editor, node explorer, execution viewer |
+| `workflow-builder-extension` | `@continuum/workflow-builder-extension` | Theia AI chat agent that builds workflows from a prompt (see its README) |
 | `continuum-workbench` | `@continuum/workbench` | Full Theia IDE application (browser target) |
 | `continuum-workbench-thin` | `@continuum/workbench-thin` | Lightweight Theia application (browser-only) |
 
@@ -106,6 +107,9 @@ continuum-workbench/
 │   ├── package.json
 │   └── src/
 ├── workflow-editor-extension/         # @continuum/workflow-editor-extension
+│   ├── package.json
+│   └── src/
+├── workflow-builder-extension/        # @continuum/workflow-builder-extension — AI workflow builder agent
 │   ├── package.json
 │   └── src/
 ├── continuum-workbench/               # @continuum/workbench — full Theia IDE

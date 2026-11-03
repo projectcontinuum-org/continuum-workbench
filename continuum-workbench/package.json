@@ -24,7 +24,8 @@
     "@theia/ai-ollama": "latest",
     "@theia/ai-ide": "latest",
     "@continuum/core": "*",
-    "@continuum/workflow-editor-extension": "*"
+    "@continuum/workflow-editor-extension": "*",
+    "@continuum/workflow-builder-extension": "*"
   },
   "devDependencies": {
     "@theia/cli": "latest",
@@ -49,7 +50,15 @@
           "dark": "continuum-dark"
         },
         "defaultIconTheme": "theia-file-icons",
-        "reloadOnReconnect": true
+        "reloadOnReconnect": true,
+        "preferences": {
+          "ai-features.mcp.mcpServers": {
+            "continuum": {
+              "serverUrl": "http://localhost:8080/api-server/mcp",
+              "autostart": true
+            }
+          }
+        }
       }
     },
     "backend": {

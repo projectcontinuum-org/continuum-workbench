@@ -30,6 +30,7 @@
     "continuum-core",
     "continuum-workbench",
     "workflow-editor-extension",
+    "workflow-builder-extension",
     "continuum-workbench-thin"
   ]
 }

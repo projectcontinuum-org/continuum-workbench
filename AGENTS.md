@@ -12,6 +12,7 @@ Browser-based IDE for Project Continuum. Turborepo monorepo with 4 Yarn workspac
 |-----------|---------|---------|
 | `continuum-core/` | `@continuum/core` | Shared React library — models, types, React Flow node components |
 | `workflow-editor-extension/` | `@continuum/workflow-editor-extension` | Eclipse Theia extension — workflow canvas, node explorer, execution viewer |
+| `workflow-builder-extension/` | `@continuum/workflow-builder-extension` | Theia AI chat agent "WorkflowBuilder" — builds a `.cwf` from a prompt using the api-server node-registry MCP |
 | `continuum-workbench/` | `@continuum/workbench` | Full Theia IDE app (port 3002) |
 | `continuum-workbench-thin/` | `@continuum/workbench-thin` | Lightweight variant |
 
