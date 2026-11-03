@@ -14,7 +14,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/continuum-workbench ./\
-RUN curl -fsSL https://claude.ai/install.sh | bash
+COPY --from=builder /app/continuum-workbench ./
 EXPOSE 8080
 CMD [ "lib/backend/main.js", "-h", "0.0.0.0", "-p", "8080" ]
