@@ -47,7 +47,7 @@ tasks.register("publish") {
 tasks.register<Exec>("jib") {
   description = "Docker build and push to Docker Hub"
   group = "Jib tasks"
-  val dockerRepoName = "docker.io/projectcontinuum"
+  val dockerRepoName = "docker.io/projectcontinuum/continuum-workbench"
   val imageName = "$dockerRepoName:${project.version}"
   val latestName = "$dockerRepoName:latest"
   commandLine("bash", "-c",
