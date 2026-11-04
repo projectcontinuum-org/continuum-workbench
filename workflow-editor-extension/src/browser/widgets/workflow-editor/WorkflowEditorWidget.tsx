@@ -24,6 +24,7 @@ import { ContextMenuRenderer } from '@theia/core/lib/browser/context-menu-render
 import { ContextKeyService, ContextKey } from '@theia/core/lib/browser/context-key-service';
 import { WORKFLOW_EDITOR_CONTEXT_MENU } from '../../menu/WorkflowEditorContextMenu';
 import { WorkflowClipboardService } from '../../service/WorkflowClipboardService';
+import { sha256Hex } from '../../service/Sha256';
 
 export const WorkflowEditorWidgetOptions = Symbol('WorkflowEditorWidgetOptions');
 export interface WorkflowEditorWidgetOptions {
@@ -90,11 +91,7 @@ export default class WorkflowEditorWidget extends ReactWidget implements Navigat
     }
 
     async createHash(input: string) {
-        const msgUint8 = new TextEncoder().encode(input);                                  
-        const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);                
-        const hashArray = Array.from(new Uint8Array(hashBuffer));                     
-        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join(''); 
-        return hashHex;
+        return sha256Hex(input);
     }
 
     async loadFileContent() {

@@ -15,6 +15,7 @@
     "@theia/ai-chat": "latest",
     "@theia/ai-core": "latest",
     "@theia/core": "latest",
+    "@theia/editor": "latest",
     "@theia/filesystem": "latest",
     "@theia/workspace": "latest"
   },

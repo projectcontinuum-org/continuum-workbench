@@ -2,6 +2,7 @@ import { injectable } from '@theia/core/shared/inversify';
 import { AbstractStreamParsingChatAgent } from '@theia/ai-chat/lib/common/chat-agents';
 import { LanguageModelRequirement } from '@theia/ai-core/lib/common';
 import { WORKFLOW_BUILDER_PROMPT_ID, workflowBuilderPrompt } from './WorkflowBuilderPrompt';
+import { ACTIVE_FILE_VARIABLE } from './ActiveFileVariableContribution';
 
 export const WorkflowBuilderAgentId = 'continuum-workflow-builder';
 
@@ -19,5 +20,6 @@ export class WorkflowBuilderAgent extends AbstractStreamParsingChatAgent {
 
     override prompts = [{ id: WORKFLOW_BUILDER_PROMPT_ID, defaultVariant: workflowBuilderPrompt, variants: [] }];
     protected override systemPromptId: string = WORKFLOW_BUILDER_PROMPT_ID;
+    override variables = [ACTIVE_FILE_VARIABLE.name];
     override iconClass: string = 'fa fa-solid fa-diagram-project';
 }
