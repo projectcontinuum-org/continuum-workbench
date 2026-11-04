@@ -10,9 +10,10 @@ RUN yarn run build
 
 FROM node:24-slim AS production
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libsecret-1-0 curl && \
+    libsecret-1-0 curl ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 RUN curl -fsSL https://claude.ai/install.sh | bash
+ENV PATH="/root/.local/bin:${PATH}"
 WORKDIR /app
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/continuum-workbench ./
