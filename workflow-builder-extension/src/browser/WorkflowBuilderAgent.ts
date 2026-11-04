@@ -16,7 +16,7 @@ export class WorkflowBuilderAgent extends AbstractStreamParsingChatAgent {
     }];
     protected defaultLanguageModelPurpose: string = 'chat';
     override description = 'Builds a Continuum workflow from a plain-language request. It looks up the available nodes and their documentation ' +
-        'in the Continuum node registry, then saves a validated .cwf file in the workspace and opens it.';
+        'in the Continuum node registry, has the api-server validate and build the workflow, then saves it as a .cwf file in the workspace.';
 
     override prompts = [{ id: WORKFLOW_BUILDER_PROMPT_ID, defaultVariant: workflowBuilderPrompt, variants: [] }];
     protected override systemPromptId: string = WORKFLOW_BUILDER_PROMPT_ID;

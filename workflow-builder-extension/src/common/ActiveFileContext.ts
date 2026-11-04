@@ -18,7 +18,7 @@ interface SpecLike {
 }
 
 /**
- * Reduces a .cwf file to the compact spec format createContinuumWorkflow takes, dropping icons, schemas and layout.
+ * Reduces a .cwf file to the compact spec format buildContinuumWorkflow takes, dropping icons, schemas and layout.
  * Returns undefined when the text is not a workflow.
  */
 export function summarizeWorkflow(text: string): SpecLike | undefined {
@@ -65,7 +65,7 @@ export function formatActiveFile(file: ActiveFile | undefined): string {
         const workflow = file.path.endsWith('.cwf') ? summarizeWorkflow(file.content) : undefined;
         if (workflow) {
             const summary = truncate(JSON.stringify(workflow, null, 1));
-            parts.push(`This is a Continuum workflow, shown in the createContinuumWorkflow spec format with all its property values` +
+            parts.push(`This is a Continuum workflow, shown in the buildContinuumWorkflow spec format with all its property values` +
                 `${summary.truncated ? ` (first ${MAX_CONTEXT_CHARS} characters)` : ''}:\n${fenced(summary.text, 'json')}`);
         } else {
             const content = truncate(file.content);

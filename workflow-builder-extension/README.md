@@ -1,14 +1,21 @@
 # Workflow Builder (Theia AI agent)
 
-Chat agent **@WorkflowBuilder** for the Continuum workbench. Describe a workflow in plain language; the agent looks up the available nodes, reads their documentation, then saves a validated `.cwf` into the open workspace folder and opens it in the workflow editor.
+Chat agent **@WorkflowBuilder** for the Continuum workbench. Describe a workflow in plain language; the agent looks up the available nodes, reads their documentation, has the api-server validate and build the workflow, then saves it as a `.cwf` in the open workspace folder.
 
 It uses whichever model is selected in the chat box (the agent asks for `default/universal`; override it under *AI Configuration*).
 
+The agent is only a prompt: all Continuum-specific tooling lives in the api-server MCP server, and files are written with Theia's built-in AI tools. The same prompt runs in Claude Code (see below).
+
 ## How it works
 
-1. **Discovery** — the agent calls the api-server MCP tools `listContinuumNodeCategories`, `searchContinuumNodes`, `getContinuumNodeMetadata` (server key `continuum`, tool ids `mcp_continuum_*`) and the extension tool `getContinuumNodeDocumentation` (REST `node-explorer/nodes/{id}/documentation`).
-2. **Validate** — it calls the api-server MCP tool `validateContinuumWorkflow` with a compact spec (`name`, `nodes[{key,nodeId,properties}]`, `edges[{from,fromPort,to,toPort}]`). The server checks the spec against the live registry, including each node's full JSON Schema, and returns `valid` with every error (naming the node, edge or property) and warning. The agent fixes the errors and validates again until it returns `valid: true`.
-3. **Save** — it calls `createContinuumWorkflow` with the same spec. `src/common/WorkflowAssembler.ts` checks it again (node ids, ports, property keys/types/enums, required properties, duplicate or doubly fed ports, cycles), so a workflow is never saved invalid even if the agent skips validation. It then adds the fields the API requires (`selected`, `positionAbsolute`, ...), lays the nodes out, and writes `<name>.cwf`. On errors nothing is written; the errors go back to the model.
+All Continuum tools are api-server MCP tools (server key `continuum`, tool ids `mcp_continuum_*`), so node lookup, validation and the `.cwf` format stay consistent with the backend data model (`ContinuumWorkflowModel`).
+
+1. **Discovery** — `listContinuumNodeCategories`, `searchContinuumNodes`, `getContinuumNodeMetadata` and `getContinuumNodeDocumentation`.
+2. **Validate** — `validateContinuumWorkflow` with a compact spec (`name`, `nodes[{key,nodeId,properties}]`, `edges[{from,fromPort,to,toPort}]`). The server checks it against the live registry, including each node's full JSON Schema, and returns `valid` with every error (naming the node, edge or property) and warning. The agent fixes the errors until it returns `valid: true`.
+3. **Build** — `buildContinuumWorkflow` with the same spec validates again and returns `fileName` (`<name-slug>.cwf`) and `workflow`, the complete `.cwf` content: registry metadata per node, properties merged over the defaults, the fields the API requires (`selected`, `positionAbsolute`, ...) and a layout. Invalid specs return errors and no workflow.
+4. **Save** — Theia's `findFilesByPattern` checks the name is free (the agent adds `-2`, `-3`, ... if not) and `writeFileContent` writes the returned workflow unchanged. The user opens it from the file explorer.
+
+`writeFileContent` and `findFilesByPattern` come from `@theia/ai-ide`, which the workbench app already includes.
 
 ## Editor context
 
@@ -36,16 +43,23 @@ CONTINUUM_API_SERVER_MCP_URL=http://continuum-api-server:8080/mcp
 - A blank or non-http(s) value is ignored with a warning in the backend log, and the default is used.
 - The variable is read when the workbench frontend starts. Restart the workbench after changing it.
 - Settings win: an `ai-features.mcp.mcpServers` entry in user or workspace settings overrides this default.
-- Keep the server key `continuum`: the agent prompt references the tools as `mcp_continuum_*`. Check *AI Configuration > MCP* that the server shows as started with four tools.
+- Keep the server key `continuum`: the agent prompt references the tools as `mcp_continuum_*`. Check *AI Configuration > MCP* that the server shows as started with six tools.
 
-If the MCP server is not reachable the agent cannot discover nodes and will say so; `createContinuumWorkflow` still rejects anything not in the registry.
+If the MCP server is not reachable the agent has no Continuum tools: it cannot discover nodes or build a workflow, and will say so.
 
-The node catalog and documentation tool use the workbench's existing REST base (`API_SERVER_BASE`, see `workflow-editor-extension/src/browser/service/ApiConfig.ts`), which is not changed by this variable.
+## Claude Code agent
+
+`claude-code/` holds the same agent for Claude Code: `workflow-builder.md` (a subagent definition with the same rules) and `mcp.json` (the `continuum` MCP server). It uses only the MCP tools above plus Claude Code's `Glob` and `Write`, with no scripts.
+
+```bash
+cp claude-code/workflow-builder.md <project>/.claude/agents/workflow-builder.md
+# register the MCP server, e.g. from claude-code/mcp.json, and restart Claude Code
+```
 
 ## Develop
 
 ```bash
 yarn install
 yarn workspace @continuum/workflow-builder-extension build
-yarn workspace @continuum/workflow-builder-extension test   # assembler unit tests (node:test)
+yarn workspace @continuum/workflow-builder-extension test   # src/common unit tests (node:test)
 ```

@@ -10,8 +10,6 @@
     "src"
   ],
   "dependencies": {
-    "@continuum/core": "*",
-    "@continuum/workflow-editor-extension": "*",
     "@theia/ai-chat": "latest",
     "@theia/ai-core": "latest",
     "@theia/core": "latest",
