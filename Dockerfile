@@ -22,6 +22,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN curl -fsSL https://claude.ai/install.sh | bash && \
     ln -sf /root/.local/bin/claude /usr/local/bin/claude && \
     /usr/local/bin/claude --version
+RUN npm install -g @anthropic-ai/claude-agent-sdk
 COPY workflow-builder-extension/claude-code/workflow-builder.md /root/.claude/agents/workflow-builder.md
 ENV PATH="/root/.local/bin:${PATH}"
 ENV SHELL=/bin/bash

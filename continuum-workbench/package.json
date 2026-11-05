@@ -17,6 +17,7 @@
     "@theia/workspace": "latest",
     "@theia/ai-chat": "latest",
     "@theia/ai-chat-ui": "latest",
+    "@theia/ai-claude-code": "latest",
     "@theia/ai-code-completion": "latest",
     "@theia/ai-core": "latest",
     "@theia/ai-core-ui": "latest",
