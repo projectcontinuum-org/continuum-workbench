@@ -4,11 +4,13 @@ on:
   release:
     types: [published]
 
+env:
+  IMAGE_REPO: docker.io/projectcontinuum/continuum-workbench
+
 jobs:
-  release:
+  build:
     permissions:
       contents: read
-      packages: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -39,8 +41,76 @@ jobs:
       - name: Build
         run: ./gradlew build --no-daemon
 
-      - name: Push container image to Docker Hub
-        run: ./gradlew jib --no-daemon
-        env:
-          DOCKER_REPO_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
-          DOCKER_REPO_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
+  image:
+    needs: build
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - arch: amd64
+            platform: linux/amd64
+            runner: ubuntu-latest
+          - arch: arm64
+            platform: linux/arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Read version from package.json
+        id: version
+        run: echo "value=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+
+      - name: Build and push ${{ matrix.arch }} image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
+          push: true
+          tags: ${{ env.IMAGE_REPO }}:${{ steps.version.outputs.value }}-${{ matrix.arch }}
+          cache-from: type=gha,scope=${{ matrix.arch }}
+          cache-to: type=gha,scope=${{ matrix.arch }},mode=max
+
+  manifest:
+    needs: image
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Read version from package.json
+        id: version
+        run: echo "value=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+
+      - name: Publish multi-arch manifest
+        run: |
+          docker buildx imagetools create \
+            -t "$IMAGE_REPO:${{ steps.version.outputs.value }}" \
+            -t "$IMAGE_REPO:latest" \
+            "$IMAGE_REPO:${{ steps.version.outputs.value }}-amd64" \
+            "$IMAGE_REPO:${{ steps.version.outputs.value }}-arm64"
