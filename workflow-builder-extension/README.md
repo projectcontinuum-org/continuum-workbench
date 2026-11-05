@@ -49,7 +49,7 @@ If the MCP server is not reachable the agent has no Continuum tools: it cannot d
 
 ## Claude Code agent
 
-`claude-code/` holds the same agent for Claude Code: `workflow-builder.md` (a subagent definition with the same rules) and `mcp.json` (the `continuum` MCP server). It uses only the MCP tools above plus Claude Code's `Glob` and `Write`, with no scripts.
+`claude-code/` holds the same agent for Claude Code: `workflow-builder.md` (a subagent definition with the same rules) and `mcp.json` (the `continuum` MCP server). It uses only the six MCP tools above plus Claude Code's built-in `Write` to save the built file: no Bash, no scripts, no other tools.
 
 ```bash
 cp claude-code/workflow-builder.md <project>/.claude/agents/workflow-builder.md
