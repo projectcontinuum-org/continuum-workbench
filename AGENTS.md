@@ -11,7 +11,7 @@ Browser-based IDE for Project Continuum. Turborepo monorepo with 4 Yarn workspac
 | Workspace | Package | Purpose |
 |-----------|---------|---------|
 | `continuum-core/` | `@continuum/core` | Shared React library — models, types, React Flow node components |
-| `workflow-editor-extension/` | `@continuum/workflow-editor-extension` | Eclipse Theia extension — workflow canvas, node explorer, execution viewer |
+| `workflow-editor-extension/` | `@continuum/workflow-editor-extension` | Eclipse Theia extension — workflow canvas, node explorer, execution viewer. An open `.cwf` tab reloads when the file changes on disk (asks first if it has unsaved edits); opening a file never writes to it |
 | `workflow-builder-extension/` | `@continuum/workflow-builder-extension` | Theia AI chat agent "WorkflowBuilder" — a prompt only: discovers nodes, validates and builds the `.cwf` with api-server MCP tools, saves it with Theia's `writeFileContent`; `claude-code/` has the Claude Code twin |
 | `continuum-workbench/` | `@continuum/workbench` | Full Theia IDE app (port 3002) |
 | `continuum-workbench-thin/` | `@continuum/workbench-thin` | Lightweight variant |

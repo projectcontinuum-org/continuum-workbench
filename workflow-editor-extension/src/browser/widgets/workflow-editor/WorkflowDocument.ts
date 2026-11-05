@@ -6,6 +6,8 @@ import { RemoteFileSystemProvider } from "@theia/filesystem/lib/common/remote-fi
 export default class WorkflowDocument implements Saveable {
     protected originalWorkflow?: IWorkflow;
     protected unsavedWorkflow?: IWorkflow;
+    /** The file text last loaded or saved, so a change event for that same text can be ignored. */
+    syncedContent?: string;
     protected readonly toDispose = new DisposableCollection();
     protected readonly onChangeEventEmitter = new Emitter<void>();
     public readonly onContentChanged = new Emitter<void>().event;
@@ -18,10 +20,6 @@ export default class WorkflowDocument implements Saveable {
         protected readonly resourceUri: URI
     ) {}
 
-    setOriginalWorkflow(wf?: IWorkflow) {
-        this.originalWorkflow = wf;
-    }
-
     setUnsavedWorkflow(wf?: IWorkflow) {
         if(JSON.stringify(this.originalWorkflow) != JSON.stringify(wf)) {
             this.unsavedWorkflow = wf;
@@ -29,8 +27,37 @@ export default class WorkflowDocument implements Saveable {
         }
     }
 
+    /** Makes wf the saved state, as loaded from content (the file text). */
+    reset(wf: IWorkflow, content: string) {
+        this.originalWorkflow = wf;
+        this.unsavedWorkflow = undefined;
+        this.syncedContent = content;
+        this.setDirty(false);
+    }
+
     get dirty(): boolean {
         return this._dirty;
+    }
+
+    /**
+     * True when there are unsaved changes beyond what React Flow sets on its own when it shows a workflow
+     * (measured node sizes, selection), so a file written by another tool is not reported as edited.
+     */
+    hasUnsavedEdits(): boolean {
+        return this.dirty && WorkflowDocument.withoutViewState(this.unsavedWorkflow) != WorkflowDocument.withoutViewState(this.originalWorkflow);
+    }
+
+    protected static withoutViewState(wf?: IWorkflow): string | undefined {
+        const omit = (item: object, keys: string[]) => {
+            const copy: { [key: string]: unknown } = { ...item };
+            keys.forEach(key => delete copy[key]);
+            return copy;
+        };
+        return wf && JSON.stringify({
+            ...wf,
+            nodes: wf.nodes.map(node => omit(node, ['width', 'height', 'selected', 'dragging', 'positionAbsolute'])),
+            edges: wf.edges.map(edge => omit(edge, ['selected']))
+        });
     }
 
     setDirty(value: boolean) {
@@ -45,8 +72,9 @@ export default class WorkflowDocument implements Saveable {
             if(this.unsavedWorkflow != undefined) {
                 console.log("Saving ", options, this.unsavedWorkflow);
                 this.originalWorkflow = this.unsavedWorkflow;
+                this.syncedContent = JSON.stringify(this.originalWorkflow, null, 4);
                 const encoder = new TextEncoder();
-                this.remoteFileSystemProvider.writeFile(this.resourceUri, encoder.encode(JSON.stringify(this.originalWorkflow, null, 4)), {create: true, overwrite: true});
+                this.remoteFileSystemProvider.writeFile(this.resourceUri, encoder.encode(this.syncedContent), {create: true, overwrite: true});
                 this.setDirty(false);
             }
             resolve();
