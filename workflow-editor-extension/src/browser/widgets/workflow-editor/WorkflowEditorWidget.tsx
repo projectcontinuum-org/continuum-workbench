@@ -6,8 +6,9 @@ import '@fontsource/roboto/700.css';
 import { Message, Navigatable, OpenerService, ReactWidget, SaveableSource, StatefulWidget, Widget } from '@theia/core/lib/browser';
 import { ReactNode } from "react";
 import React, { useEffect } from "react";
-import { MessageService, UNTITLED_SCHEME, URI } from "@theia/core";
+import { Disposable, MessageService, UNTITLED_SCHEME, URI } from "@theia/core";
 import { RemoteFileSystemProvider } from '@theia/filesystem/lib/common/remote-file-system-provider';
+import { FileChangeType } from '@theia/filesystem/lib/common/files';
 import { INodeRepoTreeItem, IWorkflow, Workflow } from '@continuum/core';
 import WorkflowEditor, { WorkflowEditorRef } from '../../components/workflow-editor/WorkflowEditor';
 import { ThemeProvider } from '@mui/material/styles';
@@ -24,6 +25,7 @@ import { ContextMenuRenderer } from '@theia/core/lib/browser/context-menu-render
 import { ContextKeyService, ContextKey } from '@theia/core/lib/browser/context-key-service';
 import { WORKFLOW_EDITOR_CONTEXT_MENU } from '../../menu/WorkflowEditorContextMenu';
 import { WorkflowClipboardService } from '../../service/WorkflowClipboardService';
+import { sha256Hex } from '../../service/Sha256';
 
 export const WorkflowEditorWidgetOptions = Symbol('WorkflowEditorWidgetOptions');
 export interface WorkflowEditorWidgetOptions {
@@ -46,6 +48,9 @@ export default class WorkflowEditorWidget extends ReactWidget implements Navigat
     protected isUndoRedoAction = false;
     protected static readonly MAX_HISTORY_SIZE = 50;
     protected lastMousePosition: { x: number, y: number } = { x: 0, y: 0 };
+    protected editorKey = 0;
+    protected reloadTimer?: ReturnType<typeof setTimeout>;
+    protected reloadPromptOpen = false;
 
     constructor(
         private readonly options: Required<WorkflowEditorWidgetOptions> & Widget.IOptions,
@@ -72,6 +77,7 @@ export default class WorkflowEditorWidget extends ReactWidget implements Navigat
         this.node.addEventListener('mousemove', this.handleMouseMove);
 
         this.loadFileContent();
+        this.watchFile();
     }
 
     protected handleFocusIn = (): void => {
@@ -90,30 +96,17 @@ export default class WorkflowEditorWidget extends ReactWidget implements Navigat
     }
 
     async createHash(input: string) {
-        const msgUint8 = new TextEncoder().encode(input);                                  
-        const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);                
-        const hashArray = Array.from(new Uint8Array(hashBuffer));                     
-        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join(''); 
-        return hashHex;
+        return sha256Hex(input);
     }
 
     async loadFileContent() {
         if(this._uri.scheme != UNTITLED_SCHEME) {
             this.remoteFileSystemProvider.readFile(this._uri).then(async (bytesArray)=>{
                 if (bytesArray.length > 0) {
+                    const content = new TextDecoder().decode(bytesArray);
                     try {
-                        this.workflow = new Workflow(JSON.parse(new TextDecoder().decode(bytesArray)));
-                        this.workflowDocument.setOriginalWorkflow(this.workflow);
-                        let pathHash = await this.createHash(this._uri.path.toString())
-                        // As sometimes the file name is changed, we need to update the id and name of the workflow
-                        if(pathHash != this.workflow.id || this.workflow.name != this._uri.path.toString()) {
-                            let updatedWorkflow = JSON.parse(JSON.stringify(this.workflow));
-                            updatedWorkflow.id = await this.createHash(this._uri.path.toString());
-                            updatedWorkflow.name = this._uri.path.toString();
-                            this.workflowDocument.setUnsavedWorkflow(updatedWorkflow);
-                            await this.workflowDocument.save();
-                            this.workflow = updatedWorkflow;
-                        }
+                        this.workflow = await this.parseWorkflow(content);
+                        this.workflowDocument.reset(this.workflow, content);
                     } catch(ex) {
                         this.messageService.error("Unable to open workflow");
                         console.error("Unable to open workflow", ex);
@@ -125,11 +118,7 @@ export default class WorkflowEditorWidget extends ReactWidget implements Navigat
                     this.workflowDocument.setUnsavedWorkflow(this.workflow);
                 }
                 console.log("Received file", this.workflow);
-                this.workflow!!.nodes.forEach((node: Node) => {
-                    if (this.maxNodeId < parseInt(node.id)) {
-                        this.maxNodeId = parseInt(node.id);
-                    }
-                });
+                this.updateMaxNodeId();
                 // Initialize history with the loaded state
                 this.initializeHistory();
                 this.update();
@@ -141,6 +130,90 @@ export default class WorkflowEditorWidget extends ReactWidget implements Navigat
             this.initializeHistory();
             this.update();
         }
+    }
+
+    /**
+     * Parses the file content. The id and name always follow the file path, as the file may have been renamed or written
+     * by another tool. They are set in memory only: writing them back here would modify a file that tool may still be
+     * writing. They reach the file with the next save.
+     */
+    protected async parseWorkflow(content: string): Promise<IWorkflow> {
+        const workflow = new Workflow(JSON.parse(content));
+        workflow.id = await this.createHash(this._uri.path.toString());
+        workflow.name = this._uri.path.toString();
+        return workflow;
+    }
+
+    protected updateMaxNodeId(): void {
+        this.workflow?.nodes.forEach((node: Node) => {
+            if (this.maxNodeId < parseInt(node.id)) {
+                this.maxNodeId = parseInt(node.id);
+            }
+        });
+    }
+
+    /** Reloads the editor when the file is changed on disk by something else, such as an AI agent building it. */
+    protected watchFile(): void {
+        if (this._uri.scheme == UNTITLED_SCHEME) {
+            return;
+        }
+        this.toDispose.push(this.remoteFileSystemProvider.watch(this._uri, { recursive: false, excludes: [] }));
+        this.toDispose.push(this.remoteFileSystemProvider.onDidChangeFile(changes => {
+            if (changes.some(change => change.type != FileChangeType.DELETED && this._uri.isEqual(change.resource))) {
+                // One write can raise several events
+                clearTimeout(this.reloadTimer);
+                this.reloadTimer = setTimeout(() => this.reloadFromDisk(), 150);
+            }
+        }));
+        this.toDispose.push(Disposable.create(() => clearTimeout(this.reloadTimer)));
+    }
+
+    protected async reloadFromDisk(): Promise<void> {
+        let content: string;
+        try {
+            content = new TextDecoder().decode(await this.remoteFileSystemProvider.readFile(this._uri));
+        } catch {
+            return;
+        }
+        // Our own save, or a file that is being replaced
+        if (!content.trim() || content == this.workflowDocument.syncedContent) {
+            return;
+        }
+        let workflow: IWorkflow;
+        try {
+            workflow = await this.parseWorkflow(content);
+        } catch {
+            // Still being written; the change event for the rest of the write reloads it
+            return;
+        }
+        if (this.workflowDocument.hasUnsavedEdits()) {
+            // Several writes in a row must not stack prompts
+            if (this.reloadPromptOpen) {
+                return;
+            }
+            this.reloadPromptOpen = true;
+            const action = await this.messageService.warn(
+                `${this._uri.path.base} was changed on disk. Reload it and discard your unsaved changes?`,
+                'Reload'
+            );
+            this.reloadPromptOpen = false;
+            if (action == 'Reload') {
+                // The file may have changed again while the prompt was open
+                await this.workflowDocument.revert();
+                await this.reloadFromDisk();
+            }
+            return;
+        }
+        console.log("Reloading workflow changed on disk", this._uri.toString());
+        this.workflow = workflow;
+        this.workflowDocument.reset(workflow, content);
+        this.updateMaxNodeId();
+        this.initializeHistory();
+        // WorkflowEditor keeps its nodes and edges in state, so a new key mounts it again with the reloaded workflow
+        this.editorKey++;
+        this.update();
+        // fitView only applies to the first mount, so fit the reloaded nodes once they are measured
+        setTimeout(() => this.reactFlow?.fitView(), 100);
     }
 
     async createNewWorkflow(uri: URI, name: string): Promise<IWorkflow> {
@@ -490,6 +563,7 @@ export default class WorkflowEditorWidget extends ReactWidget implements Navigat
             <ReactFlowProvider>
                 <WorkflowEditorWidgetHOC
                     workflow={this.workflow}
+                    editorKey={this.editorKey}
                     onChange={this.onChange}
                     onContextMenu={this.handleContextMenu}
                     onHistoryChange={this.onHistoryChange}
@@ -504,6 +578,7 @@ export default class WorkflowEditorWidget extends ReactWidget implements Navigat
 
 interface WorkflowEditorWidgetHOCProps {
     workflow?: IWorkflow;
+    editorKey: number;
     setReactflow: (reactflow: ReactFlowInstance)=>void;
     colorRegistry: ColorRegistry;
     onChange: (workflow: IWorkflow)=>void;
@@ -515,6 +590,7 @@ interface WorkflowEditorWidgetHOCProps {
 
 function WorkflowEditorWidgetHOC({
         workflow,
+        editorKey,
         setReactflow,
         colorRegistry,
         onChange,
@@ -539,6 +615,7 @@ function WorkflowEditorWidgetHOC({
             <CssBaseline />
             <CssVarsProvider theme={cssTheme}></CssVarsProvider>
             {workflow && <WorkflowEditor
+                key={editorKey}
                 ref={workflowEditorRef}
                 onChange={onChange}
                 workflow={workflow}

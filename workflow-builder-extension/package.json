@@ -1,0 +1,36 @@
+{
+  "name": "@continuum/workflow-builder-extension",
+  "keywords": [
+    "theia-extension",
+    "continuum"
+  ],
+  "version": "0.0.14",
+  "files": [
+    "lib",
+    "src"
+  ],
+  "dependencies": {
+    "@theia/ai-chat": "latest",
+    "@theia/ai-core": "latest",
+    "@theia/core": "latest",
+    "@theia/editor": "latest",
+    "@theia/filesystem": "latest",
+    "@theia/workspace": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "rimraf": "latest",
+    "typescript": "^5"
+  },
+  "scripts": {
+    "clean": "rimraf lib",
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "tsc -p tsconfig.test.json && node --test '.test-out/**/*.spec.js'"
+  },
+  "theiaExtensions": [
+    {
+      "frontend": "lib/browser/WorkflowBuilderFrontendModule"
+    }
+  ]
+}

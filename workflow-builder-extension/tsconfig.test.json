@@ -1,0 +1,6 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": { "outDir": ".test-out", "declaration": false, "declarationMap": false, "sourceMap": false, "types": ["node"], "lib": ["es2021", "dom"] },
+    "include": ["src/common"],
+    "exclude": []
+}

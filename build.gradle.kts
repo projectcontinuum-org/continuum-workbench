@@ -27,6 +27,7 @@ tasks.register<YarnTask>("build") {
 tasks.register<Delete>("clean") {
     delete("continuum-workbench/lib")
     delete("workflow-editor-extension/lib")
+    delete("workflow-builder-extension/lib")
 }
 
 tasks.named("build") {
@@ -46,7 +47,7 @@ tasks.register("publish") {
 tasks.register<Exec>("jib") {
   description = "Docker build and push to Docker Hub"
   group = "Jib tasks"
-  val dockerRepoName = "docker.io/${(System.getenv("GITHUB_REPOSITORY") ?: property("repoName").toString()).lowercase()}"
+  val dockerRepoName = "docker.io/projectcontinuum/continuum-workbench"
   val imageName = "$dockerRepoName:${project.version}"
   val latestName = "$dockerRepoName:latest"
   commandLine("bash", "-c",

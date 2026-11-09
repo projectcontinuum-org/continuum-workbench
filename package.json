@@ -1,7 +1,7 @@
 {
   "name": "continuum-frontend",
   "private": true,
-  "version": "0.0.13",
+  "version": "0.0.14",
   "scripts": {
     "preinstall": "node scripts/sync-versions.js",
     "sync-versions": "node scripts/sync-versions.js",
@@ -30,6 +30,7 @@
     "continuum-core",
     "continuum-workbench",
     "workflow-editor-extension",
+    "workflow-builder-extension",
     "continuum-workbench-thin"
   ]
 }
