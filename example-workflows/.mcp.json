@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "continuum": {
-      "type": "http",
-      "url": "http://host.docker.internal:3002/api-server/mcp"
-    }
-  }
-}
