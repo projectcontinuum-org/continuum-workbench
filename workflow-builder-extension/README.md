@@ -10,10 +10,12 @@ The agent is only a prompt: all Continuum-specific tooling lives in the api-serv
 
 All Continuum tools are api-server MCP tools (server key `continuum`, tool ids `mcp_continuum_*`), so node lookup, validation and the `.cwf` format stay consistent with the backend data model (`ContinuumWorkflowModel`).
 
-1. **Discovery** — `listContinuumNodeCategories`, `searchContinuumNodes`, `getContinuumNodeMetadata` and `getContinuumNodeDocumentation`.
-2. **Validate** — `validateContinuumWorkflow` with a compact spec (`name`, `nodes[{key,nodeId,properties}]`, `edges[{from,fromPort,to,toPort}]`). The server checks it against the live registry, including each node's full JSON Schema, and returns `valid` with every error (naming the node, edge or property) and warning. The agent fixes the errors until it returns `valid: true`.
-3. **Build** — `buildContinuumWorkflow` with the same spec validates again and returns `fileName` (`<name-slug>.cwf`) and `workflow`, the complete `.cwf` content: registry metadata per node, properties merged over the defaults, the fields the API requires (`selected`, `positionAbsolute`, ...) and a layout. Invalid specs return errors and no workflow.
-4. **Save** — Theia's `findFilesByPattern` checks the name is free (the agent adds `-2`, `-3`, ... if not) and `writeFileContent` writes the returned workflow unchanged. The user opens it from the file explorer.
+The workflow is built **live**, so a user can open the file and watch it grow (an open `.cwf` tab reloads when the file changes on disk):
+
+1. **Discovery** — `listContinuumNodeCategories` and `searchContinuumNodes` find a node for every step before any file exists; if a step has no node the agent stops.
+2. **Empty file** — `buildContinuumWorkflow` with `nodes: []` returns `fileName` (`<name-slug>.cwf`) and an empty workflow. Theia's `findFilesByPattern` checks the name is free (the agent adds `-2`, `-3`, ... if not) and `writeFileContent` saves it; the agent tells the user the path.
+3. **Node by node** — for each node, `getContinuumNodeMetadata` and `getContinuumNodeDocumentation`, then `buildContinuumWorkflow` with the whole compact spec so far (`name`, `nodes[{key,nodeId,properties}]`, `edges[{from,fromPort,to,toPort}]`), and `writeFileContent` overwrites the same file with the returned workflow unchanged. The server checks the spec against the live registry, including each node's full JSON Schema; invalid specs return errors (naming the node, edge or property) and no workflow, and the agent fixes them before saving. The workflow is the complete `.cwf` content: registry metadata per node, properties merged over the defaults, the fields the API requires (`selected`, `positionAbsolute`, ...) and a layout. `validateContinuumWorkflow` checks a spec without building it.
+4. **Finish** — the agent checks every step is covered and the last build's warnings (an unconnected input port means a missing edge), then saves the complete workflow.
 
 `writeFileContent` and `findFilesByPattern` come from `@theia/ai-ide`, which the workbench app already includes.
 
@@ -49,7 +51,7 @@ If the MCP server is not reachable the agent has no Continuum tools: it cannot d
 
 ## Claude Code agent
 
-`claude-code/` holds the same agent for Claude Code: `workflow-builder.md` (a subagent definition with the same rules) and `mcp.json` (the `continuum` MCP server). It uses only the six MCP tools above plus Claude Code's built-in `Write` to save the built file: no Bash, no scripts, no other tools.
+`claude-code/` holds the same agent for Claude Code: `workflow-builder.md` (a subagent definition with the same rules) and `mcp.json` (the `continuum` MCP server). It uses only the six MCP tools above plus Claude Code's built-in `Write` to save each build to the same file: no Bash, no scripts, no other tools. `Write` refuses to overwrite a file the agent has not read, so an existing name gets a `-2`, `-3`, ... suffix; the file it created itself it may overwrite.
 
 ```bash
 cp claude-code/workflow-builder.md <project>/.claude/agents/workflow-builder.md
