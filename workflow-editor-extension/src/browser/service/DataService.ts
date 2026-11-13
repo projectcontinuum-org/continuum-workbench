@@ -1,4 +1,5 @@
 import { API_SERVER_BASE } from "./ApiConfig";
+import { buildApiUrl } from "../../common/SafeEncoding";
 
 export interface DataPage {
     data: any[];
@@ -22,7 +23,7 @@ export default class DataService {
         const workflowId = parts[0];
         const nodeId = parts[1];
         const outputId = parts[2].split(".")[1];
-        const response = await fetch(`${this.apiBaseUrl}/${encodeURI(workflowId)}/nodes/${encodeURI(nodeId)}/outputs/${encodeURI(outputId)}?page=${page}&pageSize=${limit}`);
+        const response = await fetch(buildApiUrl(this.apiBaseUrl, [workflowId, "nodes", nodeId, "outputs", outputId], { page, pageSize: limit }));
         return response.json();
     }
 }

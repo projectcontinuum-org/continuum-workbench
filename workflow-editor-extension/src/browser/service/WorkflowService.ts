@@ -1,6 +1,7 @@
 import { IWorkflow } from "@continuum/core";
 import { IStartWorkflowResponse } from "@continuum/core";
 import { API_SERVER_BASE } from "./ApiConfig";
+import { encodePathSegment } from "../../common/SafeEncoding";
 
 export default class WorkflowService {
 
@@ -36,7 +37,7 @@ export default class WorkflowService {
     }
 
     async cancelWorkflow(workflowId: string, reason?: string): Promise<void> {
-        const url = new URL(`${this.apiBaseUrl}/${workflowId}/cancel`, window.location.origin);
+        const url = new URL(`${this.apiBaseUrl}/${encodePathSegment(workflowId)}/cancel`, window.location.origin);
         if (reason) {
             url.searchParams.append('reason', reason);
         }
@@ -50,7 +51,7 @@ export default class WorkflowService {
     }
 
     async terminateWorkflow(workflowId: string, reason?: string): Promise<void> {
-        const url = new URL(`${this.apiBaseUrl}/${workflowId}/terminate`, window.location.origin);
+        const url = new URL(`${this.apiBaseUrl}/${encodePathSegment(workflowId)}/terminate`, window.location.origin);
         if (reason) {
             url.searchParams.append('reason', reason);
         }

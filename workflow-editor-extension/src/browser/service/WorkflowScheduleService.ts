@@ -1,5 +1,6 @@
 import { ICreateWorkflowScheduleRequest, IWorkflowSchedule } from "@continuum/core";
 import { API_SERVER_BASE } from "./ApiConfig";
+import { encodePathSegment } from "../../common/SafeEncoding";
 
 export default class WorkflowScheduleService {
 
@@ -38,7 +39,7 @@ export default class WorkflowScheduleService {
     }
 
     async pauseSchedule(scheduleId: string, note?: string): Promise<void> {
-        const url = new URL(`${this.apiBaseUrl}/${scheduleId}/pause`, window.location.origin);
+        const url = new URL(`${this.apiBaseUrl}/${encodePathSegment(scheduleId)}/pause`, window.location.origin);
         if (note) {
             url.searchParams.append('note', note);
         }
@@ -52,7 +53,7 @@ export default class WorkflowScheduleService {
     }
 
     async unpauseSchedule(scheduleId: string, note?: string): Promise<void> {
-        const url = new URL(`${this.apiBaseUrl}/${scheduleId}/unpause`, window.location.origin);
+        const url = new URL(`${this.apiBaseUrl}/${encodePathSegment(scheduleId)}/unpause`, window.location.origin);
         if (note) {
             url.searchParams.append('note', note);
         }
@@ -66,7 +67,7 @@ export default class WorkflowScheduleService {
     }
 
     async triggerSchedule(scheduleId: string): Promise<void> {
-        const response = await fetch(`${this.apiBaseUrl}/${scheduleId}/trigger`, {
+        const response = await fetch(`${this.apiBaseUrl}/${encodePathSegment(scheduleId)}/trigger`, {
             method: 'POST',
             headers: this.headers
         });
@@ -76,7 +77,7 @@ export default class WorkflowScheduleService {
     }
 
     async deleteSchedule(scheduleId: string): Promise<void> {
-        const response = await fetch(`${this.apiBaseUrl}/${scheduleId}`, {
+        const response = await fetch(`${this.apiBaseUrl}/${encodePathSegment(scheduleId)}`, {
             method: 'DELETE',
             headers: this.headers
         });

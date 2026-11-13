@@ -1,6 +1,7 @@
 import { IJobUpdate } from "@continuum/core";
 import mqtt from 'mqtt/dist/mqtt.esm'
 import { API_SERVER_BASE, MQTT_BASE } from "./ApiConfig";
+import { buildApiUrl, mqttTopicLevel } from "../../common/SafeEncoding";
 
 export interface IExecutionMessage {
     jobId: string;
@@ -20,22 +21,23 @@ export default class ExecutionService {
     private readonly MQTT_TOPIC_PREFIX = "continuum/workflow/execution"
 
     async getActiveExecutionIds(filterRegex: RegExp | string): Promise<string[]> {
-        const response = await fetch(`${this.apiBaseUrl}/active?filterRegex=${filterRegex}`);
+        const response = await fetch(buildApiUrl(this.apiBaseUrl, ["active"], { filterRegex: String(filterRegex) }));
         return response.json();
     }
 
     watch(executionId: string): WatchEventHandler {
         // Create a proxy for Websocket
         console.log("mqtt=", mqtt);
+        const topic = `${this.MQTT_TOPIC_PREFIX}/${mqttTopicLevel(executionId)}/update`;
         let client = mqtt.connect(this.mqttBaseUrl);
-        client.subscribe(`${this.MQTT_TOPIC_PREFIX}/${executionId}/update`);
+        client.subscribe(topic);
         let handler: WatchEventHandler = {
             close: () => {
                 client.end();
             }
         }
-        client.on('message', (topic, message) => {
-            if (topic.startsWith(`${this.MQTT_TOPIC_PREFIX}/${executionId}/update`)) {
+        client.on('message', (messageTopic, message) => {
+            if (messageTopic.startsWith(topic)) {
                 handler.onmessage && handler.onmessage(JSON.parse(message.toString()) as IExecutionMessage);
             }
         });

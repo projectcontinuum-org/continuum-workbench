@@ -29,6 +29,7 @@
     "@theia/filesystem": "latest",
     "@theia/monaco": "latest",
     "@theia/workspace": "latest",
+    "dompurify": "^3.4.11",
     "ldrs": "^1.0.2",
     "monaco-editor": "^0.55.1",
     "mqtt": "5.10.3",
@@ -44,6 +45,7 @@
     "zustand": "^4.5.0"
   },
   "devDependencies": {
+    "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "copyfiles": "latest",
@@ -54,7 +56,8 @@
     "clean": "rimraf lib",
     "build": "tsc && yarn run copy-files",
     "watch": "tsc -w",
-    "copy-files": "copyfiles -u 1 src/**/*.html src/**/*.css lib/"
+    "copy-files": "copyfiles -u 1 src/**/*.html src/**/*.css lib/",
+    "test": "tsc -p tsconfig.test.json && node --test '.test-out/**/*.spec.js'"
   },
   "theiaExtensions": [
     {

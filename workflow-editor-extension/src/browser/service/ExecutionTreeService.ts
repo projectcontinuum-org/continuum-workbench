@@ -1,5 +1,6 @@
 import { ITreeItem, IExecution } from "@continuum/core";
 import { API_SERVER_BASE } from "./ApiConfig";
+import { buildApiUrl } from "../../common/SafeEncoding";
 
 export default class ExecutionTreeService {
 
@@ -7,7 +8,7 @@ export default class ExecutionTreeService {
 
     async getPendingExecutions(baseDir: string, workflowId?: string): Promise<ITreeItem<IExecution>[]> {
         try {
-            let response = await fetch(`${this.apiBaseUrl}/pending?baseDir=${baseDir}${workflowId ? `&workflowId=${workflowId}` : ""}`);
+            let response = await fetch(buildApiUrl(this.apiBaseUrl, ["pending"], { baseDir, workflowId: workflowId || undefined }));
             return response.json();
         } catch (error) {
             console.error(error);
@@ -17,7 +18,7 @@ export default class ExecutionTreeService {
 
     async getRunningExecutions(baseDir: string, workflowId?: string): Promise<ITreeItem<IExecution>[]> {
         try {
-            let response = await fetch(`${this.apiBaseUrl}/running?baseDir=${baseDir}${workflowId ? `&workflowId=${workflowId}` : ""}`);
+            let response = await fetch(buildApiUrl(this.apiBaseUrl, ["running"], { baseDir, workflowId: workflowId || undefined }));
             return response.json();
         } catch (error) {
             console.error(error);
@@ -27,7 +28,7 @@ export default class ExecutionTreeService {
 
     async getFinishedExecutions(baseDir: string, workflowId?: string): Promise<ITreeItem<IExecution>[]> {
         try {
-            let response = await fetch(`${this.apiBaseUrl}/finished?baseDir=${baseDir}${workflowId ? `&workflowId=${workflowId}` : ""}`);
+            let response = await fetch(buildApiUrl(this.apiBaseUrl, ["finished"], { baseDir, workflowId: workflowId || undefined }));
             return response.json();
         } catch (error) {
             console.error(error);

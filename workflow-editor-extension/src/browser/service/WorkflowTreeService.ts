@@ -1,5 +1,6 @@
 import { ITreeItem, IExecution } from "@continuum/core";
 import { API_SERVER_BASE } from "./ApiConfig";
+import { buildApiUrl } from "../../common/SafeEncoding";
 
 export default class WorkflowTreeService {
 
@@ -7,8 +8,7 @@ export default class WorkflowTreeService {
 
     async getWorflows(baseDir: string, query: string): Promise<ITreeItem<IExecution>[]> {
         try {
-            const encodedQuery = encodeURIComponent(query);
-            let response = await fetch(`${this.apiBaseUrl}/tree?baseDir=${baseDir}${encodedQuery.length > 0  ? `&query=${encodedQuery}` : ""}`);
+            let response = await fetch(buildApiUrl(this.apiBaseUrl, ["tree"], { baseDir, query: query || undefined }));
             return response.json();
         } catch (error) {
             console.error(error);
@@ -18,7 +18,7 @@ export default class WorkflowTreeService {
 
     async getWorkflowcount(baseDir: string): Promise<{count: number}> {
         try {
-            let response = await fetch(`${this.apiBaseUrl}/count?baseDir=${baseDir}`);
+            let response = await fetch(buildApiUrl(this.apiBaseUrl, ["count"], { baseDir }));
             return response.json();
         } catch (error) {
             console.error(error);
