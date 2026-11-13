@@ -11,6 +11,10 @@ case "$MCP_URL" in
     ;;
 esac
 
+# $HOME is the PVC at runtime: create what the image cannot ship there and refresh the image-owned agent on every start
+mkdir -p "$HOME/workspace" "$HOME/.claude/agents"
+cp /opt/continuum/workflow-builder.md "$HOME/.claude/agents/workflow-builder.md"
+
 # Register the api-server MCP server for Claude Code (user scope, so every project sees it); remove first because add fails if it exists
 claude mcp remove --scope user continuum >/dev/null 2>&1 || true
 if ! claude mcp add --scope user --transport http continuum "$MCP_URL" >/dev/null; then
