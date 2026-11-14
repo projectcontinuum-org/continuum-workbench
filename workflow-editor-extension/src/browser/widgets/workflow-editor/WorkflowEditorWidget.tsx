@@ -408,6 +408,11 @@ export default class WorkflowEditorWidget extends ReactWidget implements Navigat
         }
     }
 
+    protected handleRunFailure = (message: string): void => {
+        // Not awaited: an error notification has no action to wait for, and must not block the editor.
+        this.messageService.error(`Could not start the workflow. ${message}`);
+    }
+
     protected openWorkflowViewer(workflowId: string): void {
         const uri = new URI(`continuum-execution-watch://${workflowId}`);
         this.openerService.getOpener(uri).then(opener => {
@@ -568,6 +573,7 @@ export default class WorkflowEditorWidget extends ReactWidget implements Navigat
                     onContextMenu={this.handleContextMenu}
                     onHistoryChange={this.onHistoryChange}
                     onRunSuccess={this.handleRunSuccess}
+                    onRunFailure={this.handleRunFailure}
                     setReactflow={(rFlow)=>{this.reactFlow = rFlow}}
                     colorRegistry={this.colorRegistry}
                     workflowEditorRef={this.workflowEditorRef}/>
@@ -585,6 +591,7 @@ interface WorkflowEditorWidgetHOCProps {
     onContextMenu: (event: React.MouseEvent, selectedNodeId?: string)=>void;
     onHistoryChange: ()=>void;
     onRunSuccess: (workflowId: string)=>void;
+    onRunFailure: (message: string)=>void;
     workflowEditorRef: React.RefObject<WorkflowEditorRef>;
 }
 
@@ -597,6 +604,7 @@ function WorkflowEditorWidgetHOC({
         onContextMenu,
         onHistoryChange,
         onRunSuccess,
+        onRunFailure,
         workflowEditorRef
     }: WorkflowEditorWidgetHOCProps
 ) {
@@ -621,7 +629,8 @@ function WorkflowEditorWidgetHOC({
                 workflow={workflow}
                 onContextMenu={onContextMenu}
                 onHistoryChange={onHistoryChange}
-                onRunSuccess={onRunSuccess}/>}
+                onRunSuccess={onRunSuccess}
+                onRunFailure={onRunFailure}/>}
         </ThemeProvider>
     );
 }

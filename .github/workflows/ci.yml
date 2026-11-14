@@ -1,0 +1,45 @@
+name: CI
+
+# Fast feedback on every pull request and push to main: runs the unit specs of the two extensions that have them
+# (workflow-editor-extension and workflow-builder-extension). Building the Theia app and publishing the image stay in
+# build-module.yml and on-release.yml.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# A newer push to the same pull request makes the older run pointless.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  specs:
+    name: Unit specs
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Node 24 is what the shipped image runs (Dockerfile). `node --test` with a quoted glob needs Node 21 or newer.
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: yarn
+
+      # --frozen-lockfile fails the job when package.json and yarn.lock disagree, so a dependency added without
+      # committing the lockfile (jsdom, for the SVG sanitizer specs) cannot slip through.
+      # --ignore-scripts: the specs need TypeScript, jsdom and dompurify only. Skipping install scripts avoids compiling
+      # the native Theia dependencies (keytar, node-pty, ...) and needs no system libraries.
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile --ignore-scripts
+
+      # Do not set ALLOW_NO_JSDOM here: SvgSanitizer.spec.ts is the only check that the SVG security fix works, and that
+      # variable turns its real-sanitizer tests into skips.
+      - name: Run specs
+        run: yarn test

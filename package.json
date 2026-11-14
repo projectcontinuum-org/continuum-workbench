@@ -9,6 +9,7 @@
     "rebuild": "turbo build --no-cache --force",
     "dev": "turbo dev",
     "lint": "turbo lint",
+    "test": "yarn workspace @continuum/workflow-editor-extension test && yarn workspace @continuum/workflow-builder-extension test",
     "clean": "turbo clean",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "watch": "turbo watch",

@@ -2,6 +2,7 @@ import { IWorkflow } from "@continuum/core";
 import { IStartWorkflowResponse } from "@continuum/core";
 import { API_SERVER_BASE } from "./ApiConfig";
 import { encodePathSegment } from "../../common/SafeEncoding";
+import { readStartedWorkflowId, startNetworkFailure } from "../../common/StartWorkflowResult";
 
 export default class WorkflowService {
 
@@ -13,20 +14,24 @@ export default class WorkflowService {
         };
     }
 
+    /**
+     * Starts a workflow. Resolves only when the server really started one. Rejects with a `StartWorkflowError` (see
+     * common/StartWorkflowResult.ts) carrying a message that is safe to show the user when the server refused it
+     * (a 4xx or 5xx), answered without a workflow id, or could not be reached. It used to resolve with whatever the
+     * body parsed to, so a failed start looked like a started workflow.
+     */
     async activateWorkflow(workflow: IWorkflow): Promise<IStartWorkflowResponse> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const response = await fetch(this.apiBaseUrl, {
-                    method: 'POST',
-                    body: JSON.stringify(workflow),
-                    headers: this.headers
-                });
-                const data: IStartWorkflowResponse = await response.json();
-                resolve(data);
-            } catch (error) {
-                reject(error);
-            }
-        });
+        let response: Response;
+        try {
+            response = await fetch(this.apiBaseUrl, {
+                method: 'POST',
+                body: JSON.stringify(workflow),
+                headers: this.headers
+            });
+        } catch (error) {
+            throw startNetworkFailure(error);
+        }
+        return { workflowId: await readStartedWorkflowId(response) };
     }
 
     async getActiveWorkflows(): Promise<string[]> {

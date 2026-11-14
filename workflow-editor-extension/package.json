@@ -49,6 +49,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "copyfiles": "latest",
+    "jsdom": "^26.1.0",
     "rimraf": "latest",
     "typescript": "^5"
   },

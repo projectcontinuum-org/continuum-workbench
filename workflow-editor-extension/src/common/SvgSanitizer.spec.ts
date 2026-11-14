@@ -2,20 +2,33 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { sanitizeSvg, SvgPurifier } from './SvgSanitizer';
 
-// DOMPurify needs a DOM. Node has none, so the real sanitizer is tested against jsdom when it can
-// be resolved (it is not a dependency of this repo, e.g. NODE_PATH=/path/with/jsdom/node_modules).
-// Without it the jsdom tests are skipped and only the no-DOM fallback is checked.
+// DOMPurify needs a DOM, and Node has none, so the real sanitizer is tested against jsdom (a devDependency of this
+// package). A missing jsdom must FAIL this file, not skip it: these tests are the only check that the SVG security fix
+// works, and a skip reads as a pass. Set ALLOW_NO_JSDOM=1 to run without it (for example in a throwaway environment);
+// then the real-sanitizer tests are skipped and only the no-DOM fallback is checked.
 let createPurifier: (() => SvgPurifier) | undefined;
+let loadError: unknown;
 try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { JSDOM } = require('jsdom');
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const createDOMPurify = require('dompurify');
     createPurifier = () => createDOMPurify(new JSDOM('').window);
-} catch {
+} catch (e) {
     createPurifier = undefined;
+    loadError = e;
 }
-const noJsdom = createPurifier ? false : 'jsdom not resolvable';
+const allowNoJsdom = process.env.ALLOW_NO_JSDOM === '1';
+// Without a purifier the three real-sanitizer tests below cannot run. They skip, and the test right after fails (unless
+// ALLOW_NO_JSDOM=1), so the file never passes quietly without having tested the sanitizer.
+const noJsdom = createPurifier ? false : (allowNoJsdom ? 'jsdom not resolvable (ALLOW_NO_JSDOM=1)' : 'jsdom not resolvable');
+
+test('jsdom and dompurify are installed, so the real sanitizer tests below actually run', { skip: allowNoJsdom }, () => {
+    assert.ok(
+        createPurifier,
+        `jsdom and dompurify must be resolvable for the SVG sanitizer tests (run \`yarn install\`): ${String(loadError)}`,
+    );
+});
 
 const HOSTILE = [
     '<svg><script>alert(1)</script></svg>',
