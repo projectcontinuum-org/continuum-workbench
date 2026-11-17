@@ -1,4 +1,5 @@
 import { IData } from "@continuum/core";
+import { Box, Typography } from "@mui/material";
 import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import React, { useCallback, useEffect, useState } from "react";
 import DataService from "../../../service/DataService";
@@ -8,6 +9,9 @@ import { SvgCellRenderer } from "./SvgCellRenderer";
 import { SvgViewerDialog } from "./SvgViewerDialog";
 
 const dataService = new DataService();
+
+/** Shown when the api-server answers 404: not your run, a run too old to be readable, or a run that is gone. */
+export const OUTPUT_NOT_AVAILABLE = "Output not available";
 
 export interface TableOutputViewProps {
     outputData: IData;
@@ -20,6 +24,8 @@ export function TableOutputView({outputData}: TableOutputViewProps) {
     const [page, setPage] = React.useState<number>(0);
     const [pageSize, setPageSize] = React.useState<number>(25);
     const [loading, setLoading] = React.useState<boolean>(true);
+    // A message instead of a table: the output cannot be shown (404) or could not be loaded (network or server error).
+    const [unavailable, setUnavailable] = React.useState<string | null>(null);
     const [jsonViewerOpen, setJsonViewerOpen] = useState(false);
     const [selectedJsonValue, setSelectedJsonValue] = useState<any>(null);
     const [svgViewerOpen, setSvgViewerOpen] = useState(false);
@@ -53,8 +59,29 @@ export function TableOutputView({outputData}: TableOutputViewProps) {
     };
 
     useEffect(()=>{
-        dataService.getNodeData(outputData.data, page, pageSize).then((data) => {
-            if(data.data.length > 0) {
+        // A response that arrives after the view moved on (another page, another output, closed) must not be applied.
+        let stale = false;
+        // A new request: a message about the previous output must not stay up while this one loads.
+        setUnavailable(null);
+        dataService.getNodeData(outputData.data, page, pageSize).then((result) => {
+            if (stale) {
+                return;
+            }
+            if (result.kind === "not-found") {
+                // 404: not your run, a run too old to have its run id stored, or a run that no longer exists.
+                setUnavailable(OUTPUT_NOT_AVAILABLE);
+                setRows([]);
+                setLoading(false);
+                return;
+            }
+            if (result.kind === "error") {
+                setUnavailable(`Could not load this output. ${result.message}`);
+                setRows([]);
+                setLoading(false);
+                return;
+            }
+            const data = result.page;
+            if (Array.isArray(data.data) && data.data.length > 0) {
                 // console.log(`Page: ${JSON.stringify(data)}`)
                 setRowsCount(data.totalElements);
                 setRows(data.data.map((row: Array<any>, idx: number) => {
@@ -97,8 +124,16 @@ export function TableOutputView({outputData}: TableOutputViewProps) {
                     }
                 })));
                 setLoading(false);
+            } else {
+                // A page with no rows is a result, not a reason to keep the spinner up forever.
+                setRowsCount(typeof data.totalElements === "number" ? data.totalElements : 0);
+                setRows([]);
+                setLoading(false);
             }
         });
+        return () => {
+            stale = true;
+        };
     }, [outputData, page, pageSize, setRowsCount, setRows, setColumns]);
 
     const onPaginationModelChange = useCallback((model: GridPaginationModel)=>{
@@ -111,6 +146,15 @@ export function TableOutputView({outputData}: TableOutputViewProps) {
 
     return (
         <>
+            {unavailable !== null ? (
+                <Box
+                    role="status"
+                    sx={{display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: "100%", minHeight: 120, p: 2}}>
+                    <Typography variant="body1" color="text.secondary">
+                        {unavailable}
+                    </Typography>
+                </Box>
+            ) : (
             <DataGrid
                 rows={rows}
                 rowCount={rowsCount}
@@ -142,6 +186,7 @@ export function TableOutputView({outputData}: TableOutputViewProps) {
                         zIndex: 1, // Ensure the footer stays on top
                     }
                 }}/>
+            )}
             <JsonViewerDialog
                 open={jsonViewerOpen}
                 value={selectedJsonValue}

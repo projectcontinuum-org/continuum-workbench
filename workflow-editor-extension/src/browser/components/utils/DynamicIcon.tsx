@@ -3,6 +3,7 @@ import SVG from 'react-inlinesvg';
 import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 import { SvgIcon, SvgIconProps } from '@mui/material';
 import { AppContext } from '../context/AppContextProvider';
+import { sanitizeSvg } from '../../../common/SvgSanitizer';
 
 export default function DynamicIcon({icon, ...others}: SvgIconProps & {icon?: string}) {
     const { iconBank } = React.useContext(AppContext);
@@ -11,7 +12,7 @@ export default function DynamicIcon({icon, ...others}: SvgIconProps & {icon?: st
         if(icon.toLowerCase().startsWith("<svg")){
             return (
                 <SvgIcon {...others}>
-                    <SVG src={icon}/>
+                    <SVG src={icon} preProcessor={sanitizeSvg}/>
                 </SvgIcon>
             );
         }

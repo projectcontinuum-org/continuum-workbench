@@ -4,6 +4,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import MaximizeIcon from '@mui/icons-material/Fullscreen';
 import RestoreIcon from '@mui/icons-material/FullscreenExit';
+import { svgToDataUri } from '../../../../common/SafeEncoding';
 
 interface StyledDialogProps {
     customWidth?: number;
@@ -79,7 +80,7 @@ export function SvgViewerDialog({ open, svgContent, onClose }: SvgViewerDialogPr
 
     const dataUri = React.useMemo(() => {
         if (!svgContent) return '';
-        return `data:image/svg+xml;base64,${btoa(svgContent)}`;
+        return svgToDataUri(svgContent);
     }, [svgContent]);
 
     const handleMaximize = React.useCallback(() => {

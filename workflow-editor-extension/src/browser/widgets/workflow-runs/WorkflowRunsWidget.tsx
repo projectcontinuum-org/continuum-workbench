@@ -14,6 +14,7 @@ import {
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { ThemeProvider, experimental_extendTheme, Experimental_CssVarsProvider as CssVarsProvider } from '@mui/material';
 import { useMUIThemeStore } from '../../store/MUIThemeStore';
+import { rsqlComparison } from '../../../common/SafeEncoding';
 
 type TimePreset = '1h' | '24h' | '7d' | '30d' | 'custom';
 
@@ -53,7 +54,7 @@ function getPresetDates(preset: TimePreset): { from: Date; to: Date } {
  * but the API receives UTC values like: updatedAt>=2026-03-20T02:30:00.000Z
  */
 function buildTimeFilter(from: Date, to: Date): string {
-    return `updatedAt>=${from.toISOString()};updatedAt<=${to.toISOString()}`;
+    return `${rsqlComparison('updatedAt', '>=', from.toISOString())};${rsqlComparison('updatedAt', '<=', to.toISOString())}`;
 }
 
 /** Convert Date to datetime-local input value (YYYY-MM-DDTHH:MM) */

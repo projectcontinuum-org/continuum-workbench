@@ -1,6 +1,7 @@
 import { injectable } from "@theia/core/shared/inversify";
 import { IWorkflowRunItem, PageResponse } from "@continuum/core";
 import { API_SERVER_BASE } from "./ApiConfig";
+import { encodePathSegment, rsqlComparison } from "../../common/SafeEncoding";
 
 /** Full workflow run entity including the heavy `data` JSONB column */
 export interface WorkflowRunFull extends IWorkflowRunItem {
@@ -41,7 +42,7 @@ export default class WorkflowRunsService {
         url.searchParams.append('size', size.toString());
 
         // Build RSQL filter combining workflowUri and optional time range
-        let filter = `workflowUri==${workflowUri}`;
+        let filter = rsqlComparison("workflowUri", "==", workflowUri);
         if (timeFilter) {
             filter = `${filter};${timeFilter}`;
         }
@@ -59,7 +60,7 @@ export default class WorkflowRunsService {
      * (workflowSnapshot + nodeToOutputMap). Used by the execution viewer.
      */
     async getRunById(workflowId: string): Promise<WorkflowRunFull> {
-        const url = new URL(`${this.apiBaseUrl}/${workflowId}`, window.location.origin);
+        const url = new URL(`${this.apiBaseUrl}/${encodePathSegment(workflowId)}`, window.location.origin);
         const response = await fetch(url.toString(), { headers: this.headers });
         if (!response.ok) {
             throw new Error(`Failed to fetch workflow run: ${response.status} ${response.statusText}`);

@@ -7,6 +7,7 @@ import { URI } from '@theia/core';
 import { NodeExplorerCategoryNode, NodeExplorerLeafNode, NodeExplorerNode } from './NodeExplorerTree';
 import { Emitter, Event } from '@theia/core/lib/common';
 import { useNodeDragStore } from '../../store/NodeDragStore';
+import { sanitizeSvg } from '../../../common/SvgSanitizer';
 
 export const NODE_EXPLORER_CONTEXT_MENU: string[] = ['node-explorer-context-menu'];
 
@@ -112,7 +113,7 @@ export class NodeExplorerTreeWidget extends TreeWidget {
             if (iconSvg && iconSvg.toLowerCase().startsWith('<svg')) {
                 return (
                     <span className="theia-tree-icon" style={{ marginRight: '8px', display: 'inline-flex', width: '20px', height: '20px', alignItems: 'center' }}>
-                        <SVG src={iconSvg} width={20} height={20} />
+                        <SVG src={iconSvg} width={20} height={20} preProcessor={sanitizeSvg} />
                     </span>
                 );
             }

@@ -30,7 +30,9 @@ export interface WorkflowEditorProps {
     onChange: (workflow: IWorkflow)=>void,
     onContextMenu?: (event: React.MouseEvent, selectedNodeId?: string)=>void,
     onHistoryChange?: ()=>void,
-    onRunSuccess?: (workflowId: string)=>void
+    onRunSuccess?: (workflowId: string)=>void,
+    /** Called with a message safe to show the user when the workflow could not be started. */
+    onRunFailure?: (message: string)=>void
 }
 
 export interface WorkflowEditorRef {
@@ -39,7 +41,7 @@ export interface WorkflowEditorRef {
     openScheduleDialog: (initialTab?: 0 | 1) => void;
 }
 
-const WorkflowEditor = forwardRef<WorkflowEditorRef, WorkflowEditorProps>(({ workflow, onChange, onContextMenu, onHistoryChange, onRunSuccess }, ref) => {
+const WorkflowEditor = forwardRef<WorkflowEditorRef, WorkflowEditorProps>(({ workflow, onChange, onContextMenu, onHistoryChange, onRunSuccess, onRunFailure }, ref) => {
     const reactFlowRef = useRef<HTMLDivElement | null>(null);
     const workflowService = React.useMemo(() => new WorkflowService(), []);
     const [flowEdges, setFlowEdges] = React.useState(workflow.edges);
@@ -118,6 +120,7 @@ const WorkflowEditor = forwardRef<WorkflowEditorRef, WorkflowEditorProps>(({ wor
 
     const onRun = React.useCallback(async () => {
         console.log({ flowNodes, flowEdges });
+        let workflowId: string;
         try {
             const response = await workflowService.activateWorkflow({
                 id: workflow.id,
@@ -126,11 +129,16 @@ const WorkflowEditor = forwardRef<WorkflowEditorRef, WorkflowEditorProps>(({ wor
                 edges: flowEdges,
                 nodes: flowNodes,
             });
-            onRunSuccess?.(response.workflowId);
+            workflowId = response.workflowId;
         } catch (error) {
+            // The start failed. Say so, with the reason: showing "started successfully" would point at a run that
+            // does not exist. The callback is separate from onRunSuccess so the widget can use its notification channel.
             console.error(error);
+            onRunFailure?.(error instanceof Error ? error.message : String(error));
+            return;
         }
-    }, [flowEdges, flowNodes, onRunSuccess]);
+        onRunSuccess?.(workflowId);
+    }, [flowEdges, flowNodes, onRunSuccess, onRunFailure]);
 
     const onOpenScheduleMenu = React.useCallback((event: React.MouseEvent<HTMLElement>) => {
         setScheduleMenuAnchor(event.currentTarget);

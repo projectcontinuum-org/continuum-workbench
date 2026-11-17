@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, IconButton, Tooltip } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { svgToDataUri } from '../../../../common/SafeEncoding';
 
 export interface SvgCellRendererProps {
     svgContent: string;
@@ -12,7 +13,7 @@ export function SvgCellRenderer({ svgContent, onClick }: SvgCellRendererProps) {
         return <span></span>;
     }
 
-    const dataUri = `data:image/svg+xml;base64,${btoa(svgContent)}`;
+    const dataUri = svgToDataUri(svgContent);
 
     return (
         <Box
