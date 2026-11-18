@@ -23,7 +23,6 @@
     "@theia/ai-core-ui": "latest",
     "@theia/ai-history": "latest",
     "@theia/ai-ollama": "latest",
-    "@theia/ai-ide": "latest",
     "@continuum/core": "*",
     "@continuum/workflow-editor-extension": "*",
     "@continuum/workflow-builder-extension": "*"
@@ -38,7 +37,7 @@
     "build:prd": "theia build --mode=production",
     "build:dev": "theia build --mode=development",
     "rebuild": "theia rebuild:browser --cacheRoot ..",
-    "start": "theia start --plugins=local-dir:./plugins --port 3002",
+    "start": "theia start --plugins=local-dir:./plugins --port 3003",
     "watch": "yarn rebuild && theia build --watch --mode development"
   },
   "theia": {

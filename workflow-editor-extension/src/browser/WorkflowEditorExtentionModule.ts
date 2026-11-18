@@ -42,6 +42,7 @@ import { WorkflowRunsTree } from './tree/workflow-runs/WorkflowRunsTree';
 import { WorkflowRunsTreeWidget } from './tree/workflow-runs/WorkflowRunsTreeWidget';
 import { ContinuumWelcomeWidget } from './widgets/welcome/ContinuumWelcomeWidget';
 import { ContinuumWelcomeContribution } from './widgets/welcome/ContinuumWelcomeContribution';
+import { HideUnwantedWidgetsContribution } from './contribution/HideUnwantedWidgetsContribution';
 
 export default new ContainerModule((bind, unbind, isBound, rebind) => {
     bind(ContinuumThemeService).toSelf().inSingletonScope();
@@ -164,4 +165,8 @@ export default new ContainerModule((bind, unbind, isBound, rebind) => {
     })).inSingletonScope();
     bind(ContinuumWelcomeContribution).toSelf().inSingletonScope();
     bind(FrontendApplicationContribution).toService(ContinuumWelcomeContribution);
+
+    // Hide unwanted transitive widgets (Debug, Testing, Outline) without removing the packages.
+    bind(HideUnwantedWidgetsContribution).toSelf().inSingletonScope();
+    bind(FrontendApplicationContribution).toService(HideUnwantedWidgetsContribution);
 });
