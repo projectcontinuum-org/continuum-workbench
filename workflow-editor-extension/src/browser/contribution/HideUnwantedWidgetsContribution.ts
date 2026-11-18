@@ -4,22 +4,24 @@ import { ApplicationShell } from "@theia/core/lib/browser/shell/application-shel
 import { CommandRegistry } from "@theia/core/lib/common/command";
 
 /**
- * Hides the Outline widget, which arrives transitively via `@theia/monaco` → `@theia/outline-view`
- * (monaco is the editor and is kept). Debug and Testing were removed by dropping `@theia/ai-ide`
- * (which pulled them in) while keeping the AI chat window and Ollama provider (bound by
- * `@theia/ai-chat-ui` / `@theia/ai-ollama` with `@theia/ai-core`'s default `AIActivationService`).
+ * Hides widgets the workbench pulls in transitively but never uses:
+ *  - Outline: arrives via `@theia/monaco` → `@theia/outline-view` (monaco is the editor, kept).
+ *  - Debug, Testing: arrive via `@theia/plugin-ext` (the VS Code extension host, kept so the
+ *    VS Code git extension can provide SCM) → `@theia/debug` → `@theia/test`.
  *
- * This contribution unregisters Outline's toggle command so it leaves the command palette /
- * View menu, and closes the widget if it was restored into the layout on startup.
+ * The packages are kept (monaco is the editor; plugin-ext runs the git extension that powers
+ * `@theia/scm`). This contribution unregisters the toggle commands so they leave the command
+ * palette / View menu, and closes the widgets after the layout initializes.
  */
 @injectable()
 export class HideUnwantedWidgetsContribution implements FrontendApplicationContribution {
 
-    /** Toggle command id to unregister so the Outline view leaves the palette / View menu. */
-    private static readonly TOGGLE_COMMAND_IDS = ['outlineView:toggle'];
+    /** Toggle command ids to unregister so the views leave the palette / View menu. */
+    private static readonly TOGGLE_COMMAND_IDS = ['outlineView:toggle', 'debug:toggle'];
 
-    /** Outline widget id to close if restored into the layout on startup. */
-    private static readonly WIDGET_IDS = ['outline-view'];
+    /** Widget / view-container ids to close if restored into the layout on startup.
+     *  Outline (right panel); Debug and the Test Explorer (left panel). */
+    private static readonly WIDGET_IDS = ['outline-view', 'debug', 'test-view-container'];
 
     constructor(
         @inject(ApplicationShell) protected readonly shell: ApplicationShell,

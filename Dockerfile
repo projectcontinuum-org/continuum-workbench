@@ -7,6 +7,8 @@ ADD . .
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 RUN yarn install
 RUN yarn run build
+# VS Code built-in extensions (git, git-base) from theiaPlugins in continuum-workbench/package.json, into continuum-workbench/plugins
+RUN yarn --cwd continuum-workbench download:plugins
 
 FROM node:24-slim AS production
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -43,4 +45,4 @@ COPY --from=builder /app/continuum-workbench ./
 COPY --chmod=755 entrypoint.sh /usr/local/bin/continuum-entrypoint.sh
 ENTRYPOINT [ "continuum-entrypoint.sh" ]
 EXPOSE 8080
-CMD [ "lib/backend/main.js", "/home/continuum/workspace", "-h", "0.0.0.0", "-p", "8080" ]
+CMD [ "lib/backend/main.js", "/home/continuum/workspace", "--plugins=local-dir:/app/plugins", "-h", "0.0.0.0", "-p", "8080" ]
