@@ -21,6 +21,8 @@ import { MonacoLanguageRegistration } from './language/MonacoLanguageRegistratio
 import { WorkflowEditorCommandContribution } from './contribution/WorkflowEditorCommandContribution';
 import { WorkflowEditorMenuContribution } from './contribution/WorkflowEditorMenuContribution';
 import { WorkflowEditorKeybindingContribution } from './contribution/WorkflowEditorKeybindingContribution';
+import { WorkflowRunsCommandContribution } from './contribution/WorkflowRunsCommandContribution';
+import { WorkflowRunsMenuContribution } from './contribution/WorkflowRunsMenuContribution';
 import { WorkflowClipboardService } from './service/WorkflowClipboardService';
 import NodeExplorerWidget from './widgets/node-explorer/NodeExplorerWidget';
 import NodeExplorerWidgetFactory from './widgets/node-explorer/NodeExplorerWidgetFactory';
@@ -30,6 +32,8 @@ import { NodeExplorerTree } from './tree/node-explorer/NodeExplorerTree';
 import { NodeExplorerTreeWidget } from './tree/node-explorer/NodeExplorerTreeWidget';
 import NodeExplorerService from './service/NodeExplorerService';
 import WorkflowRunsService from './service/WorkflowRunsService';
+import WorkflowService from './service/WorkflowService';
+import WorkflowScheduleService from './service/WorkflowScheduleService';
 import WorkflowRunsWidget from './widgets/workflow-runs/WorkflowRunsWidget';
 import WorkflowRunsWidgetFactory from './widgets/workflow-runs/WorkflowRunsWidgetFactory';
 import { WorkflowRunsViewContribution } from './widgets/workflow-runs/WorkflowRunsViewContribution';
@@ -114,6 +118,8 @@ export default new ContainerModule((bind, unbind, isBound, rebind) => {
 
     // WorkflowRuns widget - using Theia TreeWidget
     bind(WorkflowRunsService).toSelf().inSingletonScope();
+    bind(WorkflowService).toSelf().inSingletonScope();
+    bind(WorkflowScheduleService).toSelf().inSingletonScope();
 
     const WorkflowRunsTreeContainer = Symbol('WorkflowRunsTreeContainer');
     bind(WorkflowRunsTreeContainer).toDynamicValue((ctx: interfaces.Context) => {
@@ -145,6 +151,10 @@ export default new ContainerModule((bind, unbind, isBound, rebind) => {
     bind(CommandContribution).to(WorkflowEditorCommandContribution);
     bind(MenuContribution).to(WorkflowEditorMenuContribution);
     bind(KeybindingContribution).to(WorkflowEditorKeybindingContribution);
+
+    // WorkflowRuns tree context menu contributions
+    bind(CommandContribution).to(WorkflowRunsCommandContribution);
+    bind(MenuContribution).to(WorkflowRunsMenuContribution);
 
     // Welcome widget
     bind(ContinuumWelcomeWidget).toSelf().inSingletonScope();

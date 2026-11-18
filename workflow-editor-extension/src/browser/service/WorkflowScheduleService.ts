@@ -1,7 +1,9 @@
 import { ICreateWorkflowScheduleRequest, IWorkflowSchedule } from "@continuum/core";
+import { injectable } from "@theia/core/shared/inversify";
 import { API_SERVER_BASE } from "./ApiConfig";
 import { encodePathSegment } from "../../common/SafeEncoding";
 
+@injectable()
 export default class WorkflowScheduleService {
 
     private readonly apiBaseUrl: string = `${API_SERVER_BASE}/api/v1/workflow/schedule`;

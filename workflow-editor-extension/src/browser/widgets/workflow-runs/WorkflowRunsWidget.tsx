@@ -361,10 +361,10 @@ export default class WorkflowRunsWidget extends BaseWidget {
     }
 
     /**
-     * Refresh button handler. Recalculates the rolling time window from the
-     * current preset (e.g., "last 24h from now") before reloading.
+     * Refresh: recalculate the rolling time window from the current preset (e.g., "last 24h from now")
+     * before reloading. Public so the Runs-tree context menu ("Refresh Runs") can trigger it.
      */
-    protected refresh(): void {
+    refresh(): void {
         this.tree.timeFilter = this.toolbar.toolbarRef.getCurrentFilter();
         this.reloadTree();
     }

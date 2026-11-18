@@ -3,10 +3,11 @@ import { TreeWidget, TreeProps, TreeNode, NodeProps, TreeModel } from '@theia/co
 import { ContextMenuRenderer } from '@theia/core/lib/browser';
 import { injectable, inject, postConstruct } from '@theia/core/shared/inversify';
 import { ExpandableTreeNode } from '@theia/core/lib/browser/tree/tree-expansion';
-import { WorkflowNode, WorkflowRunNode, LoadMoreNode, FolderNode } from './WorkflowRunsTree';
+import { WorkflowNode, WorkflowRunNode, LoadMoreNode, FolderNode, ScheduleNode } from './WorkflowRunsTree';
 import { Emitter, Event } from '@theia/core/lib/common';
+import { WORKFLOW_RUNS_CONTEXT_MENU } from '../../menu/WorkflowRunsContextMenu';
 
-export const WORKFLOW_RUNS_CONTEXT_MENU: string[] = ['workflow-runs-context-menu'];
+export { WORKFLOW_RUNS_CONTEXT_MENU };
 
 /** Status to codicon mapping */
 const STATUS_ICON_MAP: Record<string, { icon: string; color: string }> = {
@@ -125,6 +126,20 @@ export class WorkflowRunsTreeWidget extends TreeWidget {
             );
         }
 
+        if (ScheduleNode.is(node)) {
+            // `(manual)` gets a play icon to distinguish unscheduled runs from named schedules;
+            // a named schedule gets a stopwatch — a clear "runs on a timer" cue.
+            const iconClass = node.isManual
+                ? 'codicon codicon-play'
+                : 'fa fa-solid fa-stopwatch';
+            return (
+                <span
+                    className={`theia-tree-icon ${iconClass}`}
+                    style={{ marginRight: '8px', fontSize: '16px' }}
+                ></span>
+            );
+        }
+
         if (LoadMoreNode.is(node)) {
             return (
                 <span
@@ -142,6 +157,9 @@ export class WorkflowRunsTreeWidget extends TreeWidget {
             return node.name;
         }
         if (WorkflowNode.is(node)) {
+            return node.name;
+        }
+        if (ScheduleNode.is(node)) {
             return node.name;
         }
         if (WorkflowRunNode.is(node)) {
