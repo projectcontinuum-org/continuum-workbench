@@ -1,9 +1,11 @@
 import { IWorkflow } from "@continuum/core";
 import { IStartWorkflowResponse } from "@continuum/core";
+import { injectable } from "@theia/core/shared/inversify";
 import { API_SERVER_BASE } from "./ApiConfig";
 import { encodePathSegment } from "../../common/SafeEncoding";
 import { readStartedWorkflowId, startNetworkFailure } from "../../common/StartWorkflowResult";
 
+@injectable()
 export default class WorkflowService {
 
     private readonly apiBaseUrl: string = `${API_SERVER_BASE}/api/v1/workflow`;

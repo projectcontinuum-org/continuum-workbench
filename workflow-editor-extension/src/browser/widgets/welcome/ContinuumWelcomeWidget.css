@@ -125,6 +125,16 @@
     text-decoration: none;
 }
 
+/* A link-styled button (used for action "links" like Keyboard Shortcuts) must not
+   show the default <button> chrome; it shares .continuum-welcome-link for layout. */
+button.continuum-welcome-link {
+    background: none;
+    border: none;
+    width: 100%;
+    font: inherit;
+    text-align: left;
+}
+
 .continuum-welcome-link:hover .continuum-welcome-link-label {
     color: var(--theia-activityBar-foreground);
 }

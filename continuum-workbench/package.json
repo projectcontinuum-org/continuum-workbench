@@ -6,15 +6,9 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
-    "@theia/core": "latest",
-    "@theia/filesystem": "latest",
-    "@theia/markers": "latest",
-    "@theia/messages": "latest",
-    "@theia/monaco": "latest",
-    "@theia/navigator": "latest",
-    "@theia/preferences": "latest",
-    "@theia/process": "latest",
-    "@theia/workspace": "latest",
+    "@continuum/core": "*",
+    "@continuum/workflow-builder-extension": "*",
+    "@continuum/workflow-editor-extension": "*",
     "@theia/ai-chat": "latest",
     "@theia/ai-chat-ui": "latest",
     "@theia/ai-claude-code": "1.74.1",
@@ -23,10 +17,20 @@
     "@theia/ai-core-ui": "latest",
     "@theia/ai-history": "latest",
     "@theia/ai-ollama": "latest",
-    "@theia/ai-ide": "latest",
-    "@continuum/core": "*",
-    "@continuum/workflow-editor-extension": "*",
-    "@continuum/workflow-builder-extension": "*"
+    "@theia/core": "latest",
+    "@theia/filesystem": "latest",
+    "@theia/keymaps": "1.74.1",
+    "@theia/markers": "latest",
+    "@theia/messages": "latest",
+    "@theia/monaco": "latest",
+    "@theia/navigator": "latest",
+    "@theia/plugin-ext": "1.74.1",
+    "@theia/plugin-ext-vscode": "1.74.1",
+    "@theia/preferences": "latest",
+    "@theia/process": "latest",
+    "@theia/scm": "1.74.1",
+    "@theia/scm-extra": "1.74.1",
+    "@theia/workspace": "latest"
   },
   "devDependencies": {
     "@theia/cli": "latest",
@@ -34,12 +38,18 @@
     "terser-webpack-plugin": "5.3.10"
   },
   "scripts": {
+    "download:plugins": "theia download:plugins --rate-limit=15 --parallel=false",
     "build": "theia build --mode=development",
     "build:prd": "theia build --mode=production",
     "build:dev": "theia build --mode=development",
     "rebuild": "theia rebuild:browser --cacheRoot ..",
-    "start": "theia start --plugins=local-dir:./plugins --port 3002",
+    "start": "theia start --plugins=local-dir:./plugins --port 3003",
     "watch": "yarn rebuild && theia build --watch --mode development"
+  },
+  "theiaPluginsDir": "plugins",
+  "theiaPlugins": {
+    "vscode.git": "https://github.com/eclipse-theia/vscode-builtin-extensions/releases/download/1.108.2/vscode.git.vsix",
+    "vscode.git-base": "https://github.com/eclipse-theia/vscode-builtin-extensions/releases/download/1.108.2/vscode.git-base.vsix"
   },
   "theia": {
     "target": "browser",

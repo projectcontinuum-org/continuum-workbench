@@ -30,6 +30,12 @@ import { sha256Hex } from '../../service/Sha256';
 export const WorkflowEditorWidgetOptions = Symbol('WorkflowEditorWidgetOptions');
 export interface WorkflowEditorWidgetOptions {
     uri: string
+    /**
+     * An action to run once the workflow has loaded, used when opening the editor from outside
+     * (e.g. the Workflow Runs tree's context menu) to chain an action onto the open. Set via the
+     * opener options and applied after `loadFileContent`. Only fires once on first load.
+     */
+    pendingAction?: { type: 'schedule'; tab: 0 | 1 } | { type: 'run' }
 }
 
 export default class WorkflowEditorWidget extends ReactWidget implements Navigatable, StatefulWidget, SaveableSource {
@@ -53,7 +59,7 @@ export default class WorkflowEditorWidget extends ReactWidget implements Navigat
     protected reloadPromptOpen = false;
 
     constructor(
-        private readonly options: Required<WorkflowEditorWidgetOptions> & Widget.IOptions,
+        private readonly options: Required<Omit<WorkflowEditorWidgetOptions, 'pendingAction'>> & { pendingAction?: WorkflowEditorWidgetOptions['pendingAction'] } & Widget.IOptions,
         protected readonly remoteFileSystemProvider: RemoteFileSystemProvider,
         protected readonly colorRegistry: ColorRegistry,
         protected readonly fileDialogService: FileDialogService,
@@ -122,6 +128,7 @@ export default class WorkflowEditorWidget extends ReactWidget implements Navigat
                 // Initialize history with the loaded state
                 this.initializeHistory();
                 this.update();
+                this.applyPendingAction();
             });
         } else {
             this.workflow = await this.createNewWorkflow(this._uri, UNTITLED_SCHEME);
@@ -129,7 +136,32 @@ export default class WorkflowEditorWidget extends ReactWidget implements Navigat
             // Initialize history with the new empty state
             this.initializeHistory();
             this.update();
+            this.applyPendingAction();
         }
+    }
+
+    /**
+     * Apply a one-shot `pendingAction` (set via opener options) after the workflow loads.
+     * Cleared after firing so a later reload or visibility toggle never re-triggers it.
+     */
+    protected applyPendingAction(): void {
+        const action = (this.options as WorkflowEditorWidgetOptions).pendingAction;
+        if (!action) {
+            return;
+        }
+        (this.options as WorkflowEditorWidgetOptions).pendingAction = undefined;
+        // Defer until the React editor (and its ref) has mounted from `this.update()`.
+        setTimeout(() => {
+            if (action.type === 'schedule') {
+                if (action.tab === 1) {
+                    this.openManageSchedulesDialog();
+                } else {
+                    this.openScheduleDialog();
+                }
+            } else if (action.type === 'run') {
+                this.runWorkflow();
+            }
+        }, 0);
     }
 
     /**

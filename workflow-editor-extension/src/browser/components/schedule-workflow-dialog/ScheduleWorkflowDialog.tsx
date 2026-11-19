@@ -22,6 +22,7 @@ import { IWorkflowSchedule } from '@continuum/core';
 import WorkflowScheduleService from '../../service/WorkflowScheduleService';
 import CronBuilder from './CronBuilder';
 import WorkflowPathBreadcrumbs from './WorkflowPathBreadcrumbs';
+import { generateXkcdName } from '../../../common/XkcdNameGenerator';
 
 interface StyledDialogProps {
     customWidth?: number;
@@ -139,6 +140,13 @@ export default function ScheduleWorkflowDialog({ open, workflowId, workflowName,
     const [cronExpression, setCronExpression] = React.useState(DEFAULT_CRON);
     const [timeZone, setTimeZone] = React.useState<string | null>(null);
     const [submitting, setSubmitting] = React.useState(false);
+    const [scheduleName, setScheduleName] = React.useState(() => generateXkcdName());
+
+    // The schedule-name segment of the stored path must be an alphanumeric literal:
+    // strip anything that isn't a letter or digit so user edits can't introduce `/`,
+    // spaces, hyphens, dots or other special characters.
+    const sanitizedScheduleName = React.useMemo(() => scheduleName.replace(/[^A-Za-z0-9]/g, ''), [scheduleName]);
+    const scheduleNameError = sanitizedScheduleName.length === 0;
 
     // Manage Schedules tab state
     const [schedules, setSchedules] = React.useState<IWorkflowSchedule[]>([]);
@@ -148,13 +156,29 @@ export default function ScheduleWorkflowDialog({ open, workflowId, workflowName,
     const [scheduleToDelete, setScheduleToDelete] = React.useState<IWorkflowSchedule | null>(null);
 
     const isCronValid = mode === 'builder' ? true : cronExpression.trim().length > 0;
-    const canSubmit = isCronValid && !submitting;
+    const canSubmit = isCronValid && !submitting && !scheduleNameError;
 
     const refreshSchedules = React.useCallback(async () => {
         setLoadingSchedules(true);
         try {
-            const result = await scheduleService.listSchedules(workflowName);
-            setSchedules(result);
+            // Fetch all owner schedules (no name arg) and filter client-side. The stored name
+            // is now `{workflowName}/{scheduleName}.schedule`; the old exact-match server query
+            // would no longer match. Match the workflow by parsing the path precisely: a naive
+            // `startsWith(workflowName + '/')` would false-positive for workflows `foo` vs `foo/bar`.
+            const all = await scheduleService.listSchedules();
+            const SUFFIX = '.schedule';
+            const filtered = all.filter(s => {
+                if (s.name.endsWith(SUFFIX)) {
+                    const withoutSuffix = s.name.slice(0, -SUFFIX.length);
+                    const lastSlash = withoutSuffix.lastIndexOf('/');
+                    if (lastSlash !== -1 && withoutSuffix.slice(0, lastSlash) === workflowName) {
+                        return true;
+                    }
+                }
+                // Backward compat: pre-existing schedules stored name === workflowName (no suffix).
+                return s.name === workflowName;
+            });
+            setSchedules(filtered);
         } catch (error) {
             console.error(error);
             setSnackbar({ severity: 'error', message: 'Failed to load schedules. Please try again.' });
@@ -232,12 +256,15 @@ export default function ScheduleWorkflowDialog({ open, workflowId, workflowName,
         setSubmitting(true);
         try {
             await scheduleService.createSchedule({
-                name: workflowName,
+                name: `${workflowName}/${sanitizedScheduleName}.schedule`,
                 cronExpression: cronExpression.trim(),
                 timeZone: timeZone ?? undefined,
                 continuumWorkflowModel: {
                     id: workflowId,
-                    name: workflowName,
+                    // The snapshot name becomes the run's `workflowUri` when the schedule fires,
+                    // so it carries the tree path `{workflowName}/{scheduleName}.schedule`.
+                    // The run tree parses this to nest the run under the workflow → schedule-name node.
+                    name: `${workflowName}/${sanitizedScheduleName}.schedule`,
                     active: false,
                     edges,
                     nodes
@@ -247,6 +274,7 @@ export default function ScheduleWorkflowDialog({ open, workflowId, workflowName,
             setMode('builder');
             setCronExpression(DEFAULT_CRON);
             setTimeZone(null);
+            setScheduleName(generateXkcdName());
             if (hasLoadedSchedules) {
                 refreshSchedules();
             }
@@ -256,7 +284,7 @@ export default function ScheduleWorkflowDialog({ open, workflowId, workflowName,
         } finally {
             setSubmitting(false);
         }
-    }, [scheduleService, cronExpression, timeZone, workflowId, workflowName, nodes, edges, hasLoadedSchedules, refreshSchedules]);
+    }, [scheduleService, cronExpression, timeZone, workflowId, workflowName, sanitizedScheduleName, nodes, edges, hasLoadedSchedules, refreshSchedules]);
 
     const onTogglePause = React.useCallback(async (schedule: IWorkflowSchedule) => {
         setRowActionInProgress(schedule.scheduleId);
@@ -412,6 +440,37 @@ export default function ScheduleWorkflowDialog({ open, workflowId, workflowName,
                             <Box>
                                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Schedule name</Typography>
+                                        <Tooltip title="A memorable name for this schedule. It becomes part of the stored schedule path; only letters and digits are kept.">
+                                            <InfoOutlinedIcon fontSize="small" color="action" />
+                                        </Tooltip>
+                                    </Box>
+                                    <Tooltip title="Generate a new name">
+                                        <IconButton
+                                            size="small"
+                                            disabled={submitting}
+                                            onClick={() => setScheduleName(generateXkcdName())}>
+                                            <RefreshIcon fontSize="small" />
+                                        </IconButton>
+                                    </Tooltip>
+                                </Box>
+                                <TextField
+                                    label="Schedule name"
+                                    fullWidth
+                                    placeholder="GreenOtter37"
+                                    value={scheduleName}
+                                    disabled={submitting}
+                                    error={scheduleNameError}
+                                    helperText={scheduleNameError
+                                        ? 'Enter a schedule name (letters and digits only)'
+                                        : `Stored as: ${workflowName}/${sanitizedScheduleName}.schedule`}
+                                    onChange={(e) => setScheduleName(e.target.value)}
+                                />
+                            </Box>
+
+                            <Box>
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                                         <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Cadence</Typography>
                                         <Tooltip title="How often the workflow should run.">
                                             <InfoOutlinedIcon fontSize="small" color="action" />
@@ -496,8 +555,7 @@ export default function ScheduleWorkflowDialog({ open, workflowId, workflowName,
 
                             {hasLoadedSchedules && schedules.length === 0 ? (
                                 <Typography variant="body2" color="text.secondary" sx={{ py: 4, textAlign: 'center' }}>
-                                    No schedules found with this workflow&apos;s name. If a schedule was renamed, it
-                                    won&apos;t appear here — check Manage from the workflow it still matches.
+                                    No schedules found for this workflow. Create one in the New Schedule tab.
                                 </Typography>
                             ) : (
                                 <Box sx={{ flex: 1, minHeight: 240 }}>
