@@ -19,6 +19,7 @@
     "@theia/ai-ollama": "latest",
     "@theia/core": "latest",
     "@theia/filesystem": "latest",
+    "@theia/keymaps": "1.74.1",
     "@theia/markers": "latest",
     "@theia/messages": "latest",
     "@theia/monaco": "latest",
@@ -42,7 +43,7 @@
     "build:prd": "theia build --mode=production",
     "build:dev": "theia build --mode=development",
     "rebuild": "theia rebuild:browser --cacheRoot ..",
-    "start": "theia start --plugins=local-dir:./plugins --port 3002",
+    "start": "theia start --plugins=local-dir:./plugins --port 3003",
     "watch": "yarn rebuild && theia build --watch --mode development"
   },
   "theiaPluginsDir": "plugins",

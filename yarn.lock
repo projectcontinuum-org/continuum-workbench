@@ -2475,6 +2475,19 @@
     tslib "^2.8.1"
     vscode-languageserver-textdocument "^1.0.12"
 
+"@theia/keymaps@1.74.1":
+  version "1.74.1"
+  resolved "https://registry.yarnpkg.com/@theia/keymaps/-/keymaps-1.74.1.tgz#9a41dac5fe6fcd3604ffa480fa9c4ca65fac6980"
+  integrity sha512-RmUbsuomhlgkYFw0Eb3Q8BOqrBAs8Svb9GhnlvV8XCXE1G4YPe4bdskH02lEUX0SG2UWLwb0fBfDacpPS5uhNA==
+  dependencies:
+    "@theia/core" "1.74.1"
+    "@theia/monaco" "1.74.1"
+    "@theia/monaco-editor-core" "1.108.201"
+    "@theia/preferences" "1.74.1"
+    "@theia/userstorage" "1.74.1"
+    jsonc-parser "^3.3.1"
+    tslib "^2.8.1"
+
 "@theia/localization-manager@1.74.1":
   version "1.74.1"
   resolved "https://registry.yarnpkg.com/@theia/localization-manager/-/localization-manager-1.74.1.tgz#1591342126fafe48236a1ba279930579f34cae21"

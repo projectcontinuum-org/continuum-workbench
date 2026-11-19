@@ -14,6 +14,13 @@ The full IDE now ships with Source Control. The workbench runs the VS Code `git`
 - The Dockerfile runs `yarn download:plugins` in the builder stage, and the production `CMD` loads them with `--plugins=local-dir:/app/plugins`. The plugins directory is git-ignored.
 - Use the Eclipse builds, not the older open-vsx ones: open-vsx `vscode.git` 1.88 implements an older SCM history API and fails to open repositories (`provider.onDidChangeCurrentHistoryItemRefs is not a function`).
 
+### Welcome page links to docs and opens Keyboard Shortcuts (CONTNM-167)
+
+The Welcome widget's **Help** section now has working links instead of inert text.
+
+- **Documentation** opens `https://docs.projectcontinuum.org` and **Node Development** opens the create-new-nodes guide (`https://docs.projectcontinuum.org/docs/contributing/create-new-nodes`) — both open in a new tab.
+- **Keyboard Shortcuts** opens Theia's built-in keybindings reference. This adds `@theia/keymaps` (`1.74.1`, pinned to match the VCS packages) as a workbench dependency; the `keymaps:open` command is wired to the link, so it opens the keymaps widget inside the IDE.
+
 ### Workflow Runs tree shows scheduled runs under their schedule (CONTNM-167)
 
 Scheduled runs now nest under a per-schedule node in the Workflow Runs tree, instead of all runs piling under the workflow node.

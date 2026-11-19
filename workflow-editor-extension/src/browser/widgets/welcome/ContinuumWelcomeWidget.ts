@@ -11,6 +11,11 @@ export class ContinuumWelcomeWidget extends ReactWidget {
     static readonly ID = 'continuum-welcome';
     static readonly LABEL = 'Welcome';
 
+    /** Project Continuum documentation site. */
+    static readonly DOCS_URL = 'https://docs.projectcontinuum.org';
+    /** Guide for building a custom workflow node from the feature template. */
+    static readonly NODE_DEV_DOCS_URL = 'https://docs.projectcontinuum.org/docs/contributing/create-new-nodes';
+
     @inject(CommandService)
     protected readonly commandService: CommandService;
 
@@ -93,14 +98,15 @@ export class ContinuumWelcomeWidget extends ReactWidget {
             React.createElement('h2', { className: 'continuum-welcome-section-title' }, 'Help'),
             React.createElement('div', { className: 'continuum-welcome-links' },
                 this.renderLink('fa fa-globe', 'Official Website', 'https://projectcontinuum.org', 'https://projectcontinuum.org'),
-                this.renderLink('fa fa-book', 'Documentation', 'Learn how to build workflows'),
-                this.renderLink('fa fa-keyboard', 'Keyboard Shortcuts', 'View available shortcuts'),
-                this.renderLink('fa fa-puzzle-piece', 'Node Development', 'Create custom workflow nodes')
+                this.renderLink('fa fa-book', 'Documentation', 'How-to guides and references', ContinuumWelcomeWidget.DOCS_URL),
+                this.renderLink('fa fa-keyboard', 'Keyboard Shortcuts', 'View available shortcuts', undefined,
+                    () => this.commandService.executeCommand('keymaps:open')),
+                this.renderLink('fa fa-puzzle-piece', 'Node Development', 'Build a custom workflow node', ContinuumWelcomeWidget.NODE_DEV_DOCS_URL)
             )
         );
     }
 
-    private renderLink(iconClass: string, label: string, description: string, href?: string): React.ReactNode {
+    private renderLink(iconClass: string, label: string, description: string, href?: string, onClick?: () => void): React.ReactNode {
         const content = [
             React.createElement('i', { className: `continuum-welcome-link-icon ${iconClass}` }),
             React.createElement('div', null,
@@ -114,6 +120,15 @@ export class ContinuumWelcomeWidget extends ReactWidget {
                 href,
                 target: '_blank',
                 rel: 'noopener noreferrer'
+            }, ...content);
+        }
+        if (onClick) {
+            // A link-styled button (same .continuum-welcome-link class) so an action matches the visual
+            // of the external links but is keyboard-focusable and triggered by click/Enter.
+            return React.createElement('button', {
+                type: 'button',
+                className: 'continuum-welcome-link',
+                onClick
             }, ...content);
         }
         return React.createElement('div', { className: 'continuum-welcome-link' }, ...content);
