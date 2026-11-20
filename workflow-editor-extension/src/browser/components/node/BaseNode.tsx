@@ -55,6 +55,7 @@ const getStatusColor = (status: IBaseNodeData['status']) => {
             return 'error.main';
         case 'WARNING':
             return 'warning.main';
+        case 'SCHEDULED':
         case 'BUSY':
         case 'PRE-PROCESSING':
         case 'POST-PROCESSING':

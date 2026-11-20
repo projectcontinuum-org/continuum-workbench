@@ -21,7 +21,7 @@ export interface IBaseNodeData {
     propertiesUISchema?: any;
     credentials?: {[key: string]: any};
     nodeModel: string;
-    status?: "ACTIVE" | "CONFIGURED" | "BUSY" | "SUCCESS" | "FAILED" | "WARNING" | "PRE-PROCESSING" | "POST-PROCESSING";
+    status?: "ACTIVE" | "CONFIGURED" | "SCHEDULED" | "BUSY" | "SUCCESS" | "FAILED" | "WARNING" | "PRE-PROCESSING" | "POST-PROCESSING" | "SKIPPED";
     nodeProgress?: INodeProgress;
     retryOptions?: IRetryOptions;
 }
