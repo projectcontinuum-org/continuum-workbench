@@ -6,6 +6,7 @@ import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import SkipNextIcon from '@mui/icons-material/SkipNext';
+import ScheduleIcon from '@mui/icons-material/Schedule';
 import { IBaseNodeData, StageStatus } from "@continuum/core";
 import "./BaseNode.css";
 import { Box, CircularProgress, Grid, Step, StepLabel, Stepper, Tooltip, Typography } from "@mui/material";
@@ -165,6 +166,7 @@ export default function BaseNode(props: NodeProps<IBaseNodeData>) {
                     <WarningAmberIcon color="warning" />
                   )}
                   {props.data.status == "ACTIVE" && <Bolt color="warning" />}
+                  {props.data.status == "SCHEDULED" && <ScheduleIcon color="info" />}
                 </Box>
               )}
             </Box>
