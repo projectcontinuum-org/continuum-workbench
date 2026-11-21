@@ -1,6 +1,6 @@
 import IWorkflowExecutionContext from "./types/IWorkflowExecutionContext.js"
 import { MimeTypes } from "./model/MimeTypes.js";
-import IBaseNodeModel, { IBaseNodeData, IData, INodeInputs, INodeOutputs, IPortProps, IPorts, INodeProgress, StageStatus, IRetryOptions } from "./types/IBaseNode.js"
+import IBaseNodeModel, { IBaseNodeData, IData, INodeInputs, INodeOutputs, IPortProps, IPorts, INodeProgress, StageStatus, NodeStatus, IRetryOptions } from "./types/IBaseNode.js"
 import Workflow from "./model/Workflow.js"
 import INodeToOutputsMap from "./types/INodeToOutputsMap.js"
 import IJobData from "./types/IJobData.js"
@@ -21,6 +21,7 @@ import IWorkflowRunItem, { PageResponse } from "./types/IWorkflowRun.js"
 import { IStartWorkflowResponse } from "./types/IStartWorkflowResponse.js";
 import { IWorkflowSchedule } from "./types/IWorkflowSchedule.js";
 import { ICreateWorkflowScheduleRequest } from "./types/ICreateWorkflowScheduleRequest.js";
+import { IEdgeData, EdgeStatus } from "./types/IEdgeData.js";
 
 export {
     MimeTypes,
@@ -28,6 +29,8 @@ export {
     AbstractBaseNodeModel,
     AbstractTriggerNodeModel,
     StageStatus,
+    NodeStatus,
+    EdgeStatus,
     type IBaseNodeModel,
     type ITriggerNodeModel,
     type IWorkflowExecutionContext,
@@ -57,5 +60,6 @@ export {
     type PageResponse,
     type IStartWorkflowResponse,
     type IWorkflowSchedule,
-    type ICreateWorkflowScheduleRequest
+    type ICreateWorkflowScheduleRequest,
+    type IEdgeData
 }

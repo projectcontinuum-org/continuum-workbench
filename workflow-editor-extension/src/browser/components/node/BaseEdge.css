@@ -3,3 +3,21 @@
     stroke-width: 2;
     stroke-opacity: 0.75;
 }
+
+.react-flow__edge .react-flow__edge-path.continuum-edge--delivered {
+    stroke: var(--mui-palette-success-main, var(--theia-focusBorder));
+    stroke-opacity: 0.9;
+}
+
+.react-flow__edge .react-flow__edge-path.continuum-edge--broken {
+    stroke: var(--theia-errorForeground);
+    stroke-dasharray: 6 4;
+    stroke-opacity: 0.6;
+}
+
+.react-flow__edge .continuum-edge__break-mark {
+    stroke: var(--theia-errorForeground);
+    stroke-width: 2;
+    stroke-linecap: round;
+    fill: none;
+}

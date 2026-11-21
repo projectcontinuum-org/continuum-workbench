@@ -8,6 +8,21 @@ export default interface IBaseNodeModel {
     run(nodeInputs: INodeInputs, context: INodeExecutionContext, sendProgress: ()=>Promise<boolean | undefined>): Promise<INodeOutputs>;
 }
 
+/** Mirrors `ContinuumWorkflowModel.NodeStatus` in continuum-platform-core; keep both in sync. */
+export enum NodeStatus {
+    ACTIVE = "ACTIVE",
+    CONFIGURED = "CONFIGURED",
+    SCHEDULED = "SCHEDULED",
+    BUSY = "BUSY",
+    SUCCESS = "SUCCESS",
+    FAILED = "FAILED",
+    CANCELLED = "CANCELLED",
+    WARNING = "WARNING",
+    PRE_PROCESSING = "PRE_PROCESSING",
+    POST_PROCESSING = "POST_PROCESSING",
+    SKIPPED = "SKIPPED"
+}
+
 export interface IBaseNodeData {
     id: string;
     description: string;
@@ -21,7 +36,7 @@ export interface IBaseNodeData {
     propertiesUISchema?: any;
     credentials?: {[key: string]: any};
     nodeModel: string;
-    status?: "ACTIVE" | "CONFIGURED" | "SCHEDULED" | "BUSY" | "SUCCESS" | "FAILED" | "WARNING" | "PRE-PROCESSING" | "POST-PROCESSING" | "SKIPPED";
+    status?: NodeStatus;
     nodeProgress?: INodeProgress;
     retryOptions?: IRetryOptions;
 }

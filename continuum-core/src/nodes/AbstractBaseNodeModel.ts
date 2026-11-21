@@ -1,4 +1,4 @@
-import { IBaseNodeData, INodeInputs, INodeOutputs } from "../types/IBaseNode.js";
+import { IBaseNodeData, INodeInputs, INodeOutputs, NodeStatus } from "../types/IBaseNode.js";
 import IBaseNodeModel from "../types/IBaseNode.js";
 import { MimeTypes } from "../model/MimeTypes.js";
 import INodeExecutionContext from "../types/INodeExecutionContext.js";
@@ -24,15 +24,15 @@ export default abstract class AbstractBaseNodeModel implements IBaseNodeModel {
         return new Promise(async (resolve, reject)=>{
             try{
                 console.log("Executing node... ", this.nodeInfo.id);
-                this.nodeInfo.status = "BUSY";
+                this.nodeInfo.status = NodeStatus.BUSY;
                 await sendProgress();
                 let nodeOutputs = await this.execute(nodeInputs, nodeExecutionContext);
-                this.nodeInfo.status = "SUCCESS";
+                this.nodeInfo.status = NodeStatus.SUCCESS;
                 console.log("Executing finished! ", this.nodeInfo.id);
                 await sendProgress();
                 resolve(nodeOutputs);
             } catch(ex) {
-                this.nodeInfo.status = "FAILED";
+                this.nodeInfo.status = NodeStatus.FAILED;
                 let errorOutput = await nodeExecutionContext.createPortOutput("error", {contentType: MimeTypes[".json"], name: "error"});
                 errorOutput.status = "FAILED";
                 let error = ex as Error;

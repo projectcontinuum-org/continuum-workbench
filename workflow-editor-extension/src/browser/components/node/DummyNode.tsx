@@ -1,31 +1,9 @@
 import * as React from "react";
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CancelIcon from '@mui/icons-material/Cancel';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { IBaseNodeData } from "@continuum/core";
 import "./BaseNode.css";
 import { Box, CircularProgress, Grid, Tooltip, Typography } from "@mui/material";
-import Bolt from "@mui/icons-material/Bolt";
 import DynamicIcon from "../utils/DynamicIcon";
-
-const getStatusColor = (status: IBaseNodeData['status']) => {
-    switch (status) {
-        case 'SUCCESS':
-            return 'success.main';
-        case 'FAILED':
-            return 'error.main';
-        case 'WARNING':
-            return 'warning.main';
-        case 'BUSY':
-        case 'PRE-PROCESSING':
-        case 'POST-PROCESSING':
-            return 'info.main';
-        case 'ACTIVE':
-            return 'warning.main';
-        default:
-            return 'text.secondary';
-    }
-};
+import { isNodeWorking, NodeStatusBadge, nodeStatusColor, nodeStatusLabel } from "./NodeStatusPresentation";
 
 /**
  * A lightweight version of BaseNode without ReactFlow Handle components.
@@ -115,14 +93,14 @@ export default function DummyNode(props: IBaseNodeData) {
                             {props.status && (
                                 <Typography
                                     variant="caption"
-                                    sx={{ display: 'block', color: getStatusColor(props.status), fontWeight: 500 }}
+                                    sx={{ display: 'block', color: nodeStatusColor(props.status), fontWeight: 500 }}
                                 >
-                                    {props.status}
+                                    {nodeStatusLabel(props.status)}
                                 </Typography>
                             )}
                         </Box>
 
-                        {props.status == "BUSY" && (
+                        {isNodeWorking(props.status) && (
                             <Box className="progress">
                                 <CircularProgress
                                     size={28}
@@ -134,18 +112,9 @@ export default function DummyNode(props: IBaseNodeData) {
                             </Box>
                         )}
 
-                        {props.status != "BUSY" && (
+                        {!isNodeWorking(props.status) && (
                             <Box className="status-badge">
-                                {props.status == "SUCCESS" && (
-                                    <CheckCircleIcon color="success" />
-                                )}
-                                {props.status == "FAILED" && (
-                                    <CancelIcon color="error" />
-                                )}
-                                {props.status == "WARNING" && (
-                                    <WarningAmberIcon color="warning" />
-                                )}
-                                {props.status == "ACTIVE" && <Bolt color="warning" />}
+                                <NodeStatusBadge status={props.status} />
                             </Box>
                         )}
                     </Box>
