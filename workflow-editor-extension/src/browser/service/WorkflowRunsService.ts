@@ -2,6 +2,7 @@ import { injectable } from "@theia/core/shared/inversify";
 import { IWorkflowRunItem, PageResponse } from "@continuum/core";
 import { API_SERVER_BASE } from "./ApiConfig";
 import { encodePathSegment, rsqlComparison } from "../../common/SafeEncoding";
+import { readRunsPage } from "../../common/RunsPage";
 
 /** Full workflow run entity including the heavy `data` JSONB column */
 export interface WorkflowRunFull extends IWorkflowRunItem {
@@ -33,7 +34,7 @@ export default class WorkflowRunsService {
         if (!response.ok) {
             throw new Error(`Failed to fetch distinct workflows: ${response.status} ${response.statusText}`);
         }
-        return response.json();
+        return readRunsPage<string>(await response.json());
     }
 
     async getRunsByWorkflowUri(workflowUri: string, timeFilter?: string, page = 0, size = 50): Promise<PageResponse<IWorkflowRunItem>> {
@@ -52,7 +53,7 @@ export default class WorkflowRunsService {
         if (!response.ok) {
             throw new Error(`Failed to fetch workflow runs: ${response.status} ${response.statusText}`);
         }
-        return response.json();
+        return readRunsPage<IWorkflowRunItem>(await response.json());
     }
 
     /**
