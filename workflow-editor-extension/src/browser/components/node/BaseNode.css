@@ -109,3 +109,26 @@
   min-width: 0;
   max-width: 160px;
 }
+
+/* Execution status, from the node-status--<status> class on the node body */
+.react-flow__node:has(> .node-status--scheduled) {
+  border-style: dashed;
+  border-color: var(--mui-palette-info-main);
+}
+
+.react-flow__node:has(> .node-status--busy),
+.react-flow__node:has(> .node-status--pre_processing),
+.react-flow__node:has(> .node-status--post_processing) {
+  border-color: var(--mui-palette-info-main);
+}
+
+.react-flow__node:has(> .node-status--failed) {
+  border-color: var(--mui-palette-error-main);
+}
+
+.react-flow__node:has(> .node-status--skipped),
+.react-flow__node:has(> .node-status--cancelled) {
+  border-style: dashed;
+  border-color: var(--mui-palette-text-disabled);
+  opacity: 0.55;
+}

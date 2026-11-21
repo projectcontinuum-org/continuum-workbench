@@ -2,14 +2,14 @@ import * as React from "react";
 import { Handle, NodeProps, Position } from "reactflow";
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import SkipNextIcon from '@mui/icons-material/SkipNext';
-import { IBaseNodeData, StageStatus } from "@continuum/core";
+import { IBaseNodeData, NodeStatus, StageStatus } from "@continuum/core";
 import "./BaseNode.css";
 import { Box, CircularProgress, Grid, Step, StepLabel, Stepper, Tooltip, Typography } from "@mui/material";
-import Bolt from "@mui/icons-material/Bolt";
+import { isNodeWorking, NodeStatusBadge, nodeStatusColor, nodeStatusLabel } from "./NodeStatusPresentation";
+import { nodeStatusClass } from "../../../common/ExecutionStatusPresentation";
 import { useMUIThemeStore } from "../../store/MUIThemeStore";
 import { mirage } from 'ldrs'
 import DynamicIcon from "../utils/DynamicIcon";
@@ -47,25 +47,6 @@ const getStepIcon = (status: StageStatus) => {
     }
 };
 
-const getStatusColor = (status: IBaseNodeData['status']) => {
-    switch (status) {
-        case 'SUCCESS':
-            return 'success.main';
-        case 'FAILED':
-            return 'error.main';
-        case 'WARNING':
-            return 'warning.main';
-        case 'BUSY':
-        case 'PRE-PROCESSING':
-        case 'POST-PROCESSING':
-            return 'info.main';
-        case 'ACTIVE':
-            return 'warning.main';
-        default:
-            return 'text.secondary';
-    }
-};
-
 export default function BaseNode(props: NodeProps<IBaseNodeData>) {
     const [theme] = useMUIThemeStore((state)=>([state.theme]))
 
@@ -75,7 +56,7 @@ export default function BaseNode(props: NodeProps<IBaseNodeData>) {
         direction="row"
         justifyContent="space-between"
         alignItems="center"
-        className="node-body"
+        className={["node-body", nodeStatusClass(props.data.status)].filter(Boolean).join(" ")}
         position="relative"
       >
         <Grid
@@ -119,9 +100,9 @@ export default function BaseNode(props: NodeProps<IBaseNodeData>) {
                 {props.data.status && (
                   <Typography
                     variant="caption"
-                    sx={{ display: 'block', color: getStatusColor(props.data.status), fontWeight: 500 }}
+                    sx={{ display: 'block', color: nodeStatusColor(props.data.status), fontWeight: 500 }}
                   >
-                    {props.data.status}
+                    {nodeStatusLabel(props.data.status)}
                   </Typography>
                 )}
                 {props.data.nodeProgress?.totalDurationMs && (
@@ -131,7 +112,7 @@ export default function BaseNode(props: NodeProps<IBaseNodeData>) {
                 )}
               </Box>
 
-              {props.data.status == "BUSY" && (
+              {props.data.status == NodeStatus.BUSY && (
                 <Box className="progress">
                   <CircularProgress
                     size={28}
@@ -146,24 +127,15 @@ export default function BaseNode(props: NodeProps<IBaseNodeData>) {
                   />
                 </Box>
               )}
-              {props.data.status == "PRE-PROCESSING" && (
+              {(props.data.status == NodeStatus.PRE_PROCESSING || props.data.status == NodeStatus.POST_PROCESSING) && (
                 <Box className="progress">
                   <l-mirage color={theme.palette.primary.main} />
                 </Box>
               )}
 
-              {props.data.status != "BUSY" && (
+              {!isNodeWorking(props.data.status) && (
                 <Box className="status-badge">
-                  {props.data.status == "SUCCESS" && (
-                    <CheckCircleIcon color="success" />
-                  )}
-                  {props.data.status == "FAILED" && (
-                    <CancelIcon color="error" />
-                  )}
-                  {props.data.status == "WARNING" && (
-                    <WarningAmberIcon color="warning" />
-                  )}
-                  {props.data.status == "ACTIVE" && <Bolt color="warning" />}
+                  <NodeStatusBadge status={props.data.status} />
                 </Box>
               )}
             </Box>
