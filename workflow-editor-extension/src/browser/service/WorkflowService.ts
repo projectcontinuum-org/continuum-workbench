@@ -36,13 +36,6 @@ export default class WorkflowService {
         return { workflowId: await readStartedWorkflowId(response) };
     }
 
-    async getActiveWorkflows(): Promise<string[]> {
-        const response = await fetch(`${this.apiBaseUrl}/active`, {
-            headers: this.headers
-        });
-        return response.json();
-    }
-
     async cancelWorkflow(workflowId: string, reason?: string): Promise<void> {
         const url = new URL(`${this.apiBaseUrl}/${encodePathSegment(workflowId)}/cancel`, window.location.origin);
         if (reason) {
