@@ -10,11 +10,9 @@ import ITriggerNodeModel from "./types/ITriggerNode.js"
 import AbstractBaseNodeModel from "./nodes/AbstractBaseNodeModel.js";
 import AbstractTriggerNodeModel from "./nodes/AbstractTriggerNodeModel.js";
 import INodeModelsMap from "./types/INodeModelsMap.js"
-import IExecutionStatus from "./types/IExecutionStatus.js"
 import INodeExecutionContext from "./types/INodeExecutionContext.js";
 import INodeRepoTreeItem from "./types/INodeRepoTreeItem.js"
 import INodePackageExport, {INodeModelExport} from "./types/INodePackageExport.js"
-import ITreeItem from "./types/ITreeItem.js"
 import IExecution from "./types/IExecution.js"
 import INodeExplorerTreeItem, { NodeExplorerItemType } from "./types/INodeExplorerTreeItem.js"
 import IWorkflowRunItem, { PageResponse } from "./types/IWorkflowRun.js"
@@ -46,12 +44,10 @@ export {
     type IPortProps,
     type IPorts,
     type INodeModelsMap,
-    type IExecutionStatus,
     type INodeExecutionContext,
     type INodeRepoTreeItem,
     type INodePackageExport,
     type INodeModelExport,
-    type ITreeItem,
     type IExecution,
     type INodeProgress,
     type INodeExplorerTreeItem,

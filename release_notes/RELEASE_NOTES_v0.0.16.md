@@ -51,6 +51,15 @@ Previously shipped in `release/0.0.15` but un-noted. The `@WorkflowBuilder` chat
 - A new `entrypoint.sh` seeds the PVC-backed home on every start: creates `~/workspace` and `~/.claude/agents`, copies the `workflow-builder.md` agent, and registers the api-server MCP server for Claude Code at user scope from `CONTINUUM_API_SERVER_MCP_URL` (default `http://continuum-platform-api-server:8080/mcp`), validating it is an `http(s)` URL before use.
 - The `workflow-builder.md` agent prompt was updated to always delegate to the agent and to strip a leading `cwf` marker line before the Write hook saves `.cwf` content.
 
+### Removed dead code: Node Repository widget and unused API clients (CONTNM-177)
+
+Nothing visible changes: none of this was bound, imported or called.
+
+- The Node Repository widget (replaced by the Node Explorer) is removed with its factory, view contribution, `NodeRepoExplorer` and `StyledTreeItem`, and the commented-out NodeRepo and Workflow Status bindings in the extension module.
+- API clients with no caller are removed: `WorkflowTreeService`, `ExecutionTreeService`, `NodeRepoService`, `WorkflowService.getActiveWorkflows` and `ExecutionService.getActiveExecutionIds`. Their endpoints are removed from the api-server in platform 0.0.23 (or never existed there: `/execution-tree`, `/execution/active`, `/node-repo`).
+- `@continuum/core` no longer exports the unused `ITreeItem` and `IExecutionStatus` types.
+- `@mui/x-tree-view` and `@react-spring/web` are removed from `workflow-editor-extension` (only the deleted widget used them).
+
 ## CI
 
 - New `.github/workflows/ci.yml` runs on every pull request and push to `main`: `yarn install --frozen-lockfile --ignore-scripts` then `yarn test` (the specs of `workflow-editor-extension` and `workflow-builder-extension`). `--frozen-lockfile` fails when `package.json` and `yarn.lock` disagree, so a dependency added without committing the lockfile cannot pass. Image builds and publishing stay in `build-module.yml` and `on-release.yml`.
@@ -60,6 +69,7 @@ Previously shipped in `release/0.0.15` but un-noted. The `@WorkflowBuilder` chat
 
 - Pull `projectcontinuum/continuum-workbench:0.0.16`. The image now runs as the `continuum` user; the cluster manager should run the pod as uid 1000 and mount a PVC at `/home/continuum`.
 - For the Workflow Builder, ensure an api-server with the MCP endpoint is reachable from the workbench backend and set `CONTINUUM_API_SERVER_MCP_URL` if it is not at `http://continuum-platform-api-server:8080/mcp`.
+- `yarn.lock` must be regenerated (`yarn install`) for the removal of `@mui/x-tree-view` and `@react-spring/web`; CI's `--frozen-lockfile` fails until it is committed.
 - Pre-existing schedules whose name was just the workflow name still appear in Manage Schedules (backward-compat fallback). New schedules are stored as `{workflowName}/{scheduleName}.schedule`.
 
 ## Changes
@@ -72,5 +82,6 @@ Previously shipped in `release/0.0.15` but un-noted. The `@WorkflowBuilder` chat
 | (this branch) | CONTNM-167 | Add VCS (git) support via Theia plugin host |
 | (this branch) | CONTNM-167 | Remove Testing, Debug and Outline widgets |
 | (this branch) | CONTNM-167 | Show workflow scheduled runs under scheduled tree nodes |
+| (this branch) | CONTNM-177 | Remove the unused Node Repository widget, dead API clients, core types and dependencies |
 
 **Full diff:** `release/0.0.14...HEAD` (53 files changed, 2451 insertions, 381 deletions)

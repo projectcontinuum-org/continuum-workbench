@@ -62,3 +62,6 @@ unsloth-trainer/.venv/
 
 ### Theia plugins (downloaded by `yarn download:plugins`) ###
 **/continuum-workbench/plugins/
+
+# macOS
+.DS_Store

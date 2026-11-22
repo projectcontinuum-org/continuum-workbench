@@ -27,6 +27,13 @@ yarn install && yarn build && yarn start:workbench
 
 `.github/workflows/ci.yml` runs on every pull request and push to `main`: `yarn install --frozen-lockfile --ignore-scripts` then `yarn test` (the specs of `workflow-editor-extension` and `workflow-builder-extension`; the other workspaces have none). `--frozen-lockfile` fails when `package.json` and `yarn.lock` disagree, so a dependency added without committing the lockfile cannot pass. Do not set `ALLOW_NO_JSDOM` in CI. Image builds and publishing stay in `build-module.yml` and `on-release.yml`.
 
+## Release Notes
+
+Release notes live in `release_notes/`, one file per version: `RELEASE_NOTES_v<version>.md`, where `<version>` is the `version` in the root `package.json` (the version being prepared). Every change updates that file in the same change; a task is not done while the release notes are stale.
+
+- Never edit the file of a version that has already been released (a `release/<version>` tag exists); if the current version is already released, bump the version or ask first.
+- Put the change under "Highlights" (user-visible features and fixes), "CI", "Upgrade notes" (anything a deployer or a client must act on, such as a dependency or `yarn.lock` change) or "Changes", and correct any existing line the change makes untrue.
+
 ## Stack
 
 React 18, TypeScript 5, Eclipse Theia, React Flow 11, JSONForms, MQTT.js, Yarn + Turborepo, Node >= 20
