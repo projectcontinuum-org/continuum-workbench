@@ -4,7 +4,6 @@
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "type": "module",
   "scripts": {
     "clean": "rm -R dist",
     "build": "tsc",
@@ -14,16 +13,11 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^6.10.0",
-    "@typescript-eslint/parser": "^6.10.0",
-    "eslint": "^8.53.0",
     "typescript": "^5.2.2",
-    "@jsonforms/core": "3.2.0"
+    "@jsonforms/core": "3.7.0",
+    "reactflow": "^11.10.1"
   },
   "files": [
     "dist/**/*"
-  ],
-  "dependencies": {
-    "reactflow": "^11.10.1"
-  }
+  ]
 }

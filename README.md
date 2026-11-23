@@ -35,7 +35,7 @@ A Turborepo monorepo containing the browser-based workflow editor and IDE for Pr
 
 | Workspace | Package | Description |
 |-----------|---------|-------------|
-| `continuum-core` | `@continuum/core` | Shared library — workflow models, types, and status enums |
+| `continuum-core` | `@continuum/core` | Types-only shared library — workflow model, node and run types, status enums |
 | `workflow-editor-extension` | `@continuum/workflow-editor-extension` | Eclipse Theia extension — workflow editor, node explorer, execution viewer |
 | `workflow-builder-extension` | `@continuum/workflow-builder-extension` | Theia AI chat agent that builds workflows from a prompt (see its README) |
 | `continuum-workbench` | `@continuum/workbench` | Full Theia IDE application (browser target) |
@@ -103,7 +103,7 @@ Open [http://localhost:3002](http://localhost:3002) and start building workflows
 
 ```
 continuum-workbench/
-├── continuum-core/                    # @continuum/core — shared library
+├── continuum-core/                    # @continuum/core — shared types and models
 │   ├── package.json
 │   └── src/
 ├── workflow-editor-extension/         # @continuum/workflow-editor-extension

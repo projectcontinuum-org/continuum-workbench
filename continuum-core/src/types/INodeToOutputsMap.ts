@@ -1,4 +1,4 @@
-import { INodeOutputs } from "./IBaseNode.js"
+import { INodeOutputs } from "./IBaseNode"
 
 export default interface INodeToOutputsMap {
     [nodeId: string]: INodeOutputs

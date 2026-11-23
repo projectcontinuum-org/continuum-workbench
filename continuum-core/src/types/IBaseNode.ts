@@ -1,5 +1,5 @@
 import { MimeTypes } from "../model/MimeTypes";
-import { JsonSchema } from '@jsonforms/core';
+import type { JsonSchema } from '@jsonforms/core';
 
 /** Mirrors `ContinuumWorkflowModel.NodeStatus` in continuum-platform-core; keep both in sync. */
 export enum NodeStatus {
