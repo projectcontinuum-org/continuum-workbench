@@ -75,9 +75,15 @@ export const MonacoEditorWrapper: React.FC<MonacoEditorWrapperProps> = ({
         editorRef.current.updateOptions(options);
     }, [options]);
 
+    // `nokey`: React Flow listens for keys on `document` (Space = pan activation,
+    // Backspace = delete selection) and calls preventDefault() unless the target is
+    // an input/textarea/contenteditable or inside `.nokey`. Monaco's native
+    // EditContext input is a plain <div>, so without this the editor never receives
+    // Space and Backspace would delete selected workflow nodes.
     return (
         <div
             ref={containerRef}
+            className="nokey"
             style={{
                 height: height || '400px',
                 width: '100%'
