@@ -25,7 +25,7 @@ yarn install && yarn build && yarn start:workbench
 
 ## CI
 
-`.github/workflows/ci.yml` runs on every pull request and push to `main`: `yarn install --frozen-lockfile --ignore-scripts` then `yarn test` (the specs of `workflow-editor-extension` and `workflow-builder-extension`; the other workspaces have none). `--frozen-lockfile` fails when `package.json` and `yarn.lock` disagree, so a dependency added without committing the lockfile cannot pass. Do not set `ALLOW_NO_JSDOM` in CI. Image builds and publishing stay in `build-module.yml` and `on-release.yml`.
+`.github/workflows/ci.yml` runs on every pull request and push to `main`: `yarn install --frozen-lockfile --ignore-scripts` then `yarn test` (the specs of `workflow-editor-extension` and `workflow-builder-extension`; the other workspaces have none). `--frozen-lockfile` fails when `package.json` needs an entry `yarn.lock` does not have, so a dependency added without committing the lockfile cannot pass. It does not fail on leftovers: a removed dependency still passes with its old entries in `yarn.lock`, so regenerate the lockfile in the same change and check that the removed packages are gone from it. Do not set `ALLOW_NO_JSDOM` in CI. Image builds and publishing stay in `build-module.yml` and `on-release.yml`.
 
 ## Release Notes
 

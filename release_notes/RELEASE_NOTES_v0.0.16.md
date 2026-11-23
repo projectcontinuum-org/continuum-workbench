@@ -58,7 +58,7 @@ Nothing visible changes: none of this was bound, imported or called.
 - The Node Repository widget (replaced by the Node Explorer) is removed with its factory, view contribution, `NodeRepoExplorer` and `StyledTreeItem`, and the commented-out NodeRepo and Workflow Status bindings in the extension module.
 - API clients with no caller are removed: `WorkflowTreeService`, `ExecutionTreeService`, `NodeRepoService`, `WorkflowService.getActiveWorkflows` and `ExecutionService.getActiveExecutionIds`. Their endpoints are removed from the api-server in platform 0.0.23 (or never existed there: `/execution-tree`, `/execution/active`, `/node-repo`).
 - `@continuum/core` no longer exports the unused `ITreeItem` and `IExecutionStatus` types.
-- `@mui/x-tree-view` and `@react-spring/web` are removed from `workflow-editor-extension` (only the deleted widget used them).
+- `@mui/x-tree-view` and `@react-spring/web` are removed from `workflow-editor-extension` (only the deleted widget used them). `yarn.lock` drops them and the packages only they pulled in (`@mui/base@5.0.0-beta.20`, `@mui/utils@6.4.8` and `@react-spring/animated`, `core`, `rafz`, `shared`, `types`); no other package changes version.
 
 ## CI
 
@@ -69,7 +69,6 @@ Nothing visible changes: none of this was bound, imported or called.
 
 - Pull `projectcontinuum/continuum-workbench:0.0.16`. The image now runs as the `continuum` user; the cluster manager should run the pod as uid 1000 and mount a PVC at `/home/continuum`.
 - For the Workflow Builder, ensure an api-server with the MCP endpoint is reachable from the workbench backend and set `CONTINUUM_API_SERVER_MCP_URL` if it is not at `http://continuum-platform-api-server:8080/mcp`.
-- `yarn.lock` must be regenerated (`yarn install`) for the removal of `@mui/x-tree-view` and `@react-spring/web`; CI's `--frozen-lockfile` fails until it is committed.
 - Pre-existing schedules whose name was just the workflow name still appear in Manage Schedules (backward-compat fallback). New schedules are stored as `{workflowName}/{scheduleName}.schedule`.
 
 ## Changes
