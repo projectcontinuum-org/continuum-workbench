@@ -1,7 +1,12 @@
-import { CREDENTIALS_MANAGER_BASE } from './ApiConfig';
+import type { Credential } from '../../generated/credentials-server';
+import { HttpReply } from '../../common/HttpReply';
+import { requirePathSegment } from "../../common/SafeEncoding";
+import { credentialsApi, reply } from './ApiClients';
 
-const API_BASE = `${CREDENTIALS_MANAGER_BASE}/api/v1/credentials`;
-
+/**
+ * A credential as the workbench shows it. The server also returns the decrypted secret values (`data`); they are
+ * dropped here so a secret never reaches React state, a log line or a re-render.
+ */
 export interface CredentialResponse {
   userId: string;
   name: string;
@@ -26,32 +31,43 @@ export class CredentialsServiceError extends Error {
 // by however many wrapped lines the raw text takes.
 const MAX_ERROR_MESSAGE_LENGTH = 300;
 
-async function handleResponse<T>(response: Response): Promise<T> {
+async function errorMessage(response: HttpReply): Promise<string> {
+  const errorText = await response.text();
+  let message = errorText || `HTTP ${response.status}`;
+  try {
+    const errorJson = JSON.parse(errorText);
+    // Problem details carry the message in `detail`; `error` is the deprecated property of the former bodies.
+    const fromBody = errorJson.detail || errorJson.error;
+    if (typeof fromBody === 'string' && fromBody !== '') message = fromBody;
+  } catch {
+    // Not JSON. If it looks like an HTML page (e.g. a dev-server 404
+    // fallback from a misconfigured base URL), it's not useful to a user
+    // and can be arbitrarily long - fall back to a generic message.
+    if (errorText.trimStart().startsWith('<')) {
+      message = `HTTP ${response.status}`;
+    }
+  }
+  return message.length > MAX_ERROR_MESSAGE_LENGTH ? `${message.slice(0, MAX_ERROR_MESSAGE_LENGTH)}…` : message;
+}
+
+function toCredentialResponse(credential: Credential): CredentialResponse {
+  return {
+    userId: credential.userId,
+    name: credential.name,
+    type: credential.type,
+    typeVersion: credential.typeVersion,
+    description: credential.description ?? null,
+    createdAt: credential.createdAt,
+    updatedAt: credential.updatedAt,
+  };
+}
+
+async function credentialsOf(call: Promise<{ status: number; statusText: string; data: Credential[] }>): Promise<CredentialResponse[]> {
+  const response = await reply(call);
   if (!response.ok) {
-    const errorText = await response.text();
-    let message = errorText || `HTTP ${response.status}`;
-    try {
-      const errorJson = JSON.parse(errorText);
-      if (errorJson.error) message = errorJson.error;
-    } catch {
-      // Not JSON. If it looks like an HTML page (e.g. a dev-server 404
-      // fallback from a misconfigured base URL), it's not useful to a user
-      // and can be arbitrarily long - fall back to a generic message.
-      if (errorText.trimStart().startsWith('<')) {
-        message = `HTTP ${response.status}`;
-      }
-    }
-    if (message.length > MAX_ERROR_MESSAGE_LENGTH) {
-      message = `${message.slice(0, MAX_ERROR_MESSAGE_LENGTH)}…`;
-    }
-    throw new CredentialsServiceError(response.status, message);
+    throw new CredentialsServiceError(response.status, await errorMessage(response));
   }
-
-  if (response.status === 204) {
-    return undefined as T;
-  }
-
-  return response.json();
+  return response.data.map(toCredentialResponse);
 }
 
 export class CredentialsService {
@@ -59,13 +75,7 @@ export class CredentialsService {
    * List all credentials for the current user
    */
   async list(): Promise<CredentialResponse[]> {
-    const response = await fetch(API_BASE, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    return handleResponse<CredentialResponse[]>(response);
+    return credentialsOf(credentialsApi.listCredentials());
   }
 
   /**
@@ -73,13 +83,7 @@ export class CredentialsService {
    * @param type The credential type to filter by (e.g., 'BASIC', 'TOKEN')
    */
   async listByType(type: string): Promise<CredentialResponse[]> {
-    const response = await fetch(`${API_BASE}/type/${encodeURIComponent(type)}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    return handleResponse<CredentialResponse[]>(response);
+    return credentialsOf(credentialsApi.listCredentialsByType({ type: requirePathSegment(type) }));
   }
 
   /**
@@ -88,13 +92,7 @@ export class CredentialsService {
    * @param version The credential type version
    */
   async listByTypeAndVersion(type: string, version: string): Promise<CredentialResponse[]> {
-    const response = await fetch(`${API_BASE}/type/${encodeURIComponent(type)}/${encodeURIComponent(version)}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    return handleResponse<CredentialResponse[]>(response);
+    return credentialsOf(credentialsApi.listCredentialsByTypeVersion({ type: requirePathSegment(type), version: requirePathSegment(version) }));
   }
 
   /**
@@ -102,17 +100,13 @@ export class CredentialsService {
    * @param name The credential name
    */
   async getByName(name: string): Promise<CredentialResponse> {
-    const response = await fetch(`${API_BASE}/${encodeURIComponent(name)}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    return handleResponse<CredentialResponse>(response);
+    const response = await reply(credentialsApi.getCredential({ name: requirePathSegment(name) }));
+    if (!response.ok) {
+      throw new CredentialsServiceError(response.status, await errorMessage(response));
+    }
+    return toCredentialResponse(response.data);
   }
 }
 
 // Singleton instance
 export const credentialsService = new CredentialsService();
-
-

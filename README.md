@@ -96,6 +96,7 @@ Open [http://localhost:3002](http://localhost:3002) and start building workflows
 | `yarn build:workbench-thin` | Build only the thin workbench |
 | `yarn lint` | Lint all workspaces |
 | `yarn format` | Format all TypeScript/Markdown files |
+| `yarn generate:api` | Regenerate the typescript-axios API clients in `workflow-editor-extension/src/generated/` from the OpenAPI specs in a sibling `continuum-platform-core` checkout (needs `openapi-generator`, e.g. `brew install openapi-generator`; set `CONTINUUM_API_SPEC_DIR` for another location) |
 
 ---
 
@@ -108,7 +109,7 @@ continuum-workbench/
 │   └── src/
 ├── workflow-editor-extension/         # @continuum/workflow-editor-extension
 │   ├── package.json
-│   └── src/
+│   └── src/                           # generated/ = typescript-axios API clients (do not edit; `yarn generate:api`)
 ├── workflow-builder-extension/        # @continuum/workflow-builder-extension — AI workflow builder agent
 │   ├── package.json
 │   └── src/
@@ -118,6 +119,7 @@ continuum-workbench/
 ├── continuum-workbench-thin/          # @continuum/workbench-thin — lightweight
 │   ├── package.json
 │   └── src-gen/
+├── scripts/                           # sync-versions.js, generate-api-clients.sh
 ├── package.json                       # Root workspace config
 ├── turbo.json                         # Turborepo pipeline config
 ├── Dockerfile                         # Container image

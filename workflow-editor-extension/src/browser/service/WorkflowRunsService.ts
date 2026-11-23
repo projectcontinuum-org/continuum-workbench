@@ -1,8 +1,8 @@
 import { injectable } from "@theia/core/shared/inversify";
 import { IWorkflowRunItem, PageResponse } from "@continuum/core";
-import { API_SERVER_BASE } from "./ApiConfig";
-import { encodePathSegment, rsqlComparison } from "../../common/SafeEncoding";
+import { requirePathSegment, rsqlComparison } from "../../common/SafeEncoding";
 import { readRunsPage } from "../../common/RunsPage";
+import { reply, requireOk, workflowRunsApi } from "./ApiClients";
 
 /** Full workflow run entity including the heavy `data` JSONB column */
 export interface WorkflowRunFull extends IWorkflowRunItem {
@@ -15,45 +15,21 @@ export interface WorkflowRunFull extends IWorkflowRunItem {
 @injectable()
 export default class WorkflowRunsService {
 
-    private readonly apiBaseUrl: string = `${API_SERVER_BASE}/api/v1/workflow-runs`;
-
-    private get headers(): Record<string, string> {
-        return {
-            'Content-type': 'application/json; charset=UTF-8'
-        };
-    }
-
     async getDistinctWorkflows(filter?: string, page = 0, size = 50): Promise<PageResponse<string>> {
-        const url = new URL(`${this.apiBaseUrl}/distinct-workflows`, window.location.origin);
-        url.searchParams.append('page', page.toString());
-        url.searchParams.append('size', size.toString());
-        if (filter) {
-            url.searchParams.append('filter', filter);
-        }
-        const response = await fetch(url.toString(), { headers: this.headers });
-        if (!response.ok) {
-            throw new Error(`Failed to fetch distinct workflows: ${response.status} ${response.statusText}`);
-        }
-        return readRunsPage<string>(await response.json());
+        const response = await reply(workflowRunsApi.listRunWorkflowUris({ filter: filter || undefined, page, size }));
+        requireOk(response, 'fetch distinct workflows');
+        return readRunsPage<string>(response.data);
     }
 
     async getRunsByWorkflowUri(workflowUri: string, timeFilter?: string, page = 0, size = 50): Promise<PageResponse<IWorkflowRunItem>> {
-        const url = new URL(this.apiBaseUrl, window.location.origin);
-        url.searchParams.append('page', page.toString());
-        url.searchParams.append('size', size.toString());
-
         // Build RSQL filter combining workflowUri and optional time range
         let filter = rsqlComparison("workflowUri", "==", workflowUri);
         if (timeFilter) {
             filter = `${filter};${timeFilter}`;
         }
-        url.searchParams.append('filter', filter);
-
-        const response = await fetch(url.toString(), { headers: this.headers });
-        if (!response.ok) {
-            throw new Error(`Failed to fetch workflow runs: ${response.status} ${response.statusText}`);
-        }
-        return readRunsPage<IWorkflowRunItem>(await response.json());
+        const response = await reply(workflowRunsApi.listWorkflowRuns({ filter, page, size }));
+        requireOk(response, 'fetch workflow runs');
+        return readRunsPage<IWorkflowRunItem>(response.data);
     }
 
     /**
@@ -61,11 +37,8 @@ export default class WorkflowRunsService {
      * (workflowSnapshot + nodeToOutputMap). Used by the execution viewer.
      */
     async getRunById(workflowId: string): Promise<WorkflowRunFull> {
-        const url = new URL(`${this.apiBaseUrl}/${encodePathSegment(workflowId)}`, window.location.origin);
-        const response = await fetch(url.toString(), { headers: this.headers });
-        if (!response.ok) {
-            throw new Error(`Failed to fetch workflow run: ${response.status} ${response.statusText}`);
-        }
-        return response.json();
+        const response = await reply(workflowRunsApi.getWorkflowRun({ workflowId: requirePathSegment(workflowId) }));
+        requireOk(response, 'fetch workflow run');
+        return response.data;
     }
 }

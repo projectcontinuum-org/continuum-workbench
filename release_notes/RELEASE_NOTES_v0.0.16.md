@@ -34,6 +34,15 @@ Scheduled runs now nest under a per-schedule node in the Workflow Runs tree, ins
 
 Adding `@theia/plugin-ext` for git support transitively re-introduces `@theia/debug` and `@theia/test` (and `@theia/monaco` brings `@theia/outline-view`). The packages are kept — monaco is the editor, plugin-ext runs the git extension — but `HideUnwantedWidgetsContribution` now unregisters their toggle commands on startup and closes the views after layout init, so the Debug, Testing and Outline widgets no longer appear in the palette or View menu. The same commit also drops `@theia/ai-ide` (the AI chat window and Ollama provider remain available via `@theia/ai-chat-ui` / `@theia/ai-ollama` and `@theia/ai-core`'s default `AIActivationService`).
 
+### Platform calls go through generated typescript-axios clients (CONTNM-177)
+
+`workflow-editor-extension` no longer calls the platform with hand-written `fetch` code. Its services use typescript-axios clients generated from the OpenAPI specs that continuum-platform-core commits in `docs/api/` (`continuum-api-server.openapi.yaml`, `continuum-credentials-server.openapi.yaml`), so request paths, parameters and models come from the spec and cannot drift from the API.
+
+- The clients live in `workflow-editor-extension/src/generated/` and are regenerated with `yarn generate:api` (`scripts/generate-api-clients.sh`, which needs `openapi-generator`, written against 7.27.0). Do not edit them by hand. `ApiClients.ts` creates them once on the existing `API_SERVER_BASE` / `CREDENTIALS_MANAGER_BASE`.
+- Behavior is unchanged: starting a workflow still rejects with a `StartWorkflowError` unless the server returned a workflow id, a node-output 404 is still "Output not available", and path values are still refused when empty, `.` or `..`. A new `HttpReply` helper lets those helpers read an axios response the way they read a `fetch` one.
+- Credentials: the client receives the decrypted secret values from `GET /api/v1/credentials`; `CredentialsService` drops them so they never reach UI state. A credential error now shows the problem-detail `detail` first, then the deprecated `error`.
+- `buildApiUrl` is removed from `SafeEncoding.ts` (the generated client builds URLs); `requirePathSegment` replaces its dot-segment check.
+
 ### Security: shell, SQL, template and header injection (CONTNM-161, #37)
 
 Hardening across the workbench services, landed on `main` with the 0.0.16 bump.
@@ -70,6 +79,7 @@ Nothing visible changes: none of this was bound, imported or called.
 
 ## Upgrade notes
 
+- `workflow-editor-extension` now depends on `axios` (`^1.7.4`). `yarn.lock` already resolves that exact range for another dependency, so no lockfile change is expected; confirm with `yarn install --frozen-lockfile` off the org VPN before merging.
 - Pull `projectcontinuum/continuum-workbench:0.0.16`. The image now runs as the `continuum` user; the cluster manager should run the pod as uid 1000 and mount a PVC at `/home/continuum`.
 - For the Workflow Builder, ensure an api-server with the MCP endpoint is reachable from the workbench backend and set `CONTINUUM_API_SERVER_MCP_URL` if it is not at `http://continuum-platform-api-server:8080/mcp`.
 - Pre-existing schedules whose name was just the workflow name still appear in Manage Schedules (backward-compat fallback). New schedules are stored as `{workflowName}/{scheduleName}.schedule`.
@@ -84,6 +94,7 @@ Nothing visible changes: none of this was bound, imported or called.
 | (this branch) | CONTNM-167 | Add VCS (git) support via Theia plugin host |
 | (this branch) | CONTNM-167 | Remove Testing, Debug and Outline widgets |
 | (this branch) | CONTNM-167 | Show workflow scheduled runs under scheduled tree nodes |
+| (this branch) | CONTNM-177 | Call the platform through typescript-axios clients generated from the OpenAPI specs |
 | (this branch) | CONTNM-177 | Remove the unused Node Repository widget, dead API clients, core types and dependencies |
 
 **Full diff:** `release/0.0.14...HEAD` (53 files changed, 2451 insertions, 381 deletions)

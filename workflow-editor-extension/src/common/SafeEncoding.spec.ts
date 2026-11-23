@@ -1,33 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildApiUrl, encodePathSegment, mqttTopicLevel, rsqlComparison, rsqlQuote, svgToDataUri, utf8ToBase64 } from './SafeEncoding';
-
-const BASE = '/api-server/api/v1/workflow';
-
-test('buildApiUrl: query values cannot add, end or split parameters', () => {
-    const hostile = 'a&admin=true#frag?x=1;b,c==d/../e %"\\';
-    const url = buildApiUrl(BASE, ['tree'], { baseDir: hostile, query: '—✓' });
-    assert.equal(url.startsWith(`${BASE}/tree?`), true);
-    assert.equal(url.includes('#'), false);
-    const params = new URL(url, 'http://h').searchParams;
-    assert.deepEqual([...params.keys()], ['baseDir', 'query']);
-    assert.equal(params.get('baseDir'), hostile);
-    assert.equal(params.get('query'), '—✓');
-});
-
-test('buildApiUrl: undefined/null left out, empty string and numbers kept, no "?" without params', () => {
-    assert.equal(buildApiUrl(BASE, ['count']), `${BASE}/count`);
-    assert.equal(buildApiUrl(BASE, ['pending'], { baseDir: '', workflowId: undefined, x: null }), `${BASE}/pending?baseDir=`);
-    assert.equal(buildApiUrl(BASE, [], { page: 0, pageSize: 50 }), `${BASE}?page=0&pageSize=50`);
-});
-
-test('buildApiUrl: path segments stay one segment each', () => {
-    const url = buildApiUrl(BASE, ['a/b?c#d&e', 'nodes', '—✓'], { page: 1 });
-    assert.equal(url, `${BASE}/a%2Fb%3Fc%23d%26e/nodes/%E2%80%94%E2%9C%93?page=1`);
-    const parsed = new URL(url, 'http://h');
-    assert.equal(parsed.pathname, `${BASE}/a%2Fb%3Fc%23d%26e/nodes/%E2%80%94%E2%9C%93`);
-    assert.equal(parsed.hash, '');
-});
+import { encodePathSegment, requirePathSegment, mqttTopicLevel, rsqlComparison, rsqlQuote, svgToDataUri, utf8ToBase64 } from './SafeEncoding';
 
 test('encodePathSegment: dot segments are rejected, "../x" is encoded into one segment', () => {
     for (const bad of ['', '.', '..']) {
@@ -36,6 +9,13 @@ test('encodePathSegment: dot segments are rejected, "../x" is encoded into one s
     assert.equal(encodePathSegment('../x'), '..%2Fx');
     assert.equal(new URL(`http://h/api/${encodePathSegment('../x')}/cancel`).pathname, '/api/..%2Fx/cancel');
     assert.equal(encodePathSegment('3f1c-uuid'), '3f1c-uuid');
+});
+
+test('requirePathSegment: returns a valid segment unchanged (the generated client encodes it) and rejects dot segments', () => {
+    assert.equal(requirePathSegment('a/b c'), 'a/b c');
+    for (const bad of ['', '.', '..']) {
+        assert.throws(() => requirePathSegment(bad), /Invalid URL path segment/);
+    }
 });
 
 test('rsqlQuote: wraps in double quotes and escapes backslash and double quote', () => {
