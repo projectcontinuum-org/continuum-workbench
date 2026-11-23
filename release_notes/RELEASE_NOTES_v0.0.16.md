@@ -39,6 +39,7 @@ Adding `@theia/plugin-ext` for git support transitively re-introduces `@theia/de
 `workflow-editor-extension` no longer calls the platform with hand-written `fetch` code. Its services use typescript-axios clients generated from the OpenAPI specs that continuum-platform-core commits in `docs/api/` (`continuum-api-server.openapi.yaml`, `continuum-credentials-server.openapi.yaml`), so request paths, parameters and models come from the spec and cannot drift from the API.
 
 - The clients live in `workflow-editor-extension/src/generated/` and are regenerated with `yarn generate:api` (`scripts/generate-api-clients.sh`, which needs `openapi-generator`, written against 7.27.0). Do not edit them by hand. `ApiClients.ts` creates them once on the existing `API_SERVER_BASE` / `CREDENTIALS_MANAGER_BASE`.
+- `axios` (`^1.7.4`, a range `yarn.lock` already resolves) is a new dependency of `workflow-editor-extension`.
 - Behavior is unchanged: starting a workflow still rejects with a `StartWorkflowError` unless the server returned a workflow id, a node-output 404 is still "Output not available", and path values are still refused when empty, `.` or `..`. A new `HttpReply` helper lets those helpers read an axios response the way they read a `fetch` one.
 - Credentials: the client receives the decrypted secret values from `GET /api/v1/credentials`; `CredentialsService` drops them so they never reach UI state. A credential error now shows the problem-detail `detail` first, then the deprecated `error`.
 - `buildApiUrl` is removed from `SafeEncoding.ts` (the generated client builds URLs); `requirePathSegment` replaces its dot-segment check.
@@ -74,12 +75,11 @@ Nothing visible changes: none of this was bound, imported or called.
 
 ## CI
 
-- New `.github/workflows/ci.yml` runs on every pull request and push to `main`: `yarn install --frozen-lockfile --ignore-scripts` then `yarn test` (the specs of `workflow-editor-extension` and `workflow-builder-extension`). `--frozen-lockfile` fails when `package.json` and `yarn.lock` disagree, so a dependency added without committing the lockfile cannot pass. Image builds and publishing stay in `build-module.yml` and `on-release.yml`.
+- New `.github/workflows/ci.yml` runs on every pull request and push to `main`: `yarn install --frozen-lockfile --ignore-scripts` then `yarn test` (the specs of `workflow-editor-extension` and `workflow-builder-extension`). `--frozen-lockfile` fails when `package.json` needs an entry `yarn.lock` does not have, so a dependency added without committing the lockfile cannot pass; it does not fail on leftovers, so a removed dependency still passes with its old entries in `yarn.lock`. Image builds and publishing stay in `build-module.yml` and `on-release.yml`.
 - Specs run with `node --test` against `tsconfig.test.json` (compiles `src/common` to `.test-out`). `jsdom` is a devDependency because `SvgSanitizer.spec.ts` needs a DOM and fails when jsdom is missing (set `ALLOW_NO_JSDOM=1` to run without it; do not set it in CI). New this release: `SafeEncoding`, `StartWorkflowResult`, `NodeDataResult`, `SvgSanitizer` and `XkcdNameGenerator` specs.
 
 ## Upgrade notes
 
-- `workflow-editor-extension` now depends on `axios` (`^1.7.4`). `yarn.lock` already resolves that exact range for another dependency, so no lockfile change is expected; confirm with `yarn install --frozen-lockfile` off the org VPN before merging.
 - Pull `projectcontinuum/continuum-workbench:0.0.16`. The image now runs as the `continuum` user; the cluster manager should run the pod as uid 1000 and mount a PVC at `/home/continuum`.
 - For the Workflow Builder, ensure an api-server with the MCP endpoint is reachable from the workbench backend and set `CONTINUUM_API_SERVER_MCP_URL` if it is not at `http://continuum-platform-api-server:8080/mcp`.
 - Pre-existing schedules whose name was just the workflow name still appear in Manage Schedules (backward-compat fallback). New schedules are stored as `{workflowName}/{scheduleName}.schedule`.
