@@ -256,6 +256,11 @@ const WorkflowEditor = forwardRef<WorkflowEditorRef, WorkflowEditorProps>(({ wor
                 edgeTypes={edgeTypes}
                 defaultEdgeOptions={defaultEdgeOptions}
                 className="workflow-editor"
+                // While the node dialog is open, turn off React Flow's document-level
+                // Space (pan) and Backspace (delete selection) keys so they can't swallow
+                // typing in the dialog or delete canvas nodes behind it.
+                panActivationKeyCode={nodeDialogProps ? null : 'Space'}
+                deleteKeyCode={nodeDialogProps ? null : 'Backspace'}
                 fitView>
                 <Controls />
                 <Panel position="bottom-center">

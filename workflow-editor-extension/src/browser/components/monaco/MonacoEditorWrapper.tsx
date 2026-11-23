@@ -26,17 +26,33 @@ export const MonacoEditorWrapper: React.FC<MonacoEditorWrapperProps> = ({
 
     // Create editor on mount
     useEffect(() => {
-        if (!containerRef.current || !monaco) return;
+        const container = containerRef.current;
+        if (!container || !monaco) return;
 
-        const editor = monaco.editor.create(containerRef.current, {
+        const editor = monaco.editor.create(container, {
             value: value,
             language: language,
             theme: theme || 'vs-dark',
             'semanticHighlighting.enabled': false,
+            // Theia's Monaco (1.108) defaults to the native EditContext API, whose input
+            // element is a plain `div.native-edit-context`. Page-level key handlers (React
+            // Flow) don't recognise it as a text field, and macOS text services (e.g.
+            // "add period with double-space") act on it inconsistently. The classic hidden
+            // `textarea.inputarea` is treated as a normal input everywhere.
+            editContext: false,
+            // Don't let a typed character such as Space accept a suggestion.
+            acceptSuggestionOnCommitCharacter: false,
             ...options
         });
 
         editorRef.current = editor;
+
+        // Keep editor key events from reaching document-level listeners (React Flow's
+        // Space = pan and Backspace = delete). Bubble phase and no preventDefault(),
+        // so Monaco, which handles keys on its input element, still gets every key first.
+        const stopKey = (e: KeyboardEvent) => e.stopPropagation();
+        container.addEventListener('keydown', stopKey);
+        container.addEventListener('keyup', stopKey);
 
         // Listen to content changes
         const disposable = editor.onDidChangeModelContent(() => {
@@ -45,6 +61,8 @@ export const MonacoEditorWrapper: React.FC<MonacoEditorWrapperProps> = ({
 
         // Cleanup on unmount
         return () => {
+            container.removeEventListener('keydown', stopKey);
+            container.removeEventListener('keyup', stopKey);
             disposable.dispose();
             editor.dispose();
             editorRef.current = null;

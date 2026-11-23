@@ -44,6 +44,13 @@ Adding `@theia/plugin-ext` for git support transitively re-introduces `@theia/de
 - Credentials: the client receives the decrypted secret values from `GET /api/v1/credentials`; `CredentialsService` drops them so they never reach UI state. A credential error now shows the problem-detail `detail` first, then the deprecated `error`.
 - `buildApiUrl` is removed from `SafeEncoding.ts` (the generated client builds URLs); `requirePathSegment` replaces its dot-segment check.
 
+### Space and Backspace work in node dialog code editors (CONTNM-145)
+
+You can now type a space in the node dialog's code editors (any `format: "code"` property, e.g. CreateTable's FreeMarker **JSON Array**). Before, React Flow's page-wide Space key (pan the canvas) blocked it. Backspace in an editor also no longer deletes the selected canvas nodes behind the dialog.
+
+- `MonacoEditorWrapper` creates the editor with `editContext: false`. Theia's Monaco 1.108 defaults to the native EditContext input, a plain `div.native-edit-context`. React Flow, which only skips inputs, textareas and contenteditable elements, did not recognize it as a text field. With the option off, Monaco uses the classic hidden `textarea`. The wrapper also sets `acceptSuggestionOnCommitCharacter: false`, marks its container `nokey`, and stops `keydown`/`keyup` from bubbling past the editor (no `preventDefault`).
+- `WorkflowEditor` turns off React Flow's `panActivationKeyCode` (Space) and `deleteKeyCode` (Backspace) while the node dialog is open.
+
 ### Security: shell, SQL, template and header injection (CONTNM-161, #37)
 
 Hardening across the workbench services, landed on `main` with the 0.0.16 bump.
