@@ -1,4 +1,4 @@
-import { IBaseNodeData } from "..";
+import { IBaseNodeData } from "./IBaseNode.js";
 
 export type NodeExplorerItemType = "CATEGORY" | "NODE";
 
