@@ -80,18 +80,6 @@ export default new ContainerModule((bind, unbind, isBound, rebind) => {
     bind(NodeDocsWidgetFactory).toSelf().inSingletonScope();
     bind(WidgetFactory).toService(NodeDocsWidgetFactory);
 
-    // NodeRepo widget
-    // bind(NodeRepoWidget).toSelf().inSingletonScope();
-    // bind(NodeRepoWidgetFactory).toSelf().inSingletonScope();
-    // bind(WidgetFactory).toService(NodeRepoWidgetFactory);
-    // bindViewContribution(bind, NodeRepoViewContribution);
-
-    // WorkflowStatus widget
-    // bind(WorkflowStatusWidget).toSelf().inSingletonScope();
-    // bind(WorkflowStatusWidgetFactory).toSelf().inSingletonScope();
-    // bind(WidgetFactory).toService(WorkflowStatusWidgetFactory);
-    // bindViewContribution(bind, WorkflowStatusViewContribution);
-
     // NodeExplorer widget - using Theia TreeWidget
     bind(NodeExplorerService).toSelf().inSingletonScope();
 

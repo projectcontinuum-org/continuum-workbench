@@ -1,90 +1,70 @@
 import { ICreateWorkflowScheduleRequest, IWorkflowSchedule } from "@continuum/core";
 import { injectable } from "@theia/core/shared/inversify";
-import { API_SERVER_BASE } from "./ApiConfig";
-import { encodePathSegment } from "../../common/SafeEncoding";
+import type { WorkflowSchedule } from "../../generated/api-server";
+import { requirePathSegment } from "../../common/SafeEncoding";
+import { reply, requireOk, workflowSchedulesApi } from "./ApiClients";
+
+/** The workbench shows only the schedule's own fields; the spec's `timeZone` is null for UTC, the workbench's is unset. */
+function toSchedule(schedule: WorkflowSchedule): IWorkflowSchedule {
+    return {
+        scheduleId: schedule.scheduleId,
+        name: schedule.name,
+        ownedBy: schedule.ownedBy,
+        cronExpression: schedule.cronExpression,
+        timeZone: schedule.timeZone ?? undefined,
+        paused: schedule.paused,
+        nextRunTimes: schedule.nextRunTimes,
+        createdAt: schedule.createdAt,
+        updatedAt: schedule.updatedAt,
+    };
+}
 
 @injectable()
 export default class WorkflowScheduleService {
 
-    private readonly apiBaseUrl: string = `${API_SERVER_BASE}/api/v1/workflow/schedule`;
-
-    private get headers(): Record<string, string> {
-        return {
-            'Content-type': 'application/json; charset=UTF-8'
-        };
-    }
-
     async createSchedule(request: ICreateWorkflowScheduleRequest): Promise<IWorkflowSchedule> {
-        const response = await fetch(this.apiBaseUrl, {
-            method: 'POST',
-            body: JSON.stringify(request),
-            headers: this.headers
-        });
-        if (!response.ok) {
-            throw new Error(`Failed to create schedule: ${response.status} ${response.statusText}`);
-        }
-        return response.json();
+        const response = await reply(workflowSchedulesApi.createWorkflowSchedule({
+            createWorkflowScheduleRequest: {
+                name: request.name,
+                cronExpression: request.cronExpression,
+                timeZone: request.timeZone,
+                // The editor's reactflow nodes are the wire shape of the spec's WorkflowNode; the server validates it.
+                continuumWorkflowModel: request.continuumWorkflowModel as unknown as WorkflowSchedule['continuumWorkflowModel'],
+            },
+        }));
+        requireOk(response, 'create schedule');
+        return toSchedule(response.data);
     }
 
     async listSchedules(name?: string): Promise<IWorkflowSchedule[]> {
-        const url = new URL(this.apiBaseUrl, window.location.origin);
-        if (name) {
-            url.searchParams.append('name', name);
-        }
-        const response = await fetch(url.toString(), {
-            headers: this.headers
-        });
-        if (!response.ok) {
-            throw new Error(`Failed to list schedules: ${response.status} ${response.statusText}`);
-        }
-        return response.json();
+        const response = await reply(workflowSchedulesApi.listWorkflowSchedules({ name: name || undefined }));
+        requireOk(response, 'list schedules');
+        return response.data.map(toSchedule);
     }
 
     async pauseSchedule(scheduleId: string, note?: string): Promise<void> {
-        const url = new URL(`${this.apiBaseUrl}/${encodePathSegment(scheduleId)}/pause`, window.location.origin);
-        if (note) {
-            url.searchParams.append('note', note);
-        }
-        const response = await fetch(url.toString(), {
-            method: 'POST',
-            headers: this.headers
-        });
-        if (!response.ok) {
-            throw new Error(`Failed to pause schedule: ${response.status} ${response.statusText}`);
-        }
+        const response = await reply(workflowSchedulesApi.pauseWorkflowSchedule({
+            scheduleId: requirePathSegment(scheduleId),
+            note: note || undefined,
+        }));
+        requireOk(response, 'pause schedule');
     }
 
     async unpauseSchedule(scheduleId: string, note?: string): Promise<void> {
-        const url = new URL(`${this.apiBaseUrl}/${encodePathSegment(scheduleId)}/unpause`, window.location.origin);
-        if (note) {
-            url.searchParams.append('note', note);
-        }
-        const response = await fetch(url.toString(), {
-            method: 'POST',
-            headers: this.headers
-        });
-        if (!response.ok) {
-            throw new Error(`Failed to unpause schedule: ${response.status} ${response.statusText}`);
-        }
+        const response = await reply(workflowSchedulesApi.unpauseWorkflowSchedule({
+            scheduleId: requirePathSegment(scheduleId),
+            note: note || undefined,
+        }));
+        requireOk(response, 'unpause schedule');
     }
 
     async triggerSchedule(scheduleId: string): Promise<void> {
-        const response = await fetch(`${this.apiBaseUrl}/${encodePathSegment(scheduleId)}/trigger`, {
-            method: 'POST',
-            headers: this.headers
-        });
-        if (!response.ok) {
-            throw new Error(`Failed to trigger schedule: ${response.status} ${response.statusText}`);
-        }
+        const response = await reply(workflowSchedulesApi.triggerWorkflowSchedule({ scheduleId: requirePathSegment(scheduleId) }));
+        requireOk(response, 'trigger schedule');
     }
 
     async deleteSchedule(scheduleId: string): Promise<void> {
-        const response = await fetch(`${this.apiBaseUrl}/${encodePathSegment(scheduleId)}`, {
-            method: 'DELETE',
-            headers: this.headers
-        });
-        if (!response.ok) {
-            throw new Error(`Failed to delete schedule: ${response.status} ${response.statusText}`);
-        }
+        const response = await reply(workflowSchedulesApi.deleteWorkflowSchedule({ scheduleId: requirePathSegment(scheduleId) }));
+        requireOk(response, 'delete schedule');
     }
 }

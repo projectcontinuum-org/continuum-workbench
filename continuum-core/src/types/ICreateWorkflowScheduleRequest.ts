@@ -1,4 +1,4 @@
-import IWorkflow from "./IWorkflow.js";
+import IWorkflow from "./IWorkflow";
 
 export interface ICreateWorkflowScheduleRequest {
     name: string;

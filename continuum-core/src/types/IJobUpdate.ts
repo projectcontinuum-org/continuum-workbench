@@ -1,5 +1,5 @@
-import IWorkflow from "./IWorkflow.js"
-import INodeToOutputsMap from "./INodeToOutputsMap.js"
+import IWorkflow from "./IWorkflow"
+import INodeToOutputsMap from "./INodeToOutputsMap"
 
 export default interface IJobUpdate {
     executionUUID: string;

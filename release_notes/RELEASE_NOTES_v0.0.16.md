@@ -34,6 +34,16 @@ Scheduled runs now nest under a per-schedule node in the Workflow Runs tree, ins
 
 Adding `@theia/plugin-ext` for git support transitively re-introduces `@theia/debug` and `@theia/test` (and `@theia/monaco` brings `@theia/outline-view`). The packages are kept — monaco is the editor, plugin-ext runs the git extension — but `HideUnwantedWidgetsContribution` now unregisters their toggle commands on startup and closes the views after layout init, so the Debug, Testing and Outline widgets no longer appear in the palette or View menu. The same commit also drops `@theia/ai-ide` (the AI chat window and Ollama provider remain available via `@theia/ai-chat-ui` / `@theia/ai-ollama` and `@theia/ai-core`'s default `AIActivationService`).
 
+### Platform calls go through generated typescript-axios clients (CONTNM-177)
+
+`workflow-editor-extension` no longer calls the platform with hand-written `fetch` code. Its services use typescript-axios clients generated from the OpenAPI specs that continuum-platform-core commits in `docs/api/` (`continuum-api-server.openapi.yaml`, `continuum-credentials-server.openapi.yaml`), so request paths, parameters and models come from the spec and cannot drift from the API.
+
+- The clients live in `workflow-editor-extension/src/generated/` and are regenerated with `yarn generate:api` (`scripts/generate-api-clients.sh`, which needs `openapi-generator`, written against 7.27.0). Do not edit them by hand. `ApiClients.ts` creates them once on the existing `API_SERVER_BASE` / `CREDENTIALS_MANAGER_BASE`.
+- `axios` (`^1.7.4`, a range `yarn.lock` already resolves) is a new dependency of `workflow-editor-extension`.
+- Behavior is unchanged: starting a workflow still rejects with a `StartWorkflowError` unless the server returned a workflow id, a node-output 404 is still "Output not available", and path values are still refused when empty, `.` or `..`. A new `HttpReply` helper lets those helpers read an axios response the way they read a `fetch` one.
+- Credentials: the client receives the decrypted secret values from `GET /api/v1/credentials`; `CredentialsService` drops them so they never reach UI state. A credential error now shows the problem-detail `detail` first, then the deprecated `error`.
+- `buildApiUrl` is removed from `SafeEncoding.ts` (the generated client builds URLs); `requirePathSegment` replaces its dot-segment check.
+
 ### Security: shell, SQL, template and header injection (CONTNM-161, #37)
 
 Hardening across the workbench services, landed on `main` with the 0.0.16 bump.
@@ -51,9 +61,21 @@ Previously shipped in `release/0.0.15` but un-noted. The `@WorkflowBuilder` chat
 - A new `entrypoint.sh` seeds the PVC-backed home on every start: creates `~/workspace` and `~/.claude/agents`, copies the `workflow-builder.md` agent, and registers the api-server MCP server for Claude Code at user scope from `CONTINUUM_API_SERVER_MCP_URL` (default `http://continuum-platform-api-server:8080/mcp`), validating it is an `http(s)` URL before use.
 - The `workflow-builder.md` agent prompt was updated to always delegate to the agent and to strip a leading `cwf` marker line before the Write hook saves `.cwf` content.
 
+### Removed dead code: Node Repository widget and unused API clients (CONTNM-177)
+
+Nothing visible changes: none of this was bound, imported or called.
+
+- The Node Repository widget (replaced by the Node Explorer) is removed with its factory, view contribution, `NodeRepoExplorer` and `StyledTreeItem`, and the commented-out NodeRepo and Workflow Status bindings in the extension module.
+- API clients with no caller are removed: `WorkflowTreeService`, `ExecutionTreeService`, `NodeRepoService`, `WorkflowService.getActiveWorkflows` and `ExecutionService.getActiveExecutionIds`. Their endpoints are removed from the api-server in platform 0.0.23 (or never existed there: `/execution-tree`, `/execution/active`, `/node-repo`).
+- `@continuum/core` no longer exports the unused `ITreeItem` and `IExecutionStatus` types.
+- `@continuum/core` drops the node-runtime contracts left over from the old in-browser executor, which nothing imported: `AbstractBaseNodeModel`, `AbstractTriggerNodeModel`, `IBaseNodeModel`, `ITriggerNodeModel`, `INodeExecutionContext`, `INodeModelsMap`, `INodePackageExport`, `INodeModelExport`, `IJobData`, `IWorkflowExecutionContext` and `INodeInputs`. It also stops exporting `MimeTypes`, `IPortProps`, `IPorts`, `INodeProgress` and `NodeExplorerItemType`; they stay in the package as parts of `IBaseNodeData`, `IData` and `INodeExplorerTreeItem`. The package now exports only the 20 symbols `workflow-editor-extension` uses. Its own imports no longer go through the package index, and all of them are extensionless. `"type": "module"` is removed from its `package.json` so webpack resolves those paths (in a `"type": "module"` package webpack 5 requires the extension); the compiled `dist` is still ES modules.
+- `@continuum/core` is now types only, and its `package.json` lists just what its build needs: `typescript`, `@jsonforms/core` (now `3.7.0`, the version `workflow-editor-extension` uses, instead of a second copy at `3.2.0`) and `reactflow`, all as devDependencies. `reactflow` is imported only for its `Node` and `Edge` types, and `workflow-editor-extension` already depends on it at the same range. Removed: `react`, `react-dom`, `react-icons`, `react-icon`, `crypto`, `@types/node`, `@types/react`, `@types/react-dom`, `copyfile`, `@vitejs/plugin-react`, `typescript-plugin-css-modules`, `eslint`, `@typescript-eslint/parser`, `@typescript-eslint/eslint-plugin`, `eslint-plugin-react-hooks` and `eslint-plugin-react-refresh` (core had no ESLint config and no `lint` script). Its `tsconfig.json` drops the DOM libs and `jsx`.
+- `yarn.lock` drops the 87 entries that only those core dependencies pulled in (among them `@jsonforms/core@3.2.0`, `react-icons@4.12.0`, ESLint 8 with `@typescript-eslint` 6, Vite's React plugin with its Babel transforms, and `typescript-plugin-css-modules` with `less`, `sass` and `stylus`), plus the ranges only core requested from entries that stay. No remaining package changes version.
+- `@mui/x-tree-view` and `@react-spring/web` are removed from `workflow-editor-extension` (only the deleted widget used them). `yarn.lock` drops them and the packages only they pulled in (`@mui/base@5.0.0-beta.20`, `@mui/utils@6.4.8` and `@react-spring/animated`, `core`, `rafz`, `shared`, `types`); no other package changes version.
+
 ## CI
 
-- New `.github/workflows/ci.yml` runs on every pull request and push to `main`: `yarn install --frozen-lockfile --ignore-scripts` then `yarn test` (the specs of `workflow-editor-extension` and `workflow-builder-extension`). `--frozen-lockfile` fails when `package.json` and `yarn.lock` disagree, so a dependency added without committing the lockfile cannot pass. Image builds and publishing stay in `build-module.yml` and `on-release.yml`.
+- New `.github/workflows/ci.yml` runs on every pull request and push to `main`: `yarn install --frozen-lockfile --ignore-scripts` then `yarn test` (the specs of `workflow-editor-extension` and `workflow-builder-extension`). `--frozen-lockfile` fails when `package.json` needs an entry `yarn.lock` does not have, so a dependency added without committing the lockfile cannot pass; it does not fail on leftovers, so a removed dependency still passes with its old entries in `yarn.lock`. Image builds and publishing stay in `build-module.yml` and `on-release.yml`.
 - Specs run with `node --test` against `tsconfig.test.json` (compiles `src/common` to `.test-out`). `jsdom` is a devDependency because `SvgSanitizer.spec.ts` needs a DOM and fails when jsdom is missing (set `ALLOW_NO_JSDOM=1` to run without it; do not set it in CI). New this release: `SafeEncoding`, `StartWorkflowResult`, `NodeDataResult`, `SvgSanitizer` and `XkcdNameGenerator` specs.
 
 ## Upgrade notes
@@ -72,5 +94,7 @@ Previously shipped in `release/0.0.15` but un-noted. The `@WorkflowBuilder` chat
 | (this branch) | CONTNM-167 | Add VCS (git) support via Theia plugin host |
 | (this branch) | CONTNM-167 | Remove Testing, Debug and Outline widgets |
 | (this branch) | CONTNM-167 | Show workflow scheduled runs under scheduled tree nodes |
+| (this branch) | CONTNM-177 | Call the platform through typescript-axios clients generated from the OpenAPI specs |
+| (this branch) | CONTNM-177 | Remove the unused Node Repository widget, dead API clients, core types and dependencies |
 
 **Full diff:** `release/0.0.14...HEAD` (53 files changed, 2451 insertions, 381 deletions)

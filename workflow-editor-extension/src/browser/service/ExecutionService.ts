@@ -1,7 +1,7 @@
 import { IJobUpdate } from "@continuum/core";
 import mqtt from 'mqtt/dist/mqtt.esm'
-import { API_SERVER_BASE, MQTT_BASE } from "./ApiConfig";
-import { buildApiUrl, mqttTopicLevel } from "../../common/SafeEncoding";
+import { MQTT_BASE } from "./ApiConfig";
+import { mqttTopicLevel } from "../../common/SafeEncoding";
 
 export interface IExecutionMessage {
     jobId: string;
@@ -16,14 +16,8 @@ export interface WatchEventHandler {
 
 export default class ExecutionService {
 
-    private readonly apiBaseUrl: string = `${API_SERVER_BASE}/api/v1/execution`;
     private readonly mqttBaseUrl: string = MQTT_BASE;
     private readonly MQTT_TOPIC_PREFIX = "continuum/workflow/execution"
-
-    async getActiveExecutionIds(filterRegex: RegExp | string): Promise<string[]> {
-        const response = await fetch(buildApiUrl(this.apiBaseUrl, ["active"], { filterRegex: String(filterRegex) }));
-        return response.json();
-    }
 
     watch(executionId: string): WatchEventHandler {
         // Create a proxy for Websocket

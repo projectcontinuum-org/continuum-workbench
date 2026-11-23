@@ -7,7 +7,7 @@
         "outDir": "./dist",
         "declarationDir": "./dist",
         "useDefineForClassFields": true,
-        "lib": ["ES2020", "DOM", "DOM.Iterable"],
+        "lib": ["ES2020"],
         "skipLibCheck": true,
 
         /* Bundler mode */
@@ -16,7 +16,6 @@
         "resolveJsonModule": true,
         "isolatedModules": true,
         "noEmit": false,
-        "jsx": "react-jsx",
 
         /* Linting */
         "strict": true,

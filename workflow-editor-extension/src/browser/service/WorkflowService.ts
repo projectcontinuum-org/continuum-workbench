@@ -1,20 +1,13 @@
 import { IWorkflow } from "@continuum/core";
 import { IStartWorkflowResponse } from "@continuum/core";
 import { injectable } from "@theia/core/shared/inversify";
-import { API_SERVER_BASE } from "./ApiConfig";
-import { encodePathSegment } from "../../common/SafeEncoding";
-import { readStartedWorkflowId, startNetworkFailure } from "../../common/StartWorkflowResult";
+import type { ContinuumWorkflowModel } from "../../generated/api-server";
+import { requirePathSegment } from "../../common/SafeEncoding";
+import { readStartedWorkflowId, startNetworkFailure, StartWorkflowError } from "../../common/StartWorkflowResult";
+import { reply, requireOk, workflowsApi } from "./ApiClients";
 
 @injectable()
 export default class WorkflowService {
-
-    private readonly apiBaseUrl: string = `${API_SERVER_BASE}/api/v1/workflow`;
-
-    private get headers(): Record<string, string> {
-        return {
-            'Content-type': 'application/json; charset=UTF-8'
-        };
-    }
 
     /**
      * Starts a workflow. Resolves only when the server really started one. Rejects with a `StartWorkflowError` (see
@@ -23,51 +16,33 @@ export default class WorkflowService {
      * body parsed to, so a failed start looked like a started workflow.
      */
     async activateWorkflow(workflow: IWorkflow): Promise<IStartWorkflowResponse> {
-        let response: Response;
         try {
-            response = await fetch(this.apiBaseUrl, {
-                method: 'POST',
-                body: JSON.stringify(workflow),
-                headers: this.headers
-            });
+            // The editor's reactflow nodes are the wire shape of the spec's WorkflowNode; the server validates it.
+            const response = await reply(workflowsApi.startWorkflow({
+                continuumWorkflowModel: workflow as unknown as ContinuumWorkflowModel,
+            }));
+            return { workflowId: await readStartedWorkflowId(response) };
         } catch (error) {
+            if (error instanceof StartWorkflowError) {
+                throw error;
+            }
             throw startNetworkFailure(error);
         }
-        return { workflowId: await readStartedWorkflowId(response) };
-    }
-
-    async getActiveWorkflows(): Promise<string[]> {
-        const response = await fetch(`${this.apiBaseUrl}/active`, {
-            headers: this.headers
-        });
-        return response.json();
     }
 
     async cancelWorkflow(workflowId: string, reason?: string): Promise<void> {
-        const url = new URL(`${this.apiBaseUrl}/${encodePathSegment(workflowId)}/cancel`, window.location.origin);
-        if (reason) {
-            url.searchParams.append('reason', reason);
-        }
-        const response = await fetch(url.toString(), {
-            method: 'POST',
-            headers: this.headers
-        });
-        if (!response.ok) {
-            throw new Error(`Failed to cancel workflow: ${response.status} ${response.statusText}`);
-        }
+        const response = await reply(workflowsApi.cancelWorkflow({
+            workflowId: requirePathSegment(workflowId),
+            reason: reason || undefined,
+        }));
+        requireOk(response, 'cancel workflow');
     }
 
     async terminateWorkflow(workflowId: string, reason?: string): Promise<void> {
-        const url = new URL(`${this.apiBaseUrl}/${encodePathSegment(workflowId)}/terminate`, window.location.origin);
-        if (reason) {
-            url.searchParams.append('reason', reason);
-        }
-        const response = await fetch(url.toString(), {
-            method: 'POST',
-            headers: this.headers
-        });
-        if (!response.ok) {
-            throw new Error(`Failed to terminate workflow: ${response.status} ${response.statusText}`);
-        }
+        const response = await reply(workflowsApi.terminateWorkflow({
+            workflowId: requirePathSegment(workflowId),
+            reason: reason || undefined,
+        }));
+        requireOk(response, 'terminate workflow');
     }
 }

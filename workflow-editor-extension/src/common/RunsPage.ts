@@ -7,7 +7,7 @@
 
 /** A page as the api-server sends it. */
 export interface PagedModel<T> {
-    content: T[];
+    content?: T[];
     page?: {
         size?: number;
         number?: number;

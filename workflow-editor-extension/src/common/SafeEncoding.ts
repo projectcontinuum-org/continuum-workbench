@@ -1,35 +1,22 @@
 /**
- * Pure helpers for putting untrusted values into URLs, RSQL filters, MQTT topics and data URIs.
+ * Pure helpers for putting untrusted values into URL paths, RSQL filters, MQTT topics and data URIs.
  * No DOM or Theia imports, so they run under `node --test` (see SafeEncoding.spec.ts).
  */
 
-export type QueryValue = string | number | boolean | undefined | null;
-
 /**
- * Encode one URL path segment. Rejects "", "." and "..": encodeURIComponent leaves dots alone and
- * URL parsers treat "%2e%2e" as ".." too, so these can't be made safe by encoding.
+ * Reject "", "." and "..": a generated client puts a path parameter through encodeURIComponent, which leaves dots
+ * alone, and URL parsers treat "%2e%2e" as ".." too, so these can't be made safe by encoding. Returns the segment.
  */
-export function encodePathSegment(segment: string): string {
+export function requirePathSegment(segment: string): string {
     if (segment === '' || segment === '.' || segment === '..') {
         throw new Error(`Invalid URL path segment: "${segment}"`);
     }
-    return encodeURIComponent(segment);
+    return segment;
 }
 
-/**
- * Build `base/seg1/seg2?k=v` with every path segment and query value encoded.
- * Query entries that are undefined or null are left out; empty strings are kept.
- */
-export function buildApiUrl(base: string, pathSegments: readonly string[] = [], query: Record<string, QueryValue> = {}): string {
-    const path = pathSegments.map(segment => `/${encodePathSegment(segment)}`).join('');
-    const params = new URLSearchParams();
-    for (const [key, value] of Object.entries(query)) {
-        if (value !== undefined && value !== null) {
-            params.append(key, String(value));
-        }
-    }
-    const queryString = params.toString();
-    return `${base}${path}${queryString ? `?${queryString}` : ''}`;
+/** Encode one URL path segment (after {@link requirePathSegment}). */
+export function encodePathSegment(segment: string): string {
+    return encodeURIComponent(requirePathSegment(segment));
 }
 
 /**

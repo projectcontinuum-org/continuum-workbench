@@ -1,5 +1,5 @@
 import IWorkflow from "../types/IWorkflow";
-import { Edge, Node } from "reactflow";
+import type { Edge, Node } from "reactflow";
 
 export default class Workflow implements IWorkflow{
     id: string;
