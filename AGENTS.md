@@ -34,6 +34,10 @@ Release notes live in `release_notes/`, one file per version: `RELEASE_NOTES_v<v
 - Never edit the file of a version that has already been released (a `release/<version>` tag exists); if the current version is already released, bump the version or ask first.
 - Put the change under "Highlights" (user-visible features and fixes), "CI", "Upgrade notes" (anything a deployer or a client must act on, such as a dependency or `yarn.lock` change) or "Changes", and correct any existing line the change makes untrue.
 
+## README
+
+Every change to a module updates the README.md that documents it, in the same change: the module's own README.md if it has one, otherwise the repository root README.md. Keep what a reader runs or relies on true: module lists and tables, setup and run commands, ports, configuration and environment variables, endpoints, node lists, versions and badges, and project-structure trees. Remove what the change deleted, add what it introduced, and correct anything it made untrue. If no README section is affected, say so in the report instead of skipping the check. Report the task as not done while a README is stale. `workflow-builder-extension/` has its own `README.md`; every other workspace is documented in the root `README.md` (workspace table, Quick Start, Project Structure).
+
 ## Stack
 
 React 18, TypeScript 5, Eclipse Theia, React Flow 11, JSONForms, MQTT.js, Yarn + Turborepo, Node >= 20
