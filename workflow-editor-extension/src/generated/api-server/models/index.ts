@@ -11,6 +11,7 @@ export * from './page-metadata';
 export * from './paged-model-string';
 export * from './paged-model-workflow-run-summary';
 export * from './port-data';
+export * from './port-data-data';
 export * from './problem-detail';
 export * from './start-workflow-response';
 export * from './table-cell';
