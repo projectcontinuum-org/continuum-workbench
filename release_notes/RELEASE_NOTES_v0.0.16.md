@@ -68,6 +68,22 @@ Previously shipped in `release/0.0.15` but un-noted. The `@WorkflowBuilder` chat
 - A new `entrypoint.sh` seeds the PVC-backed home on every start: creates `~/workspace` and `~/.claude/agents`, copies the `workflow-builder.md` agent, and registers the api-server MCP server for Claude Code at user scope from `CONTINUUM_API_SERVER_MCP_URL` (default `http://continuum-platform-api-server:8080/mcp`), validating it is an `http(s)` URL before use.
 - The `workflow-builder.md` agent prompt was updated to always delegate to the agent and to strip a leading `cwf` marker line before the Write hook saves `.cwf` content.
 
+### Flow variables in the Node Outputs dialog
+
+Double-clicking a node in a run opens the Node Outputs dialog. It now has two tabs:
+
+- **Outputs:** the node's data ports and its `$error`, as before. A failed node opens on its error. System keys such as `$variable` are no longer listed as ports. Before this change the dialog offered `$variable` as a port and tried to load it as a table; it also crashed when a node had no outputs at all. Both are fixed.
+- **Flow Variables:** a table of every flow variable the node had, with a count on the tab.
+  - Each row has its name and value. Objects and arrays open in the JSON viewer.
+  - Each row has a source: **Set here**, **Inherited** or **Overrides inherited** (hover to see the inherited value).
+  - When two branches brought different values for the same name, a note says which parent's value was used.
+
+The platform stores only what each node set itself (`$variable` in its outputs, from continuum-platform-core 0.0.23). The inherited variables are recomputed in the workbench from the run snapshot by `src/common/FlowVariables.ts`, which follows the orchestrator's `FlowVariableMerger` rules:
+- The nearest ancestor wins along a chain.
+- Where branches join, the parent on the lower input port wins.
+
+New `FlowVariables` spec. Runs recorded before platform 0.0.23, and workflows that set no flow variables, show an empty Flow Variables tab.
+
 ### Removed dead code: Node Repository widget and unused API clients (CONTNM-177)
 
 Nothing visible changes: none of this was bound, imported or called.
@@ -83,7 +99,7 @@ Nothing visible changes: none of this was bound, imported or called.
 ## CI
 
 - New `.github/workflows/ci.yml` runs on every pull request and push to `main`: `yarn install --frozen-lockfile --ignore-scripts` then `yarn test` (the specs of `workflow-editor-extension` and `workflow-builder-extension`). `--frozen-lockfile` fails when `package.json` needs an entry `yarn.lock` does not have, so a dependency added without committing the lockfile cannot pass; it does not fail on leftovers, so a removed dependency still passes with its old entries in `yarn.lock`. Image builds and publishing stay in `build-module.yml` and `on-release.yml`.
-- Specs run with `node --test` against `tsconfig.test.json` (compiles `src/common` to `.test-out`). `jsdom` is a devDependency because `SvgSanitizer.spec.ts` needs a DOM and fails when jsdom is missing (set `ALLOW_NO_JSDOM=1` to run without it; do not set it in CI). New this release: `SafeEncoding`, `StartWorkflowResult`, `NodeDataResult`, `SvgSanitizer` and `XkcdNameGenerator` specs.
+- Specs run with `node --test` against `tsconfig.test.json` (compiles `src/common` to `.test-out`). `jsdom` is a devDependency because `SvgSanitizer.spec.ts` needs a DOM and fails when jsdom is missing (set `ALLOW_NO_JSDOM=1` to run without it; do not set it in CI). New this release: `SafeEncoding`, `StartWorkflowResult`, `NodeDataResult`, `SvgSanitizer`, `XkcdNameGenerator` and `FlowVariables` specs.
 
 ## Upgrade notes
 
@@ -103,5 +119,6 @@ Nothing visible changes: none of this was bound, imported or called.
 | (this branch) | CONTNM-167 | Show workflow scheduled runs under scheduled tree nodes |
 | (this branch) | CONTNM-177 | Call the platform through typescript-axios clients generated from the OpenAPI specs |
 | (this branch) | CONTNM-177 | Remove the unused Node Repository widget, dead API clients, core types and dependencies |
+| (this branch) | CONTNM-171 | Node Outputs dialog: Flow Variables tab (own and inherited), system keys no longer listed as ports |
 
 **Full diff:** `release/0.0.14...HEAD` (53 files changed, 2451 insertions, 381 deletions)

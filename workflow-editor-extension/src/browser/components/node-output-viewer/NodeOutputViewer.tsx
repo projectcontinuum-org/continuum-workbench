@@ -1,12 +1,20 @@
 import * as React from 'react';
 import DialogTitle from '@mui/material/DialogTitle';
 import Dialog from '@mui/material/Dialog';
-import {DialogContent, IconButton, MenuItem, Select, SelectChangeEvent, styled, Typography} from '@mui/material';
+import {Badge, Box, DialogContent, IconButton, MenuItem, Select, SelectChangeEvent, styled, Tab, Tabs, Typography} from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import MaximizeIcon from '@mui/icons-material/Fullscreen';
 import RestoreIcon from '@mui/icons-material/FullscreenExit';
-import { INodeOutputs } from '@continuum/core';
+import { INodeOutputs, INodeToOutputsMap, IWorkflow } from '@continuum/core';
 import { TableOutputView } from './table-output-view/TableOutputView';
+import { FlowVariablesView } from './flow-variables-view/FlowVariablesView';
+import {
+    dataPortIds,
+    flowVariableRows,
+    inheritedFlowVariables,
+    InheritedFlowVariables,
+    ownFlowVariables,
+} from '../../../common/FlowVariables';
 
 interface StyledDialogProps {
     customWidth?: number;
@@ -71,17 +79,42 @@ const ResizeHandle = styled('div')(({ theme }) => ({
 const MIN_DIALOG_WIDTH = 600;
 const MIN_DIALOG_HEIGHT = 400;
 
+const OUTPUTS_TAB = 0;
+const FLOW_VARIABLES_TAB = 1;
+
+const NO_INHERITED_VARIABLES: InheritedFlowVariables = { variables: {}, conflicts: [] };
+
 export interface NodeOutputViewerProps {
     open: boolean;
     onClose: (value: any) => void;
     initialData?: any;
     nodeOutputs: INodeOutputs;
+    /** Id of the node whose outputs are shown; with the two props below, enables the inherited flow variables. */
+    nodeId?: string;
+    /** Run snapshot, used to walk back through the node's ancestors. */
+    workflowSnapshot?: IWorkflow;
+    /** Outputs of every node of the run, including their `$variable` entries. */
+    nodeToOutputsMap?: INodeToOutputsMap;
 }
 
-export default function NodeOutputViewer({ onClose, open, nodeOutputs }: NodeOutputViewerProps) {
+export default function NodeOutputViewer({ onClose, open, nodeOutputs, nodeId, workflowSnapshot, nodeToOutputsMap }: NodeOutputViewerProps) {
 
-    const [portId, setPortId] = React.useState<string>(nodeOutputs ? Object.keys(nodeOutputs)[0] : "");
-    const [portData, setPortData] = React.useState(nodeOutputs[portId]);
+    // `$variable` (and any other `$` key but `$error`) is not a data port: it is shown on the Flow Variables tab.
+    const portIds = React.useMemo(() => dataPortIds(nodeOutputs), [nodeOutputs]);
+    const [activeTab, setActiveTab] = React.useState(OUTPUTS_TAB);
+    const [selectedPortId, setSelectedPortId] = React.useState<string>(portIds[0] ?? "");
+    const portId = portIds.includes(selectedPortId) ? selectedPortId : (portIds[0] ?? "");
+    const portData = portId ? nodeOutputs[portId] : undefined;
+
+    const flowVariables = React.useMemo(() => {
+        const inherited = nodeId && workflowSnapshot && nodeToOutputsMap
+            ? inheritedFlowVariables(nodeId, workflowSnapshot, nodeToOutputsMap)
+            : NO_INHERITED_VARIABLES;
+        return {
+            rows: flowVariableRows(ownFlowVariables(nodeOutputs), inherited.variables),
+            conflicts: inherited.conflicts,
+        };
+    }, [nodeId, workflowSnapshot, nodeToOutputsMap, nodeOutputs]);
     const [dialogSize, setDialogSize] = React.useState({ width: 800, height: 600 });
     const [isResizing, setIsResizing] = React.useState(false);
     const [isMaximized, setIsMaximized] = React.useState(false);
@@ -100,9 +133,8 @@ export default function NodeOutputViewer({ onClose, open, nodeOutputs }: NodeOut
     // ];
 
     const portIdChange = React.useCallback((event: SelectChangeEvent)=>{
-        setPortId(event.target.value);
-        setPortData(nodeOutputs[event.target.value]);
-    }, [setPortId]);
+        setSelectedPortId(event.target.value);
+    }, [setSelectedPortId]);
 
     const handleMaximize = React.useCallback(() => {
         if (isMaximized) {
@@ -195,27 +227,57 @@ export default function NodeOutputViewer({ onClose, open, nodeOutputs }: NodeOut
                 minWidth: 0,
                 gap: 2
             }}>
-                <Select
-                    value={portId}
-                    label="Port Id"
-                    onChange={portIdChange}
-                    sx={{
-                        flexShrink: 0,
-                        width: '200px',
-                        minWidth: '200px',
-                        maxWidth: '200px'
-                    }}>
-                    {Object.keys(nodeOutputs).map((key) => (
-                        <MenuItem value={key} key={key}>{key}</MenuItem>
-                    ))}
-                </Select>
-              {portData.status == "SUCCESS" && <TableOutputView outputData={portData}/>}
-              {portData.status == "FAILED" && <Typography
-                  variant="h6"
-                  color="error"
-                  gutterBottom>
-                {portData.data + "\n ERROR"}
-              </Typography>}
+                <Tabs
+                    value={activeTab}
+                    onChange={(_, tab: number) => setActiveTab(tab)}
+                    sx={{ minHeight: 'auto', borderBottom: 1, borderColor: 'divider', flexShrink: 0 }}>
+                    <Tab label="Outputs" value={OUTPUTS_TAB} />
+                    <Tab
+                        value={FLOW_VARIABLES_TAB}
+                        label={
+                            <Badge
+                                badgeContent={flowVariables.rows.length}
+                                color="primary"
+                                invisible={flowVariables.rows.length === 0}
+                                sx={{ '& .MuiBadge-badge': { right: -12 } }}>
+                                Flow Variables
+                            </Badge>
+                        } />
+                </Tabs>
+                {activeTab === OUTPUTS_TAB && (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minHeight: 0, minWidth: 0 }}>
+                        {portIds.length === 0 ? (
+                            <Typography variant="body2" color="text.secondary">
+                                This node produced no data outputs.
+                            </Typography>
+                        ) : (
+                            <Select
+                                value={portId}
+                                label="Port Id"
+                                onChange={portIdChange}
+                                sx={{
+                                    flexShrink: 0,
+                                    width: '200px',
+                                    minWidth: '200px',
+                                    maxWidth: '200px'
+                                }}>
+                                {portIds.map((key) => (
+                                    <MenuItem value={key} key={key}>{key}</MenuItem>
+                                ))}
+                            </Select>
+                        )}
+                        {portData?.status == "SUCCESS" && <TableOutputView key={portId} outputData={portData}/>}
+                        {portData?.status == "FAILED" && <Typography
+                            variant="h6"
+                            color="error"
+                            gutterBottom>
+                            {portData.data + "\n ERROR"}
+                        </Typography>}
+                    </Box>
+                )}
+                {activeTab === FLOW_VARIABLES_TAB && (
+                    <FlowVariablesView rows={flowVariables.rows} conflicts={flowVariables.conflicts} />
+                )}
             </DialogContent>
             {!isMaximized && <ResizeHandle onMouseDown={handleResizeStart} />}
         </StyledDialog>

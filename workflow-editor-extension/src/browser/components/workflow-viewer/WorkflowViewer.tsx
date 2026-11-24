@@ -6,7 +6,7 @@ import { Box, Button, CircularProgress } from "@mui/material";
 import ReactFlow, { Controls, Node, Panel } from "reactflow";
 import BaseNode from '../node/BaseNode';
 import BaseEdge from '../node/BaseEdge';
-import { IBaseNodeData, IJobUpdate, INodeOutputs, INodeToOutputsMap, IWorkflow } from '@continuum/core';
+import { IBaseNodeData, IJobUpdate, INodeToOutputsMap, IWorkflow } from '@continuum/core';
 import LockClockIcon from '@mui/icons-material/LockClock';
 import HourglassTopSharpIcon from '@mui/icons-material/HourglassTopSharp';
 import ChecklistRtlSharpIcon from '@mui/icons-material/ChecklistRtlSharp';
@@ -44,16 +44,18 @@ export interface WorkflowViewerProps {
 export default function WorkflowViewer({ workflowSnapshot, executionStatus, nodeToOutputsMap, onCancelRequest, onTerminateRequest }: WorkflowViewerProps) {
     const ref = useRef<HTMLDivElement | null>(null);
     const [theme] = useMUIThemeStore((state)=>([state.theme]));
-    const [nodeOutputs, setNodeOutputs] = React.useState<INodeOutputs | null>(null);
+    const [selectedNodeId, setSelectedNodeId] = React.useState<string | null>(null);
+    // Read from the live map, so the dialog follows updates of a running workflow.
+    const nodeOutputs = selectedNodeId ? nodeToOutputsMap[selectedNodeId] : undefined;
 
     const onNodeOutputClose = React.useCallback(()=>{
-        setNodeOutputs(null);
-    }, [setNodeOutputs]);
+        setSelectedNodeId(null);
+    }, [setSelectedNodeId]);
 
     const onNodeDoubleClick = React.useCallback((event: React.MouseEvent, clickedNode: Node<IBaseNodeData>) => {
         console.debug("WorkflowViewer: onNodeDoubleClick", event, clickedNode, nodeToOutputsMap);
-        setNodeOutputs(nodeToOutputsMap[clickedNode.id]);
-    }, [setNodeOutputs, nodeToOutputsMap]);
+        setSelectedNodeId(nodeToOutputsMap[clickedNode.id] ? clickedNode.id : null);
+    }, [setSelectedNodeId, nodeToOutputsMap]);
 
     const isTerminal = !!executionStatus && TERMINAL_STATUSES.has(executionStatus);
 
@@ -102,10 +104,13 @@ export default function WorkflowViewer({ workflowSnapshot, executionStatus, node
                     </Panel>
                 )}
             </ReactFlow>
-            {nodeOutputs && <NodeOutputViewer
+            {selectedNodeId && nodeOutputs && <NodeOutputViewer
                 open={true}
                 onClose={onNodeOutputClose}
-                nodeOutputs={nodeOutputs}/>}
+                nodeOutputs={nodeOutputs}
+                nodeId={selectedNodeId}
+                workflowSnapshot={workflowSnapshot}
+                nodeToOutputsMap={nodeToOutputsMap}/>}
         </Box>
     );
 
