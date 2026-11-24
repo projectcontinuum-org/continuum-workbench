@@ -1,7 +1,7 @@
 import * as React from 'react';
 import DialogTitle from '@mui/material/DialogTitle';
 import Dialog from '@mui/material/Dialog';
-import {Badge, Box, DialogContent, IconButton, MenuItem, Select, SelectChangeEvent, styled, Tab, Tabs, Typography} from '@mui/material';
+import {Box, DialogContent, IconButton, MenuItem, Select, SelectChangeEvent, styled, Tab, Tabs, Typography} from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import MaximizeIcon from '@mui/icons-material/Fullscreen';
 import RestoreIcon from '@mui/icons-material/FullscreenExit';
@@ -245,13 +245,31 @@ export default function NodeOutputViewer({ onClose, open, nodeOutputs, nodeId, w
                     <Tab
                         value={FLOW_VARIABLES_TAB}
                         label={
-                            <Badge
-                                badgeContent={flowVariables.rows.length}
-                                color="primary"
-                                invisible={flowVariables.rows.length === 0}
-                                sx={{ '& .MuiBadge-badge': { right: -12 } }}>
+                            // An inline count, not a MUI Badge: a Badge is positioned on the corner of what it wraps,
+                            // so it sticks out of the tab. This one takes up room inside the tab label.
+                            <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
                                 Flow Variables
-                            </Badge>
+                                {flowVariables.rows.length > 0 && (
+                                    <Box
+                                        component="span"
+                                        sx={{
+                                            minWidth: 20,
+                                            height: 20,
+                                            px: 0.75,
+                                            borderRadius: '10px',
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            fontSize: '0.75rem',
+                                            fontWeight: 500,
+                                            lineHeight: 1,
+                                            bgcolor: 'primary.main',
+                                            color: 'primary.contrastText',
+                                        }}>
+                                        {flowVariables.rows.length}
+                                    </Box>
+                                )}
+                            </Box>
                         } />
                 </Tabs>
                 {activeTab === OUTPUTS_TAB && (
