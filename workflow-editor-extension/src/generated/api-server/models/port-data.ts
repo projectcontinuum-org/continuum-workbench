@@ -13,25 +13,25 @@
  */
 
 
+// May contain unused imports in some cases
+// @ts-ignore
+import type { PortDataData } from './port-data-data';
 
 /**
- * One output of a node. A produced port references its Parquet file in object storage; a failed node has the single port `$error` whose `data` is the error message.
+ * One output of a node. A produced port references its Parquet file in object storage; a failed node has the port `$error` whose `data` is the error message. The system key `$variable`, present for every finished node (failed ones too), holds the node\'s flow variables as a JSON object in `data`: the ones it set plus the default ones the worker exports for every run (`<nodeType>_<nodeId>.executionStatus`, `.durationMs`, ...).
  */
 export interface PortData {
     /**
-     * Media type of `data`: `application/parquet` for a stored table, `text/plain` for the `$error` message.
+     * Media type of `data`: `application/parquet` for a stored table, `text/plain` for the `$error` message, `application/json` for the `$variable` flow variables.
      */
     'contentType': string;
-    /**
-     * For a table: its location, `{remote}<runId>/<nodeId>/output.<port>.parquet` (read it with the node output endpoint). For `$error`: the error message.
-     */
-    'data': string;
+    'data': PortDataData;
     /**
      * Whether the port was produced (`SUCCESS`), produced with warnings (`WARNING`) or is the error of a failed node (`FAILED`).
      */
     'status': PortDataStatusEnum;
     /**
-     * Columns of the table: one `{name, contentType}` entry per column. Empty for `$error`.
+     * Columns of the table: one `{name, contentType}` entry per column. Empty for `$error` and `$variable`.
      */
     'tableSpec': Array<{ [key: string]: string; }>;
 }
