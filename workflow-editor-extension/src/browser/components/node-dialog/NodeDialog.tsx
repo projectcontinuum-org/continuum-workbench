@@ -176,6 +176,16 @@ const ResizeHandle = styled('div')(({ theme }) => ({
 
 const MIN_DIALOG_WIDTH = 400;
 const MIN_DIALOG_HEIGHT = 300;
+/** Share of the browser window's width and height the dialog opens with. */
+const DEFAULT_WINDOW_FRACTION = 0.7;
+
+/** 70% of the browser window, but not below the resize minimum and never larger than the window itself. */
+function defaultDialogSize(): { width: number; height: number } {
+    return {
+        width: Math.min(window.innerWidth, Math.max(MIN_DIALOG_WIDTH, Math.round(window.innerWidth * DEFAULT_WINDOW_FRACTION))),
+        height: Math.min(window.innerHeight, Math.max(MIN_DIALOG_HEIGHT, Math.round(window.innerHeight * DEFAULT_WINDOW_FRACTION))),
+    };
+}
 
 console.log('[NodeDialog] Registering custom renderers including CredentialControl');
 
@@ -203,11 +213,11 @@ export default function NodeDialog({ onClose, onSave, readOnly=false, open, init
 
     const [data, setData] = React.useState(initialData);
     const [hasErrors, setHasErrors] = React.useState(false);
-    const [dialogSize, setDialogSize] = React.useState({ width: 600, height: 600 });
+    const [dialogSize, setDialogSize] = React.useState(defaultDialogSize);
     const [isResizing, setIsResizing] = React.useState(false);
     const [isMaximized, setIsMaximized] = React.useState(false);
     const resizeStartPos = React.useRef({ x: 0, y: 0, width: 0, height: 0 });
-    const previousSize = React.useRef({ width: 600, height: 600 });
+    const previousSize = React.useRef(dialogSize);
     const [retryOptions, setRetryOptions] = React.useState<IRetryOptions>(initialRetryOptions || {});
     const [activeTopTab, setActiveTopTab] = React.useState(0);
     const [overrides, setOverrides] = React.useState<Record<RetryField, boolean>>(() => ({

@@ -78,6 +78,16 @@ const ResizeHandle = styled('div')(({ theme }) => ({
 
 const MIN_DIALOG_WIDTH = 600;
 const MIN_DIALOG_HEIGHT = 400;
+/** Share of the browser window's width and height the dialog opens with. */
+const DEFAULT_WINDOW_FRACTION = 0.7;
+
+/** 70% of the browser window, but not below the resize minimum and never larger than the window itself. */
+function defaultDialogSize(): { width: number; height: number } {
+    return {
+        width: Math.min(window.innerWidth, Math.max(MIN_DIALOG_WIDTH, Math.round(window.innerWidth * DEFAULT_WINDOW_FRACTION))),
+        height: Math.min(window.innerHeight, Math.max(MIN_DIALOG_HEIGHT, Math.round(window.innerHeight * DEFAULT_WINDOW_FRACTION))),
+    };
+}
 
 const OUTPUTS_TAB = 0;
 const FLOW_VARIABLES_TAB = 1;
@@ -115,11 +125,11 @@ export default function NodeOutputViewer({ onClose, open, nodeOutputs, nodeId, w
             conflicts: inherited.conflicts,
         };
     }, [nodeId, workflowSnapshot, nodeToOutputsMap, nodeOutputs]);
-    const [dialogSize, setDialogSize] = React.useState({ width: 800, height: 600 });
+    const [dialogSize, setDialogSize] = React.useState(defaultDialogSize);
     const [isResizing, setIsResizing] = React.useState(false);
     const [isMaximized, setIsMaximized] = React.useState(false);
     const resizeStartPos = React.useRef({ x: 0, y: 0, width: 0, height: 0 });
-    const previousSize = React.useRef({ width: 800, height: 600 });
+    const previousSize = React.useRef(dialogSize);
 
     // const rows: GridRowsProp = [
     //     { id: 1, col1: 'Hello', col2: 'World' },
