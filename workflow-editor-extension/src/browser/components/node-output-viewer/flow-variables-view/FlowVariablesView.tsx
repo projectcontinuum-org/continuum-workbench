@@ -13,6 +13,7 @@ import {
     Tooltip,
     Typography,
 } from '@mui/material';
+import DataObjectOutlinedIcon from '@mui/icons-material/DataObjectOutlined';
 import OpenInFullIcon from '@mui/icons-material/OpenInFull';
 import { FlowVariableConflict, FlowVariableOrigin, FlowVariableRow } from '../../../../common/FlowVariables';
 import { JsonViewerDialog } from '../table-output-view/JsonViewerDialog';
@@ -51,9 +52,39 @@ export function FlowVariablesView({ rows, conflicts }: FlowVariablesViewProps) {
 
     if (rows.length === 0) {
         return (
-            <Typography variant="body2" color="text.secondary">
-                This node received and set no flow variables.
-            </Typography>
+            <Box
+                sx={{
+                    flex: 1,
+                    minHeight: 0,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 1.5,
+                    p: 4,
+                    textAlign: 'center',
+                }}>
+                <Box
+                    sx={{
+                        width: 72,
+                        height: 72,
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        bgcolor: 'action.hover',
+                        color: 'text.disabled',
+                    }}>
+                    <DataObjectOutlinedIcon sx={{ fontSize: 36 }} />
+                </Box>
+                <Typography variant="subtitle1" color="text.primary">
+                    No flow variables
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 360 }}>
+                    This node neither received nor set any flow variables. Variables set by this node or by
+                    nodes upstream will appear here.
+                </Typography>
+            </Box>
         );
     }
 
