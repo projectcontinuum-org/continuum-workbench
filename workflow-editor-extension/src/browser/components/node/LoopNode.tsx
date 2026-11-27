@@ -204,7 +204,7 @@ function LoopNode({
                         />
                     )}
                     {!isWorking && status !== NodeStatus.CONFIGURED && (
-                        <Box className="loop-node-status" sx={{ color: statusPresentation.color }}>
+                        <Box className="loop-node-status" sx={{ color: statusPresentation.color }} title={progressMessage ?? undefined}>
                             <NodeStatusBadge status={status} />
                             <Typography variant="caption">
                                 {statusPresentation.label}
@@ -250,6 +250,11 @@ function LoopNode({
                     <Typography className="loop-member-count">
                         {loopMemberCountLabel(memberCount)}
                     </Typography>
+                    {progressMessage && !isWorking && (
+                        <Typography className="loop-progress-message" title={progressMessage}>
+                            {progressMessage}
+                        </Typography>
+                    )}
                 </Box>
             ) : (
                 <>
