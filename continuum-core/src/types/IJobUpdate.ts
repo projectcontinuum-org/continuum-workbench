@@ -10,4 +10,6 @@ export default interface IJobUpdate {
     createdAtTimestampUtc: number;
     updatesAtTimestampUtc: number;
     workflow: IWorkflow;
+    historyEventCount?: number;
+    historyEventLimit?: number;
 }

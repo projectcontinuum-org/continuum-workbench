@@ -155,5 +155,6 @@ The workbench now supports loop nodes — a container that wraps member nodes ru
 - **Build fix**: Fixed TypeScript compilation issues in the Loop canvas hook and Flow Variables snapshot typing.
 - **Workflow Builder agents**: Both prompt twins (`claude-code/workflow-builder.md` and `WorkflowBuilderPrompt.ts`) now include a loop reference section — nodeId `org.projectcontinuum.core.builtin.Loop`, required properties (condition, maxIterations, onLimit, onNonBooleanResult), CEL semantics, available libraries, limits, examples, and validation rules.
 - **Dependency**: Added `react-querybuilder` ^8.28.0 to `workflow-editor-extension/package.json` for the visual condition builder. The common condition adapter uses its CEL parser/formatter; LoopConditionBuilder is the only UI component that imports the builder.
+- **History gauge in the workflow viewer**: the top-right corner of a run's viewer shows a circular gauge of `historyEventCount / historyEventLimit` from the orchestrator's live updates (green up to 50 %, yellow above 50 %, red above 80 %; the tooltip shows the numbers). It appears once the first update with these fields arrives; a run opened from the history list before then, or from an older orchestrator, shows no gauge.
 
 **Full diff:** `release/0.0.14...HEAD` (53 files changed, 2451 insertions, 381 deletions)

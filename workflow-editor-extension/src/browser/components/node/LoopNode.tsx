@@ -27,10 +27,8 @@ import {
     loopMemberCountLabel,
     loopNestingPresentation,
     loopNodeProgressMessage,
-    loopVariableChipText,
 } from '../../../common/LoopPresentation';
 import { fitsBuilder, parseCondition, DEFAULT_LOOP_CONDITION } from '../../../common/LoopConditionQuery';
-import type { LoopRuntimeSummary } from '../../../common/LoopRuntimePresentation';
 import { collapsedLoopHandleId } from '../../../common/LoopTopology';
 import '@reactflow/node-resizer/dist/style.css';
 import './LoopNode.css';
@@ -51,7 +49,6 @@ interface LoopNodeProps extends NodeProps {
     onOpenSettings?: () => void;
     memberCount?: number;
     nestingDepth?: number;
-    runtimeSummary?: LoopRuntimeSummary;
 }
 
 function LoopNode({
@@ -64,7 +61,6 @@ function LoopNode({
     onOpenSettings,
     memberCount = 0,
     nestingDepth = 0,
-    runtimeSummary,
 }: LoopNodeProps) {
     const nodeData = data as unknown as LoopNodeCanvasData;
     const collapsed = nodeData.collapsed ?? false;
@@ -91,7 +87,6 @@ function LoopNode({
         && !parsed;
     const borderColor = status === NodeStatus.CONFIGURED ? 'secondary.main' : statusPresentation.color;
     const nestingPresentation = loopNestingPresentation(nestingDepth);
-    const showRuntimeSummary = !collapsed && runtimeSummary && runtimeSummary.variables.length > 0;
     const updateNodeInternals = useUpdateNodeInternals();
     const handleResize = React.useCallback((_event: unknown, size: { width: number; height: number }) => {
         onResizeLoop?.(id, size.width, size.height);
@@ -258,31 +253,6 @@ function LoopNode({
                 </Box>
             ) : (
                 <>
-                    {showRuntimeSummary && (
-                        <Box className="loop-runtime-summary">
-                            <Typography
-                                className="loop-runtime-source"
-                                title={`set by: ${runtimeSummary.sourceLabel} (inside)`}>
-                                set by: {runtimeSummary.sourceLabel} (inside)
-                            </Typography>
-                            <Box
-                                className="loop-variable-chips"
-                                data-testid={`loop-runtime-variables-${id}`}
-                                role="region"
-                                aria-label="Loop carried variables"
-                                tabIndex={0}>
-                                {runtimeSummary.variables.map(({ name, value }) => (
-                                    <Typography
-                                        component="span"
-                                        className="loop-variable-chip"
-                                        title={loopVariableChipText(name, value)}
-                                        key={name}>
-                                        {loopVariableChipText(name, value)}
-                                    </Typography>
-                                ))}
-                            </Box>
-                        </Box>
-                    )}
                     {progressMessage && (
                         <Typography className="loop-progress-message" title={progressMessage}>
                             {progressMessage}

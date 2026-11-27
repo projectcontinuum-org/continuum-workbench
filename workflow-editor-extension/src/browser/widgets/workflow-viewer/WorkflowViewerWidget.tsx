@@ -26,6 +26,8 @@ export default class WorkflowViewerWidget extends ReactWidget {
     protected workflow?: IWorkflow;
     protected executionStatus?: IJobUpdate["status"];
     protected nodeToOutputsMap: INodeToOutputsMap;
+    protected historyEventCount?: number;
+    protected historyEventLimit?: number;
     protected reactFlow: ReactFlowInstance;
     protected ws?: WatchEventHandler;
     protected executionService = new ExecutionService();
@@ -75,6 +77,8 @@ export default class WorkflowViewerWidget extends ReactWidget {
             this.workflow = event.data.workflow;
             this.executionStatus = event.data.status;
             this.nodeToOutputsMap = event.data.nodeToOutputsMap;
+            this.historyEventCount = event.data.historyEventCount ?? this.historyEventCount;
+            this.historyEventLimit = event.data.historyEventLimit ?? this.historyEventLimit;
             if (this.mounted) {
                 try {
                     this.update();
@@ -146,6 +150,8 @@ export default class WorkflowViewerWidget extends ReactWidget {
                     workflow={this.workflow}
                     executionStatus={this.executionStatus}
                     nodeToOutputsMap={this.nodeToOutputsMap}
+                    historyEventCount={this.historyEventCount}
+                    historyEventLimit={this.historyEventLimit}
                     setReactflow={(rFlow)=>{this.reactFlow = rFlow}}
                     colorRegistry={this.colorRegistry}
                     onCancelRequest={this.handleCancelRequest}
@@ -161,6 +167,8 @@ interface WorkflowViewerWidgetHOCProps {
     colorRegistry: ColorRegistry;
     executionStatus?: IJobUpdate["status"];
     nodeToOutputsMap: INodeToOutputsMap;
+    historyEventCount?: number;
+    historyEventLimit?: number;
     onCancelRequest: () => void;
     onTerminateRequest: () => void;
 }
@@ -171,6 +179,8 @@ function WorkflowViewerWidgetHOC({
     colorRegistry,
     executionStatus,
     nodeToOutputsMap,
+    historyEventCount,
+    historyEventLimit,
     onCancelRequest,
     onTerminateRequest
 }: WorkflowViewerWidgetHOCProps) {
@@ -193,6 +203,8 @@ function WorkflowViewerWidgetHOC({
                 workflowSnapshot={workflow}
                 executionStatus={executionStatus}
                 nodeToOutputsMap={nodeToOutputsMap}
+                historyEventCount={historyEventCount}
+                historyEventLimit={historyEventLimit}
                 onCancelRequest={onCancelRequest}
                 onTerminateRequest={onTerminateRequest}/>}
         </ThemeProvider>
