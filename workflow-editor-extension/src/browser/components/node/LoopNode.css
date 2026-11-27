@@ -60,6 +60,15 @@
     letter-spacing: 0.12em;
 }
 
+.loop-node-id.MuiTypography-root {
+    flex: 0 0 auto;
+    color: var(--mui-palette-text-secondary, var(--theia-ui-font-color2));
+    font-family: var(--theia-ui-monospace-font-family, monospace);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+
 .loop-node-title {
     flex: 0 1 auto;
     min-width: 32px;
@@ -75,14 +84,16 @@
     box-sizing: border-box;
     display: inline-flex;
     align-items: center;
-    flex: 0 1 460px;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: auto;
     min-width: 120px;
     max-width: 460px;
     overflow: hidden;
-    padding: 2px 7px;
-    border: 1px solid var(--mui-palette-divider, var(--theia-editorWidget-border));
-    border-radius: 5px;
-    background: color-mix(in srgb, var(--mui-palette-background-default, var(--theia-editor-background)) 76%, transparent);
+    padding: 4px 8px;
+    border: 0;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--mui-palette-secondary-main, var(--theia-focusBorder)) 12%, transparent);
 }
 
 .loop-condition-text {

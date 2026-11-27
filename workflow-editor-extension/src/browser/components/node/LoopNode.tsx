@@ -144,8 +144,8 @@ function LoopNode({
                 <Box className="loop-node-identity">
                     <LoopIcon className="loop-node-icon" />
                     <Typography className="loop-node-kind">LOOP</Typography>
-                    <Typography className="loop-node-title" title={nodeData.title || 'Loop'}>
-                        {nodeData.title || 'Loop'}
+                    <Typography className="loop-node-id" title={`Loop node ID: ${id}`}>
+                        #{id}
                     </Typography>
                     <Tooltip title={`while ${conditionText}`} placement="top">
                         <Box className="loop-condition-chip">

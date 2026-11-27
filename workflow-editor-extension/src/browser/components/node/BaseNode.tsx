@@ -5,6 +5,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import SkipNextIcon from '@mui/icons-material/SkipNext';
+import LoopIcon from '@mui/icons-material/Loop';
 import { IBaseNodeData, NodeStatus, StageStatus } from "@continuum/core";
 import "./BaseNode.css";
 import { Box, CircularProgress, Grid, Step, StepLabel, Stepper, Tooltip, Typography } from "@mui/material";
@@ -13,6 +14,7 @@ import { nodeStatusClass } from "../../../common/ExecutionStatusPresentation";
 import { useMUIThemeStore } from "../../store/MUIThemeStore";
 import { mirage } from 'ldrs'
 import DynamicIcon from "../utils/DynamicIcon";
+import { useLoopMembership } from "../../hooks/useLoopMembership";
 
 mirage.register()
 
@@ -49,6 +51,7 @@ const getStepIcon = (status: StageStatus) => {
 
 export default function BaseNode(props: NodeProps<IBaseNodeData>) {
     const [theme] = useMUIThemeStore((state)=>([state.theme]))
+    const loopMembership = useLoopMembership(props.id);
 
     return (
       <Grid
@@ -56,9 +59,30 @@ export default function BaseNode(props: NodeProps<IBaseNodeData>) {
         direction="row"
         justifyContent="space-between"
         alignItems="center"
-        className={["node-body", nodeStatusClass(props.data.status)].filter(Boolean).join(" ")}
+        className={[
+          "node-body",
+          nodeStatusClass(props.data.status),
+          loopMembership ? "loop-member" : null,
+          loopMembership ? `loop-member-depth-${loopMembership.nestingDepth}` : null,
+        ].filter(Boolean).join(" ")}
         position="relative"
       >
+        {loopMembership && (
+          <Box className="loop-member-badge">
+            <LoopIcon
+              className="loop-member-icon"
+              fontSize="small"
+              data-testid={`loop-icon-${props.id}`}
+            />
+            <Typography 
+              className="loop-member-id"
+              variant="caption"
+              title={`Parent loop: #${loopMembership.parentLoopId}`}
+            >
+              #{loopMembership.parentLoopId}
+            </Typography>
+          </Box>
+        )}
         <Grid
           container
           direction="column"

@@ -44,6 +44,84 @@
   margin-top: 2px;
 }
 
+/* Loop member styling */
+.react-flow__node.loop-member {
+  position: relative;
+}
+
+.loop-member-icon {
+  flex: 0 0 auto;
+  margin: 0 !important;
+  padding: 0 !important;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+}
+
+.loop-member-badge {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  pointer-events: auto;
+}
+
+.loop-member-id {
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  color: var(--mui-palette-text-secondary, var(--theia-ui-font-color2)) !important;
+  font-family: var(--theia-ui-monospace-font-family, monospace) !important;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+}
+
+
+/* Nesting level background colors: distinct, visually clear colors for each nesting depth */
+/* Apply to .node-body which is the actual container element */
+
+/* Depth 0: Soft secondary blue */
+.node-body.loop-member-depth-0 {
+  background-color: color-mix(
+    in srgb,
+    var(--mui-palette-secondary-main) 10%,
+    transparent
+  ) !important;
+}
+
+/* Depth 1: Soft primary blue (different from depth 0) */
+.node-body.loop-member-depth-1 {
+  background-color: color-mix(
+    in srgb,
+    var(--mui-palette-primary-main) 10%,
+    transparent
+  ) !important;
+}
+
+/* Depth 2: Soft info cyan (more distinct) */
+.node-body.loop-member-depth-2 {
+  background-color: color-mix(
+    in srgb,
+    var(--mui-palette-info-main) 10%,
+    transparent
+  ) !important;
+}
+
+/* Depth 3: Soft success green (most distinct) */
+.node-body.loop-member-depth-3 {
+  background-color: color-mix(
+    in srgb,
+    var(--mui-palette-success-main) 10%,
+    transparent
+  ) !important;
+}
+
+
 .target-port-group {
   position: absolute;
   width: 10px;

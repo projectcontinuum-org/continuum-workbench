@@ -48,6 +48,24 @@ Adding `@theia/plugin-ext` for git support transitively re-introduces `@theia/de
 
 You can now type a space in the node dialog's code editors (any `format: "code"` property, e.g. CreateTable's FreeMarker **JSON Array**). Before, React Flow's page-wide Space key (pan the canvas) blocked it. Backspace in an editor also no longer deletes the selected canvas nodes behind the dialog.
 
+### Loop member nodes display icon and nesting-level background colors
+
+Nodes that are members of a Loop construct now display a small loop icon in the top-left corner with the parent Loop's ID, and inherit a visually distinct background color based on their parent Loop's nesting level. This makes nested loop structures easier to understand at a glance, and helps color-blind users identify loop membership.
+
+- **Loop icon with parent ID**: Each loop member displays a small loop icon with the parent Loop ID (e.g., `#loop-1`) in monospace font beside it.
+- **Parent ID tooltip**: Hovering over the ID shows "Parent loop: #loop-id" for additional context.
+- **Accessibility**: The icon and ID combination helps users with color vision deficiency identify loop membership and parent relationships.
+- Background colors use distinct MUI theme palette colors for each nesting depth:
+  - Depth 0: Soft secondary blue (10% `secondary-main`)
+  - Depth 1: Soft primary blue (10% `primary-main`)
+  - Depth 2: Soft info cyan (10% `info-main`)
+  - Depth 3: Soft success green (10% `success-main`)
+- Each nesting level is now visually distinct and clear at a glance.
+- The styling works in both the editor canvas and the run viewer.
+- A new React hook `useLoopMembership` detects membership and nesting depth; it is available for use by custom node components.
+- Theme-compatible: the icon, ID and background colors render correctly in both light and dark themes.
+- **Loop condition box styling:** The condition display in Loop node headers now shrinks to fit content and centers the text. The box uses a subtle badge appearance (12% secondary-color tint background, no border) instead of a text-box style, creating a more cohesive visual theme and better space efficiency.
+
 - `MonacoEditorWrapper` creates the editor with `editContext: false`. Theia's Monaco 1.108 defaults to the native EditContext input, a plain `div.native-edit-context`. React Flow, which only skips inputs, textareas and contenteditable elements, did not recognize it as a text field. With the option off, Monaco uses the classic hidden `textarea`. The wrapper also sets `acceptSuggestionOnCommitCharacter: false`, marks its container `nokey`, and stops `keydown`/`keyup` from bubbling past the editor (no `preventDefault`).
 - `WorkflowEditor` turns off React Flow's `panActivationKeyCode` (Space) and `deleteKeyCode` (Backspace) while the node dialog is open.
 
@@ -121,7 +139,7 @@ Nothing visible changes: none of this was bound, imported or called.
 | (this branch) | CONTNM-177 | Remove the unused Node Repository widget, dead API clients, core types and dependencies |
 | (this branch) | CONTNM-171 | Node Outputs dialog: Flow Variables tab (own and inherited), system keys no longer listed as ports |
 
-### Loop nodes in the workflow editor and viewer (CONTNM-180)
+### Loop nodes in the workflow editor and viewer
 
 The workbench now supports loop nodes — a container that wraps member nodes running repeatedly until their condition evaluates to false. This covers the end-to-end canvas rendering, properties dialog, run display, and builder support for writing conditions visually or as raw CEL.
 
