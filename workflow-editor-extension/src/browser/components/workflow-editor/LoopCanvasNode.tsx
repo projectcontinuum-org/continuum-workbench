@@ -5,6 +5,8 @@ import {
     enclosingLoops,
     GraphLike,
 } from '../../../common/LoopTopology';
+import { IBaseNodeData } from '@continuum/core';
+import BaseNode from '../node/BaseNode';
 import LoopNode from '../node/LoopNode';
 
 export interface LoopCanvasNodeContextValue {
@@ -62,4 +64,15 @@ export function LoopCanvasNodeRenderer(props: NodeProps) {
             nestingDepth={enclosingLoops(id, context.graph).length}
         />
     );
+}
+
+/** Editor-canvas BaseNode: adds the settings button wired to the canvas context. */
+export function BaseCanvasNodeRenderer(props: NodeProps<IBaseNodeData>) {
+    const context = React.useContext(LoopCanvasNodeContext);
+    const { id } = props;
+    const openSettings = React.useCallback(
+        () => context?.openSettings?.(id),
+        [context?.openSettings, id],
+    );
+    return <BaseNode {...props} onOpenSettings={context?.openSettings ? openSettings : undefined} />;
 }

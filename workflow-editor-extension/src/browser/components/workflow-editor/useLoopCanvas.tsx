@@ -6,14 +6,13 @@ import {
     Node,
     NodeChange,
 } from 'reactflow';
-import BaseNode from '../node/BaseNode';
 import {
     collapsedView,
     GraphLike,
     withLoopScopedEdgeClass,
     wouldCreateCycle,
 } from '../../../common/LoopTopology';
-import { LOOP_COLLAPSED_HEIGHT } from '../../../common/LoopPresentation';
+import { LOOP_COLLAPSED_HEIGHT, loopCollapsedWidth } from '../../../common/LoopPresentation';
 import {
     deleteSelectedGraph,
     LoopDeleteChoice,
@@ -22,7 +21,7 @@ import {
     moveDraggedNode,
     persistLoopResize,
 } from '../../../common/LoopCanvasOperations';
-import { LoopCanvasNodeContextValue, LoopCanvasNodeRenderer } from './LoopCanvasNode';
+import { BaseCanvasNodeRenderer, LoopCanvasNodeContextValue, LoopCanvasNodeRenderer } from './LoopCanvasNode';
 
 interface UseLoopCanvasOptions<T extends Node, E extends Edge> {
     nodes: T[];
@@ -80,7 +79,7 @@ function useLoopNodeRendering<T extends Node, E extends Edge>({
     }, [onHistoryChange]);
     const graph = React.useMemo((): GraphLike => ({ nodes, edges }), [nodes, edges]);
     const nodeTypes = React.useMemo(() => ({
-        BaseNode,
+        BaseNode: BaseCanvasNodeRenderer,
         Loop: LoopCanvasNodeRenderer,
     }), []);
     const nodeContext = React.useMemo<LoopCanvasNodeContextValue>(() => ({
@@ -108,15 +107,16 @@ function makeDisplayNodes(
         const minimum = loopMinimumSize(node.id, graph);
         const expandedSize = loopStoredSize(node.id, graph);
         const isCollapsed = !!node.data?.collapsed;
+        const width = isCollapsed ? loopCollapsedWidth(expandedSize.width) : expandedSize.width;
         return {
             ...node,
             className: `${node.className ?? ''} loop-node-wrapper`.trim(),
-            width: expandedSize.width,
+            width,
             height: isCollapsed ? LOOP_COLLAPSED_HEIGHT : expandedSize.height,
             zIndex: -1,
             style: {
                 ...node.style,
-                width: expandedSize.width,
+                width,
                 height: isCollapsed ? LOOP_COLLAPSED_HEIGHT : expandedSize.height,
             },
             hidden: hiddenNodeIds.has(node.id) || node.hidden,

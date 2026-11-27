@@ -159,17 +159,6 @@
     color: var(--mui-palette-secondary-main, var(--theia-focusBorder));
 }
 
-.loop-collapse-header-button {
-    min-width: 0;
-    min-height: 32px;
-    padding: 3px 9px;
-    border-color: var(--mui-palette-divider, var(--theia-editorWidget-border));
-    color: var(--mui-palette-text-primary, var(--theia-ui-font-color1));
-    font-size: 12px;
-    line-height: 1.3;
-    text-transform: none;
-}
-
 .loop-collapse-header-button:hover,
 .loop-settings-button:hover {
     background: color-mix(in srgb, var(--mui-palette-secondary-main, var(--theia-focusBorder)) 14%, transparent);
@@ -281,17 +270,6 @@
     font-size: 12px;
 }
 
-.loop-expand-button {
-    min-width: 0;
-    min-height: 36px;
-    padding: 4px 13px;
-    border-color: var(--mui-palette-divider, var(--theia-editorWidget-border));
-    color: var(--mui-palette-text-primary, var(--theia-ui-font-color1));
-    font-size: 12px;
-    line-height: 1.4;
-    text-transform: none;
-}
-
 .loop-edge-anchor {
     opacity: 0 !important;
     pointer-events: none !important;
@@ -300,12 +278,19 @@
 .react-flow__resize-control.handle.loop-resize-handle {
     z-index: 20;
     box-sizing: border-box;
-    width: 8px;
-    height: 8px;
-    border: 1px solid var(--mui-palette-secondary-dark, var(--theia-editorWidget-background));
-    border-radius: 2px;
-    background: var(--mui-palette-secondary-main, var(--theia-focusBorder));
+    width: 10px;
+    height: 10px;
+    border: 2px solid var(--mui-palette-secondary-main, var(--theia-focusBorder));
+    border-radius: 50%;
+    background: var(--mui-palette-background-paper, var(--theia-editor-background));
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
     opacity: 1;
+    transition: transform 120ms ease, background-color 120ms ease;
+}
+
+.react-flow__resize-control.handle.loop-resize-handle:hover {
+    background: var(--mui-palette-secondary-main, var(--theia-focusBorder));
+    transform: translate(-50%, -50%) scale(1.35);
 }
 
 .react-flow__resize-control.handle.loop-resize-handle::before {
@@ -320,7 +305,8 @@
 
 .react-flow__resize-control.line.loop-resize-line {
     z-index: 15;
-    border-color: var(--theia-focusBorder, var(--theia-input-border));
+    border-color: color-mix(in srgb, var(--mui-palette-secondary-main, var(--theia-focusBorder)) 70%, transparent);
+    border-style: solid;
     border-width: 1px;
 }
 

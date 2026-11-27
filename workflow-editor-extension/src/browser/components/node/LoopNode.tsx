@@ -12,10 +12,11 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import { alpha } from '@mui/material/styles';
-import Button from '@mui/material/Button';
 import { IBaseNodeData, NodeStatus } from "@continuum/core";
 import CircularProgress from '@mui/material/CircularProgress';
 import LoopIcon from '@mui/icons-material/Loop';
+import FullscreenIcon from '@mui/icons-material/Fullscreen';
+import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
 import { isNodeWorking, NodeStatusBadge } from './NodeStatusPresentation';
@@ -100,6 +101,35 @@ function LoopNode({
         onResizeCommit?.();
     }, [id, onResizeCommit, onResizeLoop]);
 
+    // Header items drop in order as the box narrows: 1 condition, 2 max, 3 "LOOP" label.
+    const headerRef = React.useRef<HTMLDivElement>(null);
+    const identityRef = React.useRef<HTMLDivElement>(null);
+    const [headerLevel, setHeaderLevel] = React.useState(0);
+    const [headerTick, setHeaderTick] = React.useState(0);
+    React.useEffect(() => {
+        const header = headerRef.current;
+        if (!header || typeof ResizeObserver === 'undefined') return;
+        let lastWidth = header.clientWidth;
+        const observer = new ResizeObserver(() => {
+            if (header.clientWidth === lastWidth) return;
+            lastWidth = header.clientWidth;
+                setHeaderLevel(0);
+            setHeaderTick((tick) => tick + 1);
+        });
+        observer.observe(header);
+        return () => observer.disconnect();
+    }, []);
+    React.useLayoutEffect(() => {
+        const identity = identityRef.current;
+        if (identity && identity.scrollWidth > identity.clientWidth + 1 && headerLevel < 3) {
+            setHeaderLevel(headerLevel + 1);
+        }
+    });
+    React.useLayoutEffect(() => {
+        setHeaderLevel(0);
+        setHeaderTick((tick) => tick + 1);
+    }, [conditionLabel, maxIterations, status, collapsed, nodeData.iterationCount, id]);
+
     React.useLayoutEffect(() => {
         if (collapsed) updateNodeInternals(id);
     }, [collapsed, id, updateNodeInternals]);
@@ -133,29 +163,31 @@ function LoopNode({
                     : borderColor,
                 borderRadius: 2,
                 backgroundColor: (theme) => alpha(
-                    nestingDepth > 0 ? theme.palette.secondary.main : theme.palette.secondary.dark,
-                    nestingPresentation.fillOpacity,
+                    [theme.palette.secondary.main, theme.palette.primary.main, theme.palette.info.main, theme.palette.success.main][nestingPresentation.level],
+                    0.16,
                 ),
                 position: 'relative',
             }}
         >
             {collapsed && <CollapsedEdgeAnchors />}
-            <Box className="loop-node-header">
-                <Box className="loop-node-identity">
+            <Box className="loop-node-header" ref={headerRef} data-header-tick={headerTick}>
+                <Box className="loop-node-identity" ref={identityRef}>
                     <LoopIcon className="loop-node-icon" />
-                    <Typography className="loop-node-kind">LOOP</Typography>
+                    {headerLevel < 3 && <Typography className="loop-node-kind">LOOP</Typography>}
                     <Typography className="loop-node-id" title={`Loop node ID: ${id}`}>
                         #{id}
                     </Typography>
+                    {headerLevel < 1 && (
                     <Tooltip title={`while ${conditionText}`} placement="top">
                         <Box className="loop-condition-chip">
                             <Typography className="loop-condition-text">{conditionLabel}</Typography>
                         </Box>
                     </Tooltip>
-                    {hasMaxIterations && (
+                    )}
+                    {hasMaxIterations && headerLevel < 2 && (
                         <Typography className="loop-maximum">· max {maxIterations}</Typography>
                     )}
-                    {hasCelOnlyCondition && (
+                    {hasCelOnlyCondition && headerLevel < 1 && (
                         <Tooltip title="This condition uses CEL features the builder cannot show">
                             <Box
                                 className="loop-cel-warning"
@@ -185,20 +217,21 @@ function LoopNode({
                             </Typography>
                         </Box>
                     )}
-                    {!collapsed && onToggleCollapse && (
-                        <Button
-                            size="small"
-                            variant="outlined"
-                            className="nodrag nopan loop-collapse-header-button"
-                            aria-label="Collapse loop"
-                            aria-expanded="true"
-                            data-testid="loop-collapse-toggle"
-                            onClick={(event) => {
-                                event.stopPropagation();
-                                onToggleCollapse();
-                            }}>
-                            ▾ collapse
-                        </Button>
+                    {onToggleCollapse && (
+                        <Tooltip title={collapsed ? 'Expand loop' : 'Collapse loop'}>
+                            <IconButton
+                                size="small"
+                                className="nodrag nopan loop-collapse-header-button loop-collapse-icon-button"
+                                aria-label={collapsed ? 'Expand loop' : 'Collapse loop'}
+                                aria-expanded={!collapsed}
+                                data-testid="loop-collapse-toggle"
+                                onClick={(event) => {
+                                    event.stopPropagation();
+                                    onToggleCollapse();
+                                }}>
+                                {collapsed ? <FullscreenIcon fontSize="small" /> : <FullscreenExitIcon fontSize="small" />}
+                            </IconButton>
+                        </Tooltip>
                     )}
                     {onOpenSettings && (
                         <Tooltip title="Loop settings">
@@ -222,20 +255,6 @@ function LoopNode({
                     <Typography className="loop-member-count">
                         {loopMemberCountLabel(memberCount)}
                     </Typography>
-                    <Button
-                        size="small"
-                        variant="outlined"
-                        className="nodrag nopan loop-expand-button"
-                        aria-label="Expand loop"
-                        aria-expanded="false"
-                        data-testid="loop-collapse-toggle"
-                        disabled={!onToggleCollapse}
-                        onClick={(event) => {
-                            event.stopPropagation();
-                            onToggleCollapse?.();
-                        }}>
-                        ▸ expand
-                    </Button>
                 </Box>
             ) : (
                 <>

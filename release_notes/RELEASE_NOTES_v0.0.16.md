@@ -52,8 +52,9 @@ You can now type a space in the node dialog's code editors (any `format: "code"`
 
 Nodes that are members of a Loop construct now display a small loop icon in the top-left corner with the parent Loop's ID, and inherit a visually distinct background color based on their parent Loop's nesting level. This makes nested loop structures easier to understand at a glance, and helps color-blind users identify loop membership.
 
-- **Loop icon with parent ID**: Each loop member displays a small loop icon with the parent Loop ID (e.g., `#loop-1`) in monospace font beside it.
+- **Loop icon with parent ID**: Each loop member displays a single pill-shaped badge containing the loop icon with the parent Loop ID (e.g., `#loop-1`, monospace) to its right.
 - **Parent ID tooltip**: Hovering over the ID shows "Parent loop: #loop-id" for additional context.
+- **Responsive Loop header**: When a Loop box is narrowed, its header drops items instead of overlapping: first the condition, then `max`, then the `LOOP` label (the node ID stays), and finally the Collapse button becomes an icon.
 - **Accessibility**: The icon and ID combination helps users with color vision deficiency identify loop membership and parent relationships.
 - Background colors use distinct MUI theme palette colors for each nesting depth:
   - Depth 0: Soft secondary blue (10% `secondary-main`)

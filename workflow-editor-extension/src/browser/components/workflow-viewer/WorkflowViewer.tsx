@@ -26,7 +26,7 @@ import {
     GraphLike,
     withLoopScopedEdgeClass,
 } from '../../../common/LoopTopology';
-import { LOOP_COLLAPSED_HEIGHT } from '../../../common/LoopPresentation';
+import { LOOP_COLLAPSED_HEIGHT, loopCollapsedWidth } from '../../../common/LoopPresentation';
 import { loopDisplaySize } from '../../../common/LoopCanvasOperations';
 import { loopRuntimeSummary } from '../../../common/LoopRuntimePresentation';
 import type { LoopRuntimeSummary } from '../../../common/LoopRuntimePresentation';
@@ -109,13 +109,14 @@ export default function WorkflowViewer({ workflowSnapshot, executionStatus, node
             const expandedSize = loopDisplaySize(node.id, runtimeLayoutGraph);
             const isCollapsed = !!node.data?.collapsed;
             const height = isCollapsed ? LOOP_COLLAPSED_HEIGHT : expandedSize.height;
+            const width = isCollapsed ? loopCollapsedWidth(expandedSize.width) : expandedSize.width;
             return {
                 ...node,
                 className: `${node.className ?? ''} loop-node-wrapper`.trim(),
-                width: expandedSize.width,
+                width,
                 height,
                 zIndex: -1,
-                style: { ...node.style, width: expandedSize.width, height },
+                style: { ...node.style, width, height },
                 hidden: collapsed.hiddenNodeIds.has(node.id) || node.hidden,
             };
         }),

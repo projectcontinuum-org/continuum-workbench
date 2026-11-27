@@ -6,6 +6,12 @@
 import { fitsBuilder, formatCondition, parseCondition } from './LoopConditionQuery';
 
 export const LOOP_COLLAPSED_HEIGHT = 112;
+export const LOOP_COLLAPSED_WIDTH = 300;
+
+/** A collapsed Loop shrinks in width too, but never grows beyond its expanded width. */
+export function loopCollapsedWidth(expandedWidth: number): number {
+    return Math.min(expandedWidth, LOOP_COLLAPSED_WIDTH);
+}
 
 export interface LoopNestingPresentation {
     level: number;

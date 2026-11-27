@@ -51,28 +51,35 @@
 
 .loop-member-icon {
   flex: 0 0 auto;
+  width: 12px !important;
+  height: 12px !important;
   margin: 0 !important;
   padding: 0 !important;
   pointer-events: none;
-  display: flex;
-  align-items: center;
 }
 
+/* One pill holding the loop icon and the parent loop id */
 .loop-member-badge {
   position: absolute;
-  top: 2px;
-  left: 2px;
+  top: 4px;
+  left: 4px;
   z-index: 10;
-  display: flex;
+  box-sizing: border-box;
+  display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: 3px;
+  padding: 1px 6px 1px 4px;
+  border: 1px solid color-mix(in srgb, var(--mui-palette-secondary-main, var(--theia-focusBorder)) 55%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--mui-palette-secondary-main, var(--theia-focusBorder)) 18%, transparent);
+  color: var(--mui-palette-secondary-main, var(--theia-focusBorder));
   pointer-events: auto;
 }
 
 .loop-member-id {
   font-size: 10px !important;
   font-weight: 600 !important;
-  color: var(--mui-palette-text-secondary, var(--theia-ui-font-color2)) !important;
+  color: inherit !important;
   font-family: var(--theia-ui-monospace-font-family, monospace) !important;
   letter-spacing: 0.05em;
   white-space: nowrap;
@@ -209,4 +216,20 @@
   border-style: dashed;
   border-color: var(--mui-palette-text-disabled);
   opacity: 0.55;
+}
+
+.node-settings-button.MuiIconButton-root {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  z-index: 10;
+  padding: 3px;
+  color: var(--mui-palette-text-secondary, var(--theia-ui-font-color2));
+  opacity: 0.7;
+}
+
+.node-settings-button.MuiIconButton-root:hover {
+  opacity: 1;
+  color: var(--mui-palette-secondary-main, var(--theia-focusBorder));
+  background: color-mix(in srgb, var(--mui-palette-secondary-main, var(--theia-focusBorder)) 14%, transparent);
 }

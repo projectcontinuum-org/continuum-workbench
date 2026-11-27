@@ -6,9 +6,10 @@ import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import SkipNextIcon from '@mui/icons-material/SkipNext';
 import LoopIcon from '@mui/icons-material/Loop';
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import { IBaseNodeData, NodeStatus, StageStatus } from "@continuum/core";
 import "./BaseNode.css";
-import { Box, CircularProgress, Grid, Step, StepLabel, Stepper, Tooltip, Typography } from "@mui/material";
+import { Box, CircularProgress, Grid, IconButton, Step, StepLabel, Stepper, Tooltip, Typography } from "@mui/material";
 import { isNodeWorking, NodeStatusBadge, nodeStatusColor, nodeStatusLabel } from "./NodeStatusPresentation";
 import { nodeStatusClass } from "../../../common/ExecutionStatusPresentation";
 import { useMUIThemeStore } from "../../store/MUIThemeStore";
@@ -49,7 +50,12 @@ const getStepIcon = (status: StageStatus) => {
     }
 };
 
-export default function BaseNode(props: NodeProps<IBaseNodeData>) {
+export interface BaseNodeProps extends NodeProps<IBaseNodeData> {
+  /** Present on the editor canvas only; the run viewer renders no settings button. */
+  onOpenSettings?: () => void;
+}
+
+export default function BaseNode(props: BaseNodeProps) {
     const [theme] = useMUIThemeStore((state)=>([state.theme]))
     const loopMembership = useLoopMembership(props.id);
 
@@ -67,6 +73,23 @@ export default function BaseNode(props: NodeProps<IBaseNodeData>) {
         ].filter(Boolean).join(" ")}
         position="relative"
       >
+        {props.onOpenSettings && (
+          <Tooltip title="Node settings" disableInteractive>
+            <IconButton
+              size="small"
+              className="nodrag nopan node-settings-button"
+              aria-label="Open node settings"
+              data-testid={`node-settings-button-${props.id}`}
+              onClick={(event) => {
+                event.stopPropagation();
+                props.onOpenSettings?.();
+              }}
+              onDoubleClick={(event) => event.stopPropagation()}
+            >
+              <SettingsOutlinedIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )}
         {loopMembership && (
           <Box className="loop-member-badge">
             <LoopIcon

@@ -7,6 +7,7 @@ import assert from 'node:assert/strict';
 import {
     conditionSummary,
     conditionShortFormat,
+    loopCollapsedWidth,
     loopConditionChipText,
     loopMemberCountLabel,
     loopNestingPresentation,
@@ -133,5 +134,12 @@ describe('conditionShortFormat', () => {
 
     it('returns null for null input', () => {
         assert.equal(conditionShortFormat(null), null);
+    });
+});
+
+describe('loopCollapsedWidth', () => {
+    it('shrinks wide loops and keeps narrow ones', () => {
+        assert.equal(loopCollapsedWidth(1100), 300);
+        assert.equal(loopCollapsedWidth(260), 260);
     });
 });
