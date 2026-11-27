@@ -3,8 +3,9 @@ import './WorkflowViewer.css';
 
 import React, { useRef } from 'react';
 import { Box, Button, CircularProgress } from "@mui/material";
-import ReactFlow, { Controls, Node, Panel } from "reactflow";
+import ReactFlow, { Controls, Node, NodeProps, Panel } from "reactflow";
 import BaseNode from '../node/BaseNode';
+import LoopNode from '../node/LoopNode';
 import BaseEdge from '../node/BaseEdge';
 import { IBaseNodeData, IJobUpdate, INodeToOutputsMap, IWorkflow } from '@continuum/core';
 import LockClockIcon from '@mui/icons-material/LockClock';
@@ -18,12 +19,21 @@ import StopCircleIcon from '@mui/icons-material/StopCircle';
 import { hourglass } from 'ldrs'
 import { useMUIThemeStore } from "../../store/MUIThemeStore";
 import NodeOutputViewer from "../node-output-viewer/NodeOutputViewer";
+import {
+    collapsedView,
+    descendants,
+    enclosingLoops,
+    GraphLike,
+    withLoopScopedEdgeClass,
+} from '../../../common/LoopTopology';
+import { LOOP_COLLAPSED_HEIGHT } from '../../../common/LoopPresentation';
+import { loopDisplaySize } from '../../../common/LoopCanvasOperations';
+import { loopRuntimeSummary } from '../../../common/LoopRuntimePresentation';
+import type { LoopRuntimeSummary } from '../../../common/LoopRuntimePresentation';
+import { reserveLoopRuntimeSummarySpace } from '../../../common/LoopViewerLayout';
 
 hourglass.register();
 
-const nodeTypes = {
-    BaseNode
-};
 const edgeTypes = {
     BaseEdge
 };
@@ -45,6 +55,72 @@ export default function WorkflowViewer({ workflowSnapshot, executionStatus, node
     const ref = useRef<HTMLDivElement | null>(null);
     const [theme] = useMUIThemeStore((state)=>([state.theme]));
     const [selectedNodeId, setSelectedNodeId] = React.useState<string | null>(null);
+    const graph = React.useMemo((): GraphLike => ({
+        nodes: workflowSnapshot.nodes,
+        edges: workflowSnapshot.edges,
+    }), [workflowSnapshot.nodes, workflowSnapshot.edges]);
+    const scopedEdges = React.useMemo(
+        () => withLoopScopedEdgeClass(workflowSnapshot.nodes, workflowSnapshot.edges),
+        [workflowSnapshot.nodes, workflowSnapshot.edges],
+    );
+    const collapsed = React.useMemo(
+        () => collapsedView(workflowSnapshot.nodes, scopedEdges),
+        [workflowSnapshot.nodes, scopedEdges],
+    );
+    const runtimeSummaries = React.useMemo(() => {
+        const summaries = new Map<string, LoopRuntimeSummary | undefined>();
+        workflowSnapshot.nodes
+            .filter((node) => node.type === 'Loop')
+            .forEach((node) => summaries.set(
+                node.id,
+                loopRuntimeSummary(node.id, graph, nodeToOutputsMap),
+            ));
+        return summaries;
+    }, [workflowSnapshot.nodes, graph, nodeToOutputsMap]);
+    const loopsWithSummary = React.useMemo(() => new Set(
+        workflowSnapshot.nodes
+            .filter((node) => node.type === 'Loop' && !node.data?.collapsed && runtimeSummaries.get(node.id))
+            .map((node) => node.id),
+    ), [workflowSnapshot.nodes, runtimeSummaries]);
+    const runtimeLayoutNodes = React.useMemo(
+        () => reserveLoopRuntimeSummarySpace(workflowSnapshot.nodes, loopsWithSummary),
+        [workflowSnapshot.nodes, loopsWithSummary],
+    );
+    const runtimeLayoutGraph = React.useMemo((): GraphLike => ({
+        nodes: runtimeLayoutNodes,
+        edges: workflowSnapshot.edges,
+    }), [runtimeLayoutNodes, workflowSnapshot.edges]);
+    const nodeTypes = React.useMemo(() => ({
+        BaseNode,
+        Loop: (props: NodeProps) => (
+            <LoopNode
+                {...props}
+                memberCount={descendants(props.id, graph).size}
+                nestingDepth={enclosingLoops(props.id, graph).length}
+                runtimeSummary={runtimeSummaries.get(props.id)}
+            />
+        ),
+    }), [graph, runtimeSummaries]);
+    const displayNodes = React.useMemo(
+        () => runtimeLayoutNodes.map((node) => {
+            if (node.type !== 'Loop') {
+                return { ...node, hidden: collapsed.hiddenNodeIds.has(node.id) || node.hidden };
+            }
+            const expandedSize = loopDisplaySize(node.id, runtimeLayoutGraph);
+            const isCollapsed = !!node.data?.collapsed;
+            const height = isCollapsed ? LOOP_COLLAPSED_HEIGHT : expandedSize.height;
+            return {
+                ...node,
+                className: `${node.className ?? ''} loop-node-wrapper`.trim(),
+                width: expandedSize.width,
+                height,
+                zIndex: -1,
+                style: { ...node.style, width: expandedSize.width, height },
+                hidden: collapsed.hiddenNodeIds.has(node.id) || node.hidden,
+            };
+        }),
+        [runtimeLayoutNodes, collapsed.hiddenNodeIds, runtimeLayoutGraph],
+    );
     // Read from the live map, so the dialog follows updates of a running workflow.
     const nodeOutputs = selectedNodeId ? nodeToOutputsMap[selectedNodeId] : undefined;
 
@@ -75,8 +151,8 @@ export default function WorkflowViewer({ workflowSnapshot, executionStatus, node
             }}>
             <ReactFlow
                 ref={ref}
-                nodes={workflowSnapshot.nodes}
-                edges={workflowSnapshot.edges}
+                nodes={displayNodes}
+                edges={collapsed.displayEdges}
                 onNodeDoubleClick={onNodeDoubleClick}
                 nodeTypes={nodeTypes}
                 edgeTypes={edgeTypes}

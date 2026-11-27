@@ -15,6 +15,13 @@
     stroke-opacity: 0.6;
 }
 
+.react-flow__edge.loop-scoped-edge .react-flow__edge-path:not(.continuum-edge--delivered):not(.continuum-edge--broken) {
+    stroke: var(--mui-palette-secondary-light, var(--mui-palette-secondary-main, var(--theia-focusBorder)));
+    stroke-dasharray: 8 4;
+    stroke-width: 2.5;
+    stroke-opacity: 0.95;
+}
+
 .react-flow__edge .continuum-edge__break-mark {
     stroke: var(--theia-errorForeground);
     stroke-width: 2;

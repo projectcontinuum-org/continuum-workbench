@@ -26,6 +26,8 @@ import { ContextKeyService, ContextKey } from '@theia/core/lib/browser/context-k
 import { WORKFLOW_EDITOR_CONTEXT_MENU } from '../../menu/WorkflowEditorContextMenu';
 import { WorkflowClipboardService } from '../../service/WorkflowClipboardService';
 import { sha256Hex } from '../../service/Sha256';
+import { findDropTarget, LOOP_NODE_MODEL, orderParentFirst, toRelativePosition } from '../../../common/LoopTopology';
+import { LoopDeleteChoice } from '../../../common/LoopCanvasOperations';
 
 export const WorkflowEditorWidgetOptions = Symbol('WorkflowEditorWidgetOptions');
 export interface WorkflowEditorWidgetOptions {
@@ -57,6 +59,23 @@ export default class WorkflowEditorWidget extends ReactWidget implements Navigat
     protected editorKey = 0;
     protected reloadTimer?: ReturnType<typeof setTimeout>;
     protected reloadPromptOpen = false;
+
+    protected handleTopologyError = (message: string): void => {
+        this.messageService.error(message);
+    }
+
+    protected handleLoopDeleteChoice = async (loopCount: number): Promise<LoopDeleteChoice | undefined> => {
+        const subject = loopCount === 1 ? 'this Loop' : `these ${loopCount} Loops`;
+        const action = await this.messageService.warn(
+            `Delete ${subject}? Choose whether to remove its members or keep them on the canvas.`,
+            'Delete members',
+            'Keep members',
+            'Cancel',
+        );
+        if (action === 'Delete members') return 'delete-members';
+        if (action === 'Keep members') return 'keep-members';
+        return undefined;
+    }
 
     constructor(
         private readonly options: Required<Omit<WorkflowEditorWidgetOptions, 'pendingAction'>> & { pendingAction?: WorkflowEditorWidgetOptions['pendingAction'] } & Widget.IOptions,
@@ -319,19 +338,33 @@ export default class WorkflowEditorWidget extends ReactWidget implements Navigat
                 console.log("Ignoring drop!!");
                 return;
         }
-        const position = this.reactFlow.screenToFlowPosition({
-            x: (e as MouseEvent).clientX - 100,
-            y: (e as MouseEvent).clientY - 50,
+        const isLoop = treeNode.nodeInfo?.nodeModel === LOOP_NODE_MODEL;
+        const absolutePosition = this.reactFlow.screenToFlowPosition({
+            x: (e as MouseEvent).clientX - (isLoop ? 260 : 100),
+            y: (e as MouseEvent).clientY - (isLoop ? 160 : 50),
         });
+        const currentNodes = this.reactFlow.getNodes();
+        const graph = { nodes: currentNodes, edges: this.reactFlow.getEdges() };
+        const targetLoopId = findDropTarget({
+            x: absolutePosition.x + (isLoop ? 260 : 100),
+            y: absolutePosition.y + (isLoop ? 160 : 50),
+        }, graph);
 
         this.maxNodeId = this.maxNodeId + 1;
 
-        this.reactFlow.addNodes([{
+        const newNode: Node = {
             id: this.maxNodeId.toString(),
-            type: "BaseNode",
-            position: position,
-            data: treeNode.nodeInfo
-        }]);
+            type: isLoop ? 'Loop' : 'BaseNode',
+            position: toRelativePosition(absolutePosition, targetLoopId, graph),
+            parentNode: targetLoopId,
+            ...(isLoop ? { width: 520, height: 320, style: { width: 520, height: 320 } } : {}),
+            data: {
+                ...treeNode.nodeInfo,
+                ...(isLoop ? { collapsed: treeNode.nodeInfo?.collapsed ?? false } : {}),
+            },
+        };
+        this.reactFlow.setNodes(nodes => orderParentFirst([...nodes, newNode]));
+        setTimeout(() => this.onHistoryChange(), 0);
     }
 
     // Navigatable
@@ -543,16 +576,7 @@ export default class WorkflowEditorWidget extends ReactWidget implements Navigat
 
     deleteSelectedNodes(): void {
         if (!this.reactFlow) return;
-        const selectedNodeIds = this.reactFlow.getNodes()
-            .filter(n => n.selected)
-            .map(n => n.id);
-
-        this.reactFlow.setNodes(nodes => nodes.filter(n => !selectedNodeIds.includes(n.id)));
-        this.reactFlow.setEdges(edges => edges.filter(
-            e => !selectedNodeIds.includes(e.source) && !selectedNodeIds.includes(e.target)
-        ));
-        // Defer history recording to allow React state to update first
-        setTimeout(() => this.onHistoryChange(), 0);
+        this.workflowEditorRef.current?.deleteSelectedNodes();
     }
 
     selectAllNodes(): void {
@@ -606,6 +630,8 @@ export default class WorkflowEditorWidget extends ReactWidget implements Navigat
                     onHistoryChange={this.onHistoryChange}
                     onRunSuccess={this.handleRunSuccess}
                     onRunFailure={this.handleRunFailure}
+                    onTopologyError={this.handleTopologyError}
+                    onConfirmLoopDelete={this.handleLoopDeleteChoice}
                     setReactflow={(rFlow)=>{this.reactFlow = rFlow}}
                     colorRegistry={this.colorRegistry}
                     workflowEditorRef={this.workflowEditorRef}/>
@@ -624,6 +650,8 @@ interface WorkflowEditorWidgetHOCProps {
     onHistoryChange: ()=>void;
     onRunSuccess: (workflowId: string)=>void;
     onRunFailure: (message: string)=>void;
+    onTopologyError: (message: string) => void;
+    onConfirmLoopDelete: (loopCount: number) => Promise<LoopDeleteChoice | undefined>;
     workflowEditorRef: React.RefObject<WorkflowEditorRef>;
 }
 
@@ -637,6 +665,8 @@ function WorkflowEditorWidgetHOC({
         onHistoryChange,
         onRunSuccess,
         onRunFailure,
+        onTopologyError,
+        onConfirmLoopDelete,
         workflowEditorRef
     }: WorkflowEditorWidgetHOCProps
 ) {
@@ -662,7 +692,9 @@ function WorkflowEditorWidgetHOC({
                 onContextMenu={onContextMenu}
                 onHistoryChange={onHistoryChange}
                 onRunSuccess={onRunSuccess}
-                onRunFailure={onRunFailure}/>}
+                onRunFailure={onRunFailure}
+                onTopologyError={onTopologyError}
+                onConfirmLoopDelete={onConfirmLoopDelete}/>}
         </ThemeProvider>
     );
 }

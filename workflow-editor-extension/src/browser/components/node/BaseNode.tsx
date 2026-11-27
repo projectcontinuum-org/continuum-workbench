@@ -88,7 +88,7 @@ export default function BaseNode(props: NodeProps<IBaseNodeData>) {
               <Box className="text">
                 <Typography variant="h6">{props.data.title}</Typography>
                 {props.data.subTitle && (
-                  <Tooltip title={props.data.subTitle} placement="top">
+                  <Tooltip title={props.data.subTitle} placement="top" disableInteractive>
                     <Typography className="subline" variant="body2">
                       {props.data.subTitle}
                     </Typography>

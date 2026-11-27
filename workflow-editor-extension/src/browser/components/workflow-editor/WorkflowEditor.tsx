@@ -3,8 +3,7 @@ import './WorkflowEditor.css';
 
 import React, { forwardRef, useImperativeHandle } from 'react';
 import { useRef, useCallback } from 'react';
-import ReactFlow, { Connection, Controls, EdgeChange, Node, NodeChange, Panel, addEdge, applyEdgeChanges, applyNodeChanges, getOutgoers } from 'reactflow';
-import BaseNode from '../node/BaseNode';
+import ReactFlow, { Connection, Controls, EdgeChange, Node, Panel, addEdge, applyEdgeChanges } from 'reactflow';
 import BaseEdge from '../node/BaseEdge';
 import { Box, Button, ButtonGroup, IconButton, Menu, MenuItem } from '@mui/material';
 import { IBaseNodeData, IRetryOptions, IWorkflow } from "@continuum/core";
@@ -14,10 +13,11 @@ import WorkflowService from "../../service/WorkflowService";
 import LockClockIcon from '@mui/icons-material/LockClock';
 import SendIcon from '@mui/icons-material/Send';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import { LOOP_NODE_MODEL } from '../../../common/LoopTopology';
+import { LoopDeleteChoice } from '../../../common/LoopCanvasOperations';
+import { useLoopCanvas } from './useLoopCanvas';
+import { LoopCanvasNodeProvider } from './LoopCanvasNode';
 
-const nodeTypes = {
-  BaseNode
-};
 const edgeTypes = {
     BaseEdge
 };
@@ -32,16 +32,19 @@ export interface WorkflowEditorProps {
     onHistoryChange?: ()=>void,
     onRunSuccess?: (workflowId: string)=>void,
     /** Called with a message safe to show the user when the workflow could not be started. */
-    onRunFailure?: (message: string)=>void
+    onRunFailure?: (message: string)=>void,
+    onTopologyError?: (message: string) => void,
+    onConfirmLoopDelete?: (loopCount: number) => Promise<LoopDeleteChoice | undefined>,
 }
 
 export interface WorkflowEditorRef {
     runWorkflow: () => void;
     openNodeSettings: () => void;
     openScheduleDialog: (initialTab?: 0 | 1) => void;
+    deleteSelectedNodes: () => void;
 }
 
-const WorkflowEditor = forwardRef<WorkflowEditorRef, WorkflowEditorProps>(({ workflow, onChange, onContextMenu, onHistoryChange, onRunSuccess, onRunFailure }, ref) => {
+const WorkflowEditor = forwardRef<WorkflowEditorRef, WorkflowEditorProps>(({ workflow, onChange, onContextMenu, onHistoryChange, onRunSuccess, onRunFailure, onTopologyError, onConfirmLoopDelete }, ref) => {
     const reactFlowRef = useRef<HTMLDivElement | null>(null);
     const workflowService = React.useMemo(() => new WorkflowService(), []);
     const [flowEdges, setFlowEdges] = React.useState(workflow.edges);
@@ -51,7 +54,6 @@ const WorkflowEditor = forwardRef<WorkflowEditorRef, WorkflowEditorProps>(({ wor
     const [selectedNode, setSelectedNode] = React.useState<Node<IBaseNodeData> | null>(null);
     const [scheduleMenuAnchor, setScheduleMenuAnchor] = React.useState<HTMLElement | null>(null);
     const [scheduleDialogState, setScheduleDialogState] = React.useState<{ open: boolean; initialTab: 0 | 1 }>({ open: false, initialTab: 0 });
-
     React.useEffect(()=>{
         if(workflow) {
             onChange({
@@ -62,11 +64,6 @@ const WorkflowEditor = forwardRef<WorkflowEditorRef, WorkflowEditorProps>(({ wor
             });
         }
     },[flowNodes, flowEdges, isActive])
-
-    const onNodesChange = useCallback((changes: NodeChange[]) => {
-        // console.log("onNodesChange");
-        setFlowNodes((nodes) => applyNodeChanges(changes, nodes));
-    },[setFlowNodes]);
 
     const onEdgesChange = useCallback((changes: EdgeChange[]) => {
         // console.log("onEdgesChange");
@@ -80,11 +77,6 @@ const WorkflowEditor = forwardRef<WorkflowEditorRef, WorkflowEditorProps>(({ wor
         onHistoryChange?.();
     },[setFlowEdges, onHistoryChange]);
 
-    const onNodeDragStop = useCallback(() => {
-        // Record history when node drag ends
-        onHistoryChange?.();
-    }, [onHistoryChange]);
-
     const onNodesDelete = useCallback(() => {
         // Record history when nodes are deleted
         onHistoryChange?.();
@@ -94,29 +86,6 @@ const WorkflowEditor = forwardRef<WorkflowEditorRef, WorkflowEditorProps>(({ wor
         // Record history when edges are deleted
         onHistoryChange?.();
     }, [onHistoryChange]);
-
-    const hasCycle = React.useCallback((connection: Connection, node: Node, visited = new Set()): boolean => {
-        if (visited.has(node.id)) return false;
-
-        visited.add(node.id);
-
-        for (const outgoer of getOutgoers(node, flowNodes, flowEdges)) {
-            if (outgoer.id === connection.source) return true;
-            if (hasCycle(connection, outgoer, visited)) return true;
-        }
-        return false;
-    }, [flowEdges, flowNodes]);
-
-    const isValidConnection = React.useCallback((connection: Connection): boolean => {
-        if (connection.source === connection.target) return false;
-        if (flowEdges.filter((edge) => edge.target === connection.target && edge.targetHandle === connection.targetHandle).length > 0)
-            return false;
-        const targetNode: Node = flowNodes.find(
-            (node) => node.id === connection.target
-        )!;
-        if (hasCycle(connection, targetNode)) return false;
-        return true;
-    }, [flowEdges, flowNodes, hasCycle]);
 
     const onRun = React.useCallback(async () => {
         console.log({ flowNodes, flowEdges });
@@ -163,18 +132,31 @@ const WorkflowEditor = forwardRef<WorkflowEditorRef, WorkflowEditorProps>(({ wor
 
     const onNodeDialogSaved = React.useCallback((properties: any, retryOptions?: IRetryOptions)=>{
         setNodeDialogProps(null);
-        console.log("selectedNode ", selectedNode);
         if(selectedNode) {
-            console.log("Saving ", properties, "to node ", selectedNode);
-            selectedNode.data.properties = properties;
-            selectedNode.data.retryOptions = retryOptions;
-            setFlowNodes(flowNodes);
+            const isLoop = selectedNode.data?.nodeModel === LOOP_NODE_MODEL;
+            setFlowNodes((nodes) => nodes.map((node) => {
+                if (node.id !== selectedNode.id) {
+                    return node;
+                }
+                return {
+                    ...node,
+                    data: {
+                        ...node.data,
+                        properties,
+                        ...(!isLoop ? { retryOptions } : {}),
+                    },
+                };
+            }));
         }
-    }, [setNodeDialogProps, selectedNode, flowNodes, setFlowNodes]);
+    }, [selectedNode]);
 
-    const openNodeSettings = React.useCallback(() => {
-        const selected = flowNodes.find(n => n.selected);
+    const openNodeSettings = React.useCallback((nodeId?: string) => {
+        const selected = nodeId
+            ? flowNodes.find((node) => node.id === nodeId)
+            : flowNodes.find(n => n.selected);
         if (selected) {
+            // Detect loop node for dialog behaviour.
+            const isLoop = selected.data?.nodeModel === LOOP_NODE_MODEL;
             setNodeDialogProps({
                 open: true,
                 onClose: onNodeDialogClose,
@@ -182,32 +164,40 @@ const WorkflowEditor = forwardRef<WorkflowEditorRef, WorkflowEditorProps>(({ wor
                 initialData: selected.data.properties || {},
                 dataSchema: selected.data.propertiesSchema || {},
                 uiSchema: selected.data.propertiesUISchema || {},
-                initialRetryOptions: selected.data.retryOptions || {}
+                initialRetryOptions: selected.data.retryOptions || {},
+                isLoop,
+                validationWorkflow: { ...workflow, nodes: flowNodes, edges: flowEdges },
+                validationNodeId: selected.id,
             });
             setSelectedNode(selected);
         }
-    }, [flowNodes, onNodeDialogClose, onNodeDialogSaved, setNodeDialogProps, setSelectedNode]);
+    }, [flowNodes, flowEdges, workflow, onNodeDialogClose, onNodeDialogSaved]);
+
+    const loopCanvas = useLoopCanvas({
+        nodes: flowNodes,
+        edges: flowEdges,
+        setNodes: setFlowNodes,
+        setEdges: setFlowEdges,
+        isActive,
+        onHistoryChange,
+        onTopologyError,
+        onConfirmLoopDelete,
+        onOpenSettings: openNodeSettings,
+    });
 
     // Expose methods via ref
     useImperativeHandle(ref, () => ({
         runWorkflow: onRun,
         openNodeSettings,
-        openScheduleDialog
-    }), [onRun, openNodeSettings, openScheduleDialog]);
+        openScheduleDialog,
+        deleteSelectedNodes: () => { void loopCanvas.deleteSelectedNodes(); },
+    }), [loopCanvas.deleteSelectedNodes, onRun, openNodeSettings, openScheduleDialog]);
 
-    const onNodeDoubleClick = React.useCallback((event: React.MouseEvent, clickedNode: Node<IBaseNodeData>) => {
-        console.log("onNodeDoubleClick", event, clickedNode);
-        setNodeDialogProps({
-            open: true,
-            onClose: onNodeDialogClose,
-            onSave: onNodeDialogSaved,
-            initialData: clickedNode.data.properties || {} ,
-            dataSchema: clickedNode.data.propertiesSchema || {},
-            uiSchema: clickedNode.data.propertiesUISchema || {},
-            initialRetryOptions: clickedNode.data.retryOptions || {}
-        });
-        setSelectedNode(clickedNode);
-    }, [setNodeDialogProps, onNodeDialogSaved, onNodeDialogClose, setSelectedNode]);
+    const onNodeClick = React.useCallback((event: React.MouseEvent, clickedNode: Node<IBaseNodeData>) => {
+        if (event.detail === 2) {
+            openNodeSettings(clickedNode.id);
+        }
+    }, [openNodeSettings]);
 
     const onNodeContextMenu = React.useCallback((event: React.MouseEvent, node: Node<IBaseNodeData>) => {
         // Select the node that was right-clicked
@@ -224,8 +214,21 @@ const WorkflowEditor = forwardRef<WorkflowEditorRef, WorkflowEditorProps>(({ wor
         onContextMenu?.(event as React.MouseEvent, undefined);
     }, [onContextMenu]);
 
+    const onCanvasKeyDown = React.useCallback((event: React.KeyboardEvent) => {
+        const target = event.target as HTMLElement;
+        if (isActive || nodeDialogProps || (event.key !== 'Backspace' && event.key !== 'Delete')
+            || target.closest('input, textarea, select, [contenteditable="true"], [role="textbox"]')) {
+            return;
+        }
+        if (!flowNodes.some((node) => node.selected)) return;
+        event.preventDefault();
+        event.stopPropagation();
+        void loopCanvas.deleteSelectedNodes();
+    }, [flowNodes, isActive, loopCanvas.deleteSelectedNodes, nodeDialogProps]);
+
     return (
         <Box
+            onKeyDown={onCanvasKeyDown}
             sx={{
                 display: "flex",
                 flexGrow: 1,
@@ -238,29 +241,29 @@ const WorkflowEditor = forwardRef<WorkflowEditorRef, WorkflowEditorProps>(({ wor
                 right: 0,
                 top: 0
             }}>
+            <LoopCanvasNodeProvider value={loopCanvas.nodeContext}>
             <ReactFlow
                 ref={reactFlowRef}
-                nodes={flowNodes}
-                edges={flowEdges}
-                onNodesChange={!isActive ? onNodesChange : undefined}
-                onNodeDoubleClick={onNodeDoubleClick}
+                    nodes={loopCanvas.displayNodes}
+                    edges={loopCanvas.displayEdges}
+                    onNodesChange={!isActive ? loopCanvas.onNodesChange : undefined}
+                    onNodeClick={onNodeClick}
                 onNodeContextMenu={onNodeContextMenu}
+                    onNodeDragStart={loopCanvas.onNodeDragStart}
                 onPaneContextMenu={onPaneContextMenu}
-                onNodeDragStop={onNodeDragStop}
+                    onNodeDragStop={loopCanvas.onNodeDragStop}
                 onNodesDelete={onNodesDelete}
                 onEdgesDelete={onEdgesDelete}
                 onEdgesChange={!isActive ? onEdgesChange : undefined}
                 onConnect={!isActive ? onNodeConnect: undefined}
-                isValidConnection={isValidConnection}
-                nodeTypes={nodeTypes}
+                isValidConnection={loopCanvas.isValidConnection}
+                nodeTypes={loopCanvas.nodeTypes}
                 edgeTypes={edgeTypes}
                 defaultEdgeOptions={defaultEdgeOptions}
                 className="workflow-editor"
-                // While the node dialog is open, turn off React Flow's document-level
-                // Space (pan) and Backspace (delete selection) keys so they can't swallow
-                // typing in the dialog or delete canvas nodes behind it.
+                // Deletion is handled here so a Loop's members can be kept or removed first.
                 panActivationKeyCode={nodeDialogProps ? null : 'Space'}
-                deleteKeyCode={nodeDialogProps ? null : 'Backspace'}
+                deleteKeyCode={null}
                 fitView>
                 <Controls />
                 <Panel position="bottom-center">
@@ -291,6 +294,7 @@ const WorkflowEditor = forwardRef<WorkflowEditorRef, WorkflowEditorProps>(({ wor
                     </IconButton>
                 </Panel>}
             </ReactFlow>
+            </LoopCanvasNodeProvider>
             {nodeDialogProps && <NodeDialog
                 {...nodeDialogProps!!}
                 onSave={onNodeDialogSaved}

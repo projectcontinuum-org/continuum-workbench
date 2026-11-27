@@ -41,6 +41,10 @@ export interface WorkflowNode {
      */
     'id': string;
     /**
+     * Id of the innermost loop (`type: Loop`) this node is inside. `position` is then relative to that loop (React Flow `parentNode`). Absent for top-level nodes.
+     */
+    'parentNode'?: string | null;
+    /**
      * Position of the node in the editor canvas.
      */
     'position': CanvasPosition;
@@ -50,7 +54,7 @@ export interface WorkflowNode {
      */
     'selected': boolean;
     /**
-     * React Flow node type. The workbench uses `BaseNode`.
+     * React Flow node type: `BaseNode` for registered nodes, `Loop` for a loop box (whose `data.nodeModel` is `org.projectcontinuum.core.builtin.Loop`).
      */
     'type': string;
     /**

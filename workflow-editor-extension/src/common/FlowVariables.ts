@@ -50,6 +50,12 @@ export interface InheritedFlowVariables {
     conflicts: FlowVariableConflict[];
 }
 
+/** Adjusts a node's inherited variables before they become available to its children. */
+export type InheritedFlowVariablesOverlay = (
+    nodeId: string,
+    inherited: FlowVariables,
+) => FlowVariables;
+
 export type FlowVariableOrigin = 'set' | 'inherited' | 'overridden';
 
 export interface FlowVariableRow {
@@ -119,7 +125,8 @@ function compareStrings(left: string, right: string): number {
 export function inheritedFlowVariables(
     nodeId: string,
     graph: FlowGraphLike,
-    nodeToOutputsMap: NodeToOutputsLike
+    nodeToOutputsMap: NodeToOutputsLike,
+    overlayInherited?: InheritedFlowVariablesOverlay,
 ): InheritedFlowVariables {
     const nodesById = new Map(graph.nodes.map((node) => [node.id, node]));
     const parentEdgesByTarget = new Map<string, FlowGraphLike['edges'][number][]>();
@@ -167,6 +174,13 @@ export function inheritedFlowVariables(
         return { variables, conflicts };
     };
 
+    const inheritedAt = (targetId: string): InheritedFlowVariables => {
+        const inherited = mergeParents(targetId);
+        return overlayInherited
+            ? { ...inherited, variables: overlayInherited(targetId, inherited.variables) }
+            : inherited;
+    };
+
     const available = (ancestorId: string): FlowVariables => {
         const cached = availableByNodeId.get(ancestorId);
         if (cached) {
@@ -177,14 +191,14 @@ export function inheritedFlowVariables(
             return {};
         }
         visiting.add(ancestorId);
-        const result = { ...mergeParents(ancestorId).variables, ...ownFlowVariables(nodeToOutputsMap[ancestorId]) };
+        const result = { ...inheritedAt(ancestorId).variables, ...ownFlowVariables(nodeToOutputsMap[ancestorId]) };
         visiting.delete(ancestorId);
         availableByNodeId.set(ancestorId, result);
         return result;
     };
 
     visiting.add(nodeId);
-    return mergeParents(nodeId);
+    return inheritedAt(nodeId);
 }
 
 /** One row per variable name, sorted by name: what the node set, inherited, or set over an inherited value. */
