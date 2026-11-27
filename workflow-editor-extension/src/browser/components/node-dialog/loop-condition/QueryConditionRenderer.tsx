@@ -19,6 +19,7 @@ import {
     Switch,
     Typography,
 } from '@mui/material';
+import type { Theme } from '@mui/material/styles';
 import { CelConditionEditor } from './CelConditionEditor';
 import { LoopConditionBuilder } from './LoopConditionBuilder';
 import {
@@ -145,7 +146,16 @@ export function QueryConditionRenderer(props: ControlProps) {
             {errors && errors.length > 0 && (
                 <Typography variant="caption" color="error">{errors[0]}</Typography>
             )}
-            <Dialog open={replaceDialogOpen} onClose={() => setReplaceDialogOpen(false)}>
+            <Dialog
+                open={replaceDialogOpen}
+                onClose={() => setReplaceDialogOpen(false)}
+                PaperProps={{
+                    sx: (theme: Theme) => ({
+                        backgroundColor: theme.palette.background.paper || theme.palette.background.default || '#1e1e1e',
+                        backgroundImage: 'none',
+                        opacity: 1,
+                    }),
+                }}>
                 <DialogTitle>Replace this CEL condition?</DialogTitle>
                 <DialogContent>
                     <Typography>
