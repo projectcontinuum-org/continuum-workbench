@@ -6,30 +6,39 @@ import { MonacoEditorWrapper } from '../monaco/MonacoEditorWrapper';
 import { isControl, rankWith } from '@jsonforms/core';
 import { useMUIThemeStore } from '../../store/MUIThemeStore';
 
-interface CodeEditorRendererProps extends ControlProps {
-  options?: {
-    format?: string;
-    language?: string;
-    rows?: number;
-  };
-}
+import { resolveCodeEditorOptions } from '../../../common/CodeEditorOptions';
+import { parseKotlinScriptContext } from '../../../common/script-editor/KotlinScriptContext';
+import { decideScriptEditorRoute } from '../../../common/script-editor/ScriptEditorRoute';
+import { NativeScriptEditor } from '../../script-editor/NativeScriptEditor';
+import { useWorkspaceRoot } from '../../script-editor/useWorkspaceRoot';
+import { useWorkspaceTrust } from '../../script-editor/useWorkspaceTrust';
+import { WorkspaceRequiredNote } from '../../script-editor/WorkspaceRequiredNote';
+import { WorkspaceTrustNote } from '../../script-editor/WorkspaceTrustNote';
 
-const CodeEditorRenderer: React.FC<CodeEditorRendererProps> = (props) => {
+const CodeEditorRenderer: React.FC<ControlProps> = (props) => {
   const {
     data,
     handleChange,
     label,
     errors,
-    options = {},
     visible,
   } = props;
+  // JSONForms passes the UI schema's options through the UI schema, not as a prop of its own.
+  const { declaredLanguage, monacoLanguage: language, rows, format, scriptContext } = resolveCodeEditorOptions(props.uischema);
 
   const muiTheme = useTheme();
   const monacoTheme = useMUIThemeStore((state) => state.monacoTheme);
 
-  const language = options.language || 'kotlin';
-  const rows = options.rows || 15;
-  const format = options.format || 'code';
+  // The names the node reported for this script, if usable. They only add to what the editor with code intelligence
+  // knows: without them (none, or malformed) a Kotlin editor still gets the standard library and Java.
+  // Keyed by content: a UI schema rebuilt with equal content must not restart the editor.
+  const contextKey = JSON.stringify(scriptContext ?? null);
+  const context = React.useMemo(() => parseKotlinScriptContext(scriptContext), [contextKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  const workspaceRoot = useWorkspaceRoot();
+  const trusted = useWorkspaceTrust();
+  const [nativeUnavailable, setNativeUnavailable] = React.useState(false);
+  const route = decideScriptEditorRoute({ language: declaredLanguage, hasWorkspaceRoot: workspaceRoot !== undefined, trusted: trusted !== false });
+  const useNative = route.kind === 'native' && !nativeUnavailable;
 
   const [value, setValue] = React.useState<string>(data || '');
 
@@ -75,22 +84,39 @@ const CodeEditorRenderer: React.FC<CodeEditorRendererProps> = (props) => {
           background: muiTheme.palette.background.default,
         }}
       >
-        <MonacoEditorWrapper
-          value={value}
-          language={language}
-          height={editorHeight}
-          theme={monacoTheme}
-          options={{
-            minimap: { enabled: false },
-            scrollBeyondLastLine: false,
-            wordWrap: 'on',
-            formatOnPaste: true,
-            formatOnType: true,
-            automaticLayout: true
-          }}
-          onChange={handleEditorChange}
-        />
+        {useNative ? (
+          <NativeScriptEditor
+            value={value}
+            context={context}
+            height={editorHeight}
+            onChange={(text) => handleEditorChange(text)}
+            onUnavailable={() => setNativeUnavailable(true)}
+          />
+        ) : (
+          <MonacoEditorWrapper
+            value={value}
+            language={language}
+            height={editorHeight}
+            theme={monacoTheme}
+            options={{
+              minimap: { enabled: false },
+              scrollBeyondLastLine: false,
+              wordWrap: 'on',
+              formatOnPaste: true,
+              formatOnType: true,
+              automaticLayout: true
+            }}
+            onChange={handleEditorChange}
+          />
+        )}
       </Box>
+      {route.kind === 'plain' && route.reason === 'no-workspace' && <WorkspaceRequiredNote />}
+      {route.kind === 'plain' && route.reason === 'untrusted' && <WorkspaceTrustNote />}
+      {route.kind === 'native' && nativeUnavailable && (
+        <FormHelperText role="note" data-testid="script-editor-unavailable-note" sx={{ mt: 1 }}>
+          Code intelligence is unavailable for this editor
+        </FormHelperText>
+      )}
       {errorMessage && (
         <FormHelperText error={true} sx={{ mt: 1 }}>
           {errorMessage}

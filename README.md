@@ -63,6 +63,7 @@ A Turborepo monorepo containing the browser-based workflow editor and IDE for Pr
 ### Prerequisites
 
 - **Node.js >= 20**
+- **JDK 21** (only for Kotlin code intelligence in the Kotlin Script node dialog; `yarn download:kotlin-ls` fetches the language server). Approve Theia's workspace trust prompt once per workspace, otherwise the dialog keeps the plain editor with a note.
 - **Yarn 1.22+**
 - **Backend services running** — see the [Continuum](https://github.com/projectcontinuum-org/continuum-platform-core) repo for Docker Compose setup
 
@@ -95,6 +96,10 @@ Open [http://localhost:3002](http://localhost:3002) and start building workflows
 | `yarn start:workbench-thin` | Start lightweight workbench |
 | `yarn build:workbench` | Build only the full workbench |
 | `yarn build:workbench-thin` | Build only the thin workbench |
+| `yarn test` | Run the script specs (`scripts/*.spec.js`) and the specs of the editor and builder extensions |
+| `yarn download:plugins` (in `continuum-workbench/`) | Fetch the VS Code extensions (git, Kotlin) into `plugins/`; the Kotlin one is installed from a pinned, checksummed release |
+| `yarn download:kotlin-ls` (in `continuum-workbench/`) | Fetch the Kotlin language server into `.kotlin-ls/` for development |
+| `yarn seed:kotlin-settings` (in `continuum-workbench/`) | Write the Kotlin extension settings into the Theia config dir (`yarn start` does this) |
 | `yarn lint` | Lint all workspaces |
 | `yarn format` | Format all TypeScript/Markdown files |
 | `yarn generate:api` | Regenerate the typescript-axios API clients in `workflow-editor-extension/src/generated/` from the OpenAPI specs in a sibling `continuum-platform-core` checkout (needs `openapi-generator`, e.g. `brew install openapi-generator`; set `CONTINUUM_API_SPEC_DIR` for another location) |

@@ -63,5 +63,8 @@ unsloth-trainer/.venv/
 ### Theia plugins (downloaded by `yarn download:plugins`) ###
 **/continuum-workbench/plugins/
 
+### Kotlin language server (downloaded by `yarn download:kotlin-ls`) ###
+/.kotlin-ls/
+
 # macOS
 .DS_Store

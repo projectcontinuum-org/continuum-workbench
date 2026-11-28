@@ -15,6 +15,9 @@ esac
 mkdir -p "$HOME/workspace" "$HOME/.claude/agents"
 cp /opt/continuum/workflow-builder.md "$HOME/.claude/agents/workflow-builder.md"
 
+# Point the Kotlin file-editor extension at the bundled server and runtime; it must never download its own
+node /opt/continuum/seed-kotlin-settings.js || echo "entrypoint: could not seed the Kotlin extension settings" >&2
+
 # Register the api-server MCP server for Claude Code (user scope, so every project sees it); remove first because add fails if it exists
 claude mcp remove --scope user continuum >/dev/null 2>&1 || true
 if ! claude mcp add --scope user --transport http continuum "$MCP_URL" >/dev/null; then

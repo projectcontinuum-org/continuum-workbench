@@ -10,12 +10,12 @@
     "src"
   ],
   "dependencies": {
-    "@theia/ai-chat": "latest",
-    "@theia/ai-core": "latest",
-    "@theia/core": "latest",
-    "@theia/editor": "latest",
-    "@theia/filesystem": "latest",
-    "@theia/workspace": "latest"
+    "@theia/ai-chat": "1.74.1",
+    "@theia/ai-core": "1.74.1",
+    "@theia/core": "1.74.1",
+    "@theia/editor": "1.74.1",
+    "@theia/filesystem": "1.74.1",
+    "@theia/workspace": "1.74.1"
   },
   "devDependencies": {
     "@types/node": "^20",

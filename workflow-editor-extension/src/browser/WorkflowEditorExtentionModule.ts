@@ -6,6 +6,10 @@ import WorkflowEditorOpenHandler from './handlers/WorkflowEditorOpenHandler';
 import WorkflowEditorWidgetFactory from './widgets/workflow-editor/WorkflowEditorWidgetFactory';
 import ContinuumThemeService from './theme/ContinuumThemeService';
 import { ContinuumFrontendApplicationContribution } from './contribution/ContinuumFrontendApplicationContribution';
+import { TheiaScriptFileSystem } from './script-editor/TheiaScriptFileSystem';
+import { TheiaWorkspaceRootSource } from './script-editor/TheiaWorkspaceRootSource';
+import { NativeMonacoEditorFactory } from './script-editor/NativeMonacoEditorFactory';
+import { ScriptEditorContribution } from './script-editor/ScriptEditorContribution';
 import ContinuumFileTreeLabelProviderContribution from './contribution/ContinuumLabelProviderContribution';
 import CreateNewWorkflowCommand from './command/CreateNewWorkflowCommand';
 import { CommandContribution, MenuContribution } from '@theia/core';
@@ -133,6 +137,14 @@ export default new ContainerModule((bind, unbind, isBound, rebind) => {
     // FrontendViewContribution
     bind(ContinuumFrontendApplicationContribution).toSelf().inSingletonScope();
     bind(FrontendApplicationContribution).toService(ContinuumFrontendApplicationContribution);
+
+    // Script editor with code intelligence: temp-file writer over Theia's file service, the editor factory, and the
+    // contribution that publishes them to the dialog components and sweeps leftovers at start.
+    bind(TheiaScriptFileSystem).toSelf().inSingletonScope();
+    bind(TheiaWorkspaceRootSource).toSelf().inSingletonScope();
+    bind(NativeMonacoEditorFactory).toSelf().inSingletonScope();
+    bind(ScriptEditorContribution).toSelf().inSingletonScope();
+    bind(FrontendApplicationContribution).toService(ScriptEditorContribution);
     bind(CommandContribution).to(ContinuumCommandcontribution);
     bind(MenuContribution).to(ContinuumMenuContribution);
 

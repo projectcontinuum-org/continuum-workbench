@@ -31,15 +31,15 @@
         }
     },
     "dependencies": {
-        "@theia/core": "latest",
-        "@theia/filesystem": "latest",
-        "@theia/markers": "latest",
-        "@theia/messages": "latest",
-        "@theia/monaco": "latest",
-        "@theia/navigator": "latest",
-        "@theia/preferences": "latest",
-        "@theia/process": "latest",
-        "@theia/workspace": "latest",
+        "@theia/core": "1.74.1",
+        "@theia/filesystem": "1.74.1",
+        "@theia/markers": "1.74.1",
+        "@theia/messages": "1.74.1",
+        "@theia/monaco": "1.74.1",
+        "@theia/navigator": "1.74.1",
+        "@theia/preferences": "1.74.1",
+        "@theia/process": "1.74.1",
+        "@theia/workspace": "1.74.1",
         "@continuum/core": "*",
         "@continuum/workflow-editor-extension": "*"
     },
@@ -51,7 +51,7 @@
         "clean": "theia clean"
     },
     "devDependencies": {
-        "@theia/cli": "latest",
+        "@theia/cli": "1.74.1",
         "monaco-editor-webpack-plugin": "^7.1.0",
         "terser-webpack-plugin": "5.3.10"
     }

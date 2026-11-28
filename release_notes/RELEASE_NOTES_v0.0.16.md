@@ -44,6 +44,18 @@ Adding `@theia/plugin-ext` for git support transitively re-introduces `@theia/de
 - Credentials: the client receives the decrypted secret values from `GET /api/v1/credentials`; `CredentialsService` drops them so they never reach UI state. A credential error now shows the problem-detail `detail` first, then the deprecated `error`.
 - `buildApiUrl` is removed from `SafeEncoding.ts` (the generated client builds URLs); `requirePathSegment` replaces its dot-segment check.
 
+### Kotlin Script editor with code intelligence
+
+The Kotlin Script node's code editor now offers completion, hover and diagnostics for the names the node itself reports (`row`, `flow` and the types they use), served by the same Kotlin extension (`fwcd.kotlin`, pinned to 0.2.36 with a checksum) that edits `.kt` files.
+
+- The dialog edits a temp file under `<workspace>/.continuum-scripts/<id>/`. The lines around your script (a package line, the wrapper function and its closing brace) are hidden in the editor, so you see and save exactly what you typed. The folder is removed when the dialog closes, leftovers of a closed or crashed tab are swept when the workbench starts or the workspace changes, and `.continuum-scripts` is excluded from the Explorer and search and ignored by git.
+- Theia's workspace trust is left at its default, so the first time you open a workspace you approve trust once ("Yes, I trust the authors"); the Kotlin extension does not run in an untrusted workspace. Until then the dialog keeps the plain editor and says "Trust this workspace to enable code intelligence".
+- A workspace folder must be open: without one the dialog keeps the plain editor and says "Open a folder to enable code intelligence". The plain editor is also used when the files cannot be written.
+- A Kotlin Script editor whose node reports no names (or a malformed report) now gets basic code intelligence too: Kotlin standard library and Java completion, hover and type errors, but no node-specific names. Nodes that report their names behave as before.
+- The `kotlin.languageServer.*` and `kotlin.java.*` settings of the workbench now govern the dialog too. One server process serves the dialog and `.kt` files.
+- The plain editor uses the language id `continuum-kotlin-script`, so merely showing it does not start the Kotlin extension.
+- Dialog code editors now read their options from the UI schema. Before, every code editor was treated as Kotlin with 15 rows. Now each honours its declared language and rows (rows is the most lines it grows to): the Rest node's URL and payload and the Claude node's prompt use FreeMarker highlighting (1, 10 and 8 rows), the Claude system prompt uses Markdown (6), its MCP servers and output schema use JSON (8), and CreateTable's JSON Array uses FreeMarker (15). Only Kotlin Script gets code intelligence. Loop's condition editor is unaffected.
+
 ### Space and Backspace work in node dialog code editors (CONTNM-145)
 
 You can now type a space in the node dialog's code editors (any `format: "code"` property, e.g. CreateTable's FreeMarker **JSON Array**). Before, React Flow's page-wide Space key (pan the canvas) blocked it. Backspace in an editor also no longer deletes the selected canvas nodes behind the dialog.
@@ -125,6 +137,8 @@ Nothing visible changes: none of this was bound, imported or called.
 - Pull `projectcontinuum/continuum-workbench:0.0.16`. The image now runs as the `continuum` user; the cluster manager should run the pod as uid 1000 and mount a PVC at `/home/continuum`.
 - For the Workflow Builder, ensure an api-server with the MCP endpoint is reachable from the workbench backend and set `CONTINUUM_API_SERVER_MCP_URL` if it is not at `http://continuum-platform-api-server:8080/mcp`.
 - Pre-existing schedules whose name was just the workflow name still appear in Manage Schedules (backward-compat fallback). New schedules are stored as `{workflowName}/{scheduleName}.schedule`.
+- Every `@theia/*` package is now pinned to the exact version `1.74.1` (it was a mix of `latest` ranges); keep them identical when upgrading (`scripts/theia-versions.spec.js` checks it, also against `yarn.lock`).
+- Kotlin code intelligence needs JDK 21 and the bundled server (`yarn download:kotlin-ls` in development; the image has both). `scripts/seed-kotlin-settings.js` (run by `yarn start` and the image entrypoint) now also points the Kotlin extension at the bundled server and runtime, and adds `.continuum-scripts` to `files.exclude` and `search.exclude`. It rewrites `settings.json` as plain JSON, so comments in that file are dropped (the original is kept as `settings.json.continuum-backup`), and it resets `kotlin.languageServer.path` and `kotlin.java.home` on every start. It no longer touches workspace trust; approve it once as described above. Set `kotlin.scripts.enabled` to `false` if you do not need `.kts` analysis in the language server.
 
 ## Changes
 

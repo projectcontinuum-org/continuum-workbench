@@ -205,6 +205,7 @@ export class MonacoLanguageRegistration {
         'javascript': javascript,
         'julia': julia,
         'kotlin': kotlin,
+        'continuum-kotlin-script': kotlin,
         'less': less,
         'lexon': lexon,
         'lua': lua,
@@ -289,6 +290,9 @@ export class MonacoLanguageRegistration {
         { id: 'javascript', extensions: ['.js', '.es6', '.jsx', '.mjs', '.cjs'], aliases: ['JavaScript', 'javascript'] },
         { id: 'julia', extensions: ['.jl'], aliases: ['Julia', 'julia'] },
         { id: 'kotlin', extensions: ['.kt', '.kts'], aliases: ['Kotlin', 'kotlin'] },
+        // Plain script editor of the node dialog: Kotlin highlighting under an id of its own (no file extensions), so the
+        // Kotlin file extension, which starts its language server on the `kotlin` id, does not react to it.
+        { id: 'continuum-kotlin-script', extensions: [], aliases: [] },
         { id: 'less', extensions: ['.less'], aliases: ['Less', 'less'] },
         { id: 'lexon', extensions: ['.lex'], aliases: ['Lexon', 'lexon'] },
         { id: 'lua', extensions: ['.lua'], aliases: ['Lua', 'lua'] },

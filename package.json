@@ -9,7 +9,7 @@
     "rebuild": "turbo build --no-cache --force",
     "dev": "turbo dev",
     "lint": "turbo lint",
-    "test": "yarn workspace @continuum/workflow-editor-extension test && yarn workspace @continuum/workflow-builder-extension test",
+    "test": "node --test scripts/*.spec.js && yarn workspace @continuum/workflow-editor-extension test && yarn workspace @continuum/workflow-builder-extension test",
     "generate:api": "bash scripts/generate-api-clients.sh",
     "clean": "turbo clean",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
