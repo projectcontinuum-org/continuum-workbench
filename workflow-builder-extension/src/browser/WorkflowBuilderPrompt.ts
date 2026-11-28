@@ -47,6 +47,36 @@ You build the workflow **live**: the file is created empty as soon as you know t
 - Template properties (prompts, JSON strings) use FreeMarker. Booleans need \`?c\` when printed, lists need \`?join\`, and a value that may be missing needs a default such as \`\${row.name!}\`.
 - Credentials are referenced by name only. Never ask for or write a secret, key or token. Tell the user which credential name to create.
 
+# Loops
+
+A loop is a node with \`nodeId\` \`org.projectcontinuum.core.builtin.Loop\`. It wraps member nodes that run repeatedly until its condition evaluates to false.
+
+**Adding a loop:** Add a node with \`type: "Loop"\` before any of its members in \`nodes[]\`. Set its \`properties.condition\` to a CEL expression (see below). Every member node sets \`parent\` to the loop's nodeId. Edges never name a loop — connect nodes inside it only.
+
+**Loop properties:**
+- \`condition\` (required): A Common Expression Language (CEL) expression that determines when the loop stops. Always uses \`vars["name"]\` for flow variables. Must be valid CEL accepted by the platform validator.
+- \`maxIterations\` (default 10,000): Maximum number of iterations before the run is terminated.
+- \`onLimit\` (default \`"fail"\"): What to do when maxIterations is reached — \`"fail"\` stops the run; \`"treat-as-false"\` continues as if the condition were false.
+- \`onNonBooleanResult\` (default \`"fail"\"): How to handle a condition result that is not boolean — \`"fail"\` stops the run; \`"treat-as-false"\` treats any non-falsy value as true.
+
+**CEL expression rules for loop conditions:**
+- Always use \`vars["<name>"]\` syntax for flow variables (double quotes required). The workbench supports a visual query builder for simple single-rule comparisons (\`vars["field"] <op> <literal>\`), falling back to CEL text mode for more complex expressions.
+- Available CEL libraries: strings (\`concat\`, \`contains\`, \`startsWith\`, \`endsWith\`, \`trim\`), math (\`abs\`, \`ceil\`, \`floor\`, \`max\`, \`min\`, \`round\`), lists (\`contains\`, \`filter\`, \`map\`, \`first\`, \`last\`), sets (\`intersect\`, \`union\`, \`difference\`), regex (\`matches\`, \`replaceFirst\`, \`replaceAll\`).
+- Not available: protos, native types beyond primitives. All string literals use double quotes. Variable names with dots are supported: \`vars["my.field.name"]\`.
+- Limits: parsed expression tree depth capped at 100; comprehension iterations capped at 10,000; regex compiled code size capped at 1,000 instructions.
+
+**Condition examples:**
+\`\`\`
+vars["page"] < 10                                    // Simple numeric comparison
+vars["hasMore"] == true                              // Boolean check
+vars["count"] >= 1 && vars["valid"] == true         // Multi-rule with CEL logical AND
+vars["result"].contains("error")                     // String method on a variable
+\`\`\`
+
+**Loop member requirements:** Every member node must set the variables its parent loop's condition reads. For example, if the condition is \`vars["page"] < 10\`, at least one member must output a \`page\` variable in each iteration.
+
+**Validation:** The workflow validator reports errors for loops with unknown parents, edges connecting to/from loops, invalid property values, and conditions that fail CEL parsing. Always validate after adding a loop before building the final workflow.
+
 # After saving
 
 Reply briefly: the file path (the user opens it from the file explorer; an open tab has already updated), a one-line description of each step in order, your assumptions, and anything the user must set up before running (credentials, worker features that must be deployed). Do not paste the workflow JSON.

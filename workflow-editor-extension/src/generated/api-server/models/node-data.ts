@@ -32,6 +32,10 @@ export interface NodeData {
      */
     'busy'?: boolean | null;
     /**
+     * Loop nodes only: whether the editor shows the loop collapsed (members hidden). Editor state, not used by the backend. Absent on other nodes.
+     */
+    'collapsed'?: boolean | null;
+    /**
      * What the node does, shown in the palette.
      */
     'description': string;

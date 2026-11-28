@@ -35,11 +35,11 @@ export interface WorkflowRunSummary {
      */
     'scheduleId'?: string | null;
     /**
-     * Run status as last reported. `PENDING`: accepted, no event yet. `STARTED`: the orchestrator picked it up. `RUNNING`: nodes are executing. `FINISHED`: every node is done (some may have failed or been skipped; see the node statuses). `FAILED`: the run failed. `CANCELLED` / `TERMINATED`: stopped through the API.
+     * Run status as last reported. `PENDING`: accepted, no event yet. `STARTED`: the orchestrator picked it up. `RUNNING`: nodes are executing. `FINISHED`: every node is done and none failed (some may have been skipped; see the node statuses). `FAILED`: a node or loop failed, or the run itself failed. `CANCELLED` / `TERMINATED`: stopped through the API (`TERMINATED` is also recorded by the API server once Temporal has terminated the run).
      */
     'status': WorkflowRunSummaryStatusEnum;
     /**
-     * When the last run event was stored (ISO-8601, UTC).
+     * When the last run event was stored, or when the API server recorded a terminate (ISO-8601, UTC).
      */
     'updatedAt': string;
     /**

@@ -1,0 +1,258 @@
+/** Loop node canvas styles. */
+
+.loop-node-body {
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+    user-select: none;
+    cursor: default;
+}
+
+.loop-node-body:focus {
+    outline: 2px solid var(--mui-palette-secondary-main, var(--theia-focusBorder));
+    outline-offset: 2px;
+}
+
+.react-flow__node.loop-node-wrapper {
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    opacity: 1;
+    /* Keep crossing wires above the Loop even when React Flow raises selected nodes. */
+    z-index: -1 !important;
+}
+
+.loop-node-header {
+    position: relative;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex: 0 0 44px;
+    min-width: 0;
+    height: 44px;
+    padding: 0 10px;
+    border-bottom: 1px solid var(--mui-palette-divider, var(--theia-editorWidget-border));
+}
+
+.loop-node-identity {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.loop-node-icon {
+    flex: 0 0 auto;
+    color: var(--mui-palette-secondary-main, var(--theia-focusBorder));
+    font-size: 19px;
+}
+
+.loop-node-kind.MuiTypography-root {
+    flex: 0 0 auto;
+    color: var(--mui-palette-secondary-main, var(--theia-focusBorder));
+    font-family: var(--theia-ui-monospace-font-family, monospace);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+}
+
+.loop-node-id.MuiTypography-root {
+    flex: 0 0 auto;
+    color: var(--mui-palette-text-secondary, var(--theia-ui-font-color2));
+    font-family: var(--theia-ui-monospace-font-family, monospace);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+
+.loop-node-title {
+    flex: 0 1 auto;
+    min-width: 32px;
+    overflow: hidden;
+    color: var(--mui-palette-text-primary, var(--theia-ui-font-color1));
+    font-size: 15px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.loop-condition-chip {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 120px;
+    max-width: 460px;
+    overflow: hidden;
+    padding: 4px 8px;
+    border: 0;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--mui-palette-secondary-main, var(--theia-focusBorder)) 12%, transparent);
+}
+
+.loop-condition-text {
+    overflow: hidden;
+    color: var(--mui-palette-text-primary, var(--theia-ui-font-color1));
+    font-family: var(--theia-ui-monospace-font-family, monospace);
+    font-size: 11px;
+    line-height: 1.4;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.loop-maximum {
+    flex: 0 0 auto;
+    color: var(--mui-palette-text-secondary, var(--theia-descriptionForeground));
+    font-family: var(--theia-ui-monospace-font-family, monospace);
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.loop-cel-warning {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    flex: 0 0 auto;
+    padding: 1px 5px;
+    border: 1px solid color-mix(in srgb, var(--mui-palette-warning-main, var(--theia-editorWarning-foreground)) 55%, transparent);
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--mui-palette-warning-main, var(--theia-editorWarning-foreground)) 10%, transparent);
+    color: var(--mui-palette-warning-main, var(--theia-editorWarning-foreground));
+    font-family: var(--theia-ui-monospace-font-family, monospace);
+    font-size: 9px;
+    white-space: nowrap;
+}
+
+.loop-cel-warning .MuiSvgIcon-root {
+    font-size: 14px;
+}
+
+.loop-node-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex: 0 0 auto;
+    gap: 4px;
+}
+
+.loop-node-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.loop-node-status .MuiSvgIcon-root {
+    font-size: 16px;
+}
+
+.loop-collapse-header-button,
+.loop-settings-button {
+    position: relative;
+    z-index: 30;
+    color: var(--mui-palette-secondary-main, var(--theia-focusBorder));
+}
+
+.loop-collapse-header-button:hover,
+.loop-settings-button:hover {
+    background: color-mix(in srgb, var(--mui-palette-secondary-main, var(--theia-focusBorder)) 14%, transparent);
+}
+
+.loop-progress-message {
+    position: relative;
+    z-index: 1;
+    flex: 0 0 auto;
+    box-sizing: border-box;
+    height: auto;
+    padding: 2px 10px 4px;
+    color: var(--mui-palette-text-secondary, var(--theia-descriptionForeground));
+    font-family: var(--theia-ui-monospace-font-family, monospace);
+    font-size: 10px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+.loop-collapsed-body {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 0 10px;
+}
+
+.loop-member-count {
+    color: var(--mui-palette-text-secondary, var(--theia-descriptionForeground));
+    font-size: 12px;
+}
+
+.loop-edge-anchor {
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+.react-flow__resize-control.handle.loop-resize-handle {
+    z-index: 20;
+    box-sizing: border-box;
+    width: 10px;
+    height: 10px;
+    border: 2px solid var(--mui-palette-secondary-main, var(--theia-focusBorder));
+    border-radius: 50%;
+    background: var(--mui-palette-background-paper, var(--theia-editor-background));
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+    opacity: 1;
+    transition: transform 120ms ease, background-color 120ms ease;
+}
+
+.react-flow__resize-control.handle.loop-resize-handle:hover {
+    background: var(--mui-palette-secondary-main, var(--theia-focusBorder));
+    transform: translate(-50%, -50%) scale(1.35);
+}
+
+.react-flow__resize-control.handle.loop-resize-handle::before {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 24px;
+    height: 24px;
+    content: "";
+    transform: translate(-50%, -50%);
+}
+
+.react-flow__resize-control.line.loop-resize-line {
+    z-index: 15;
+    border-color: color-mix(in srgb, var(--mui-palette-secondary-main, var(--theia-focusBorder)) 70%, transparent);
+    border-style: solid;
+    border-width: 1px;
+}
+
+.react-flow__resize-control.line.loop-resize-line::before {
+    position: absolute;
+    content: "";
+}
+
+.react-flow__resize-control.line.loop-resize-line.left::before,
+.react-flow__resize-control.line.loop-resize-line.right::before {
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 10px;
+    transform: translateX(-50%);
+}
+
+.react-flow__resize-control.line.loop-resize-line.top::before,
+.react-flow__resize-control.line.loop-resize-line.bottom::before {
+    top: 50%;
+    right: 0;
+    left: 0;
+    height: 10px;
+    transform: translateY(-50%);
+}

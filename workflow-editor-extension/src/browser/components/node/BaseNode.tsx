@@ -5,14 +5,17 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import SkipNextIcon from '@mui/icons-material/SkipNext';
+import LoopIcon from '@mui/icons-material/Loop';
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import { IBaseNodeData, NodeStatus, StageStatus } from "@continuum/core";
 import "./BaseNode.css";
-import { Box, CircularProgress, Grid, Step, StepLabel, Stepper, Tooltip, Typography } from "@mui/material";
+import { Box, CircularProgress, Grid, IconButton, Step, StepLabel, Stepper, Tooltip, Typography } from "@mui/material";
 import { isNodeWorking, NodeStatusBadge, nodeStatusColor, nodeStatusLabel } from "./NodeStatusPresentation";
 import { nodeStatusClass } from "../../../common/ExecutionStatusPresentation";
 import { useMUIThemeStore } from "../../store/MUIThemeStore";
 import { mirage } from 'ldrs'
 import DynamicIcon from "../utils/DynamicIcon";
+import { useLoopMembership } from "../../hooks/useLoopMembership";
 
 mirage.register()
 
@@ -47,8 +50,14 @@ const getStepIcon = (status: StageStatus) => {
     }
 };
 
-export default function BaseNode(props: NodeProps<IBaseNodeData>) {
+export interface BaseNodeProps extends NodeProps<IBaseNodeData> {
+  /** Present on the editor canvas only; the run viewer renders no settings button. */
+  onOpenSettings?: () => void;
+}
+
+export default function BaseNode(props: BaseNodeProps) {
     const [theme] = useMUIThemeStore((state)=>([state.theme]))
+    const loopMembership = useLoopMembership(props.id);
 
     return (
       <Grid
@@ -56,9 +65,47 @@ export default function BaseNode(props: NodeProps<IBaseNodeData>) {
         direction="row"
         justifyContent="space-between"
         alignItems="center"
-        className={["node-body", nodeStatusClass(props.data.status)].filter(Boolean).join(" ")}
+        className={[
+          "node-body",
+          nodeStatusClass(props.data.status),
+          loopMembership ? "loop-member" : null,
+          loopMembership ? `loop-member-depth-${loopMembership.nestingDepth}` : null,
+        ].filter(Boolean).join(" ")}
         position="relative"
       >
+        {props.onOpenSettings && (
+          <Tooltip title="Node settings" disableInteractive>
+            <IconButton
+              size="small"
+              className="nodrag nopan node-settings-button"
+              aria-label="Open node settings"
+              data-testid={`node-settings-button-${props.id}`}
+              onClick={(event) => {
+                event.stopPropagation();
+                props.onOpenSettings?.();
+              }}
+              onDoubleClick={(event) => event.stopPropagation()}
+            >
+              <SettingsOutlinedIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )}
+        {loopMembership && (
+          <Box className="loop-member-badge">
+            <LoopIcon
+              className="loop-member-icon"
+              fontSize="small"
+              data-testid={`loop-icon-${props.id}`}
+            />
+            <Typography 
+              className="loop-member-id"
+              variant="caption"
+              title={`Parent loop: #${loopMembership.parentLoopId}`}
+            >
+              #{loopMembership.parentLoopId}
+            </Typography>
+          </Box>
+        )}
         <Grid
           container
           direction="column"
@@ -88,7 +135,7 @@ export default function BaseNode(props: NodeProps<IBaseNodeData>) {
               <Box className="text">
                 <Typography variant="h6">{props.data.title}</Typography>
                 {props.data.subTitle && (
-                  <Tooltip title={props.data.subTitle} placement="top">
+                  <Tooltip title={props.data.subTitle} placement="top" disableInteractive>
                     <Typography className="subline" variant="body2">
                       {props.data.subTitle}
                     </Typography>

@@ -1,0 +1,111 @@
+.loop-condition-builder {
+    --rqb-spacing: 8px;
+    --rqb-border-width: 1px;
+    --rqb-border-color: var(--theia-input-border, var(--theia-editorWidget-border));
+    --rqb-base-color: var(--theia-focusBorder);
+    --rqb-background-color: color-mix(in srgb, var(--theia-focusBorder) 12%, transparent);
+    --rqb-border-radius: 4px;
+    color: var(--theia-foreground);
+    font-family: var(--theia-ui-font-family, inherit);
+}
+
+.loop-condition-builder .ruleGroup {
+    display: flex;
+    flex-direction: column;
+    gap: var(--rqb-spacing);
+    padding: var(--rqb-spacing);
+    border: 1px solid var(--theia-input-border, var(--theia-editorWidget-border));
+    border-radius: var(--rqb-border-radius);
+    background: var(--theia-editorWidget-background, var(--theia-editor-background));
+}
+
+.loop-condition-builder .ruleGroup .ruleGroup-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--rqb-spacing);
+}
+
+.loop-condition-builder .ruleGroup .ruleGroup-header,
+.loop-condition-builder .ruleGroup .rule {
+    display: flex;
+    align-items: center;
+    gap: var(--rqb-spacing);
+    flex-wrap: wrap;
+}
+
+.loop-condition-builder .ruleGroup .ruleGroup-header {
+    padding: 6px;
+    border-bottom: 1px solid var(--theia-editorWidget-border, var(--theia-input-border));
+    color: var(--theia-foreground);
+}
+
+.loop-condition-builder .ruleGroup .rule {
+    padding: 6px;
+    border: 1px solid var(--theia-editorWidget-border, var(--theia-input-border));
+    border-radius: 4px;
+    background: var(--theia-editor-background);
+}
+
+.loop-condition-builder :is(select, input:not([type="checkbox"]), button) {
+    box-sizing: border-box;
+    min-height: 30px;
+    padding: 4px 8px;
+    border: 1px solid var(--theia-input-border, var(--theia-editorWidget-border));
+    border-radius: 3px;
+    font: inherit;
+}
+
+.loop-condition-builder select,
+.loop-condition-builder input:not([type="checkbox"]) {
+    background: var(--theia-input-background, var(--theia-editor-background));
+    color: var(--theia-input-foreground, var(--theia-foreground));
+}
+
+.loop-condition-builder select option {
+    background: var(--theia-dropdown-background, var(--theia-input-background));
+    color: var(--theia-dropdown-foreground, var(--theia-input-foreground));
+}
+
+.loop-condition-builder button {
+    background: var(--theia-button-background, var(--theia-editorWidget-background));
+    color: var(--theia-button-foreground, var(--theia-foreground));
+    cursor: pointer;
+}
+
+.loop-condition-builder button:hover:not(:disabled) {
+    background: var(--theia-button-hoverBackground, var(--theia-list-hoverBackground));
+}
+
+.loop-condition-builder button:disabled {
+    color: var(--theia-disabledForeground);
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+.loop-condition-builder :is(input, select, button):focus-visible {
+    outline: 1px solid var(--theia-focusBorder);
+    outline-offset: 1px;
+}
+
+.loop-condition-builder input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--theia-focusBorder);
+}
+
+.loop-condition-builder :is(input, select)[aria-invalid="true"],
+.loop-condition-builder .invalid {
+    border-color: var(--theia-inputValidation-errorBorder, var(--theia-errorForeground));
+}
+
+.loop-condition-builder .ruleGroup-addRule,
+.loop-condition-builder .ruleGroup-addGroup {
+    border-color: var(--theia-focusBorder);
+}
+
+.loop-condition-builder .ruleGroup-remove,
+.loop-condition-builder .rule-remove {
+    border-color: var(--theia-inputValidation-errorBorder, var(--theia-errorForeground));
+    background: transparent;
+    color: var(--theia-errorForeground);
+}

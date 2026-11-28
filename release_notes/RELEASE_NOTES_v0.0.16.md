@@ -48,6 +48,25 @@ Adding `@theia/plugin-ext` for git support transitively re-introduces `@theia/de
 
 You can now type a space in the node dialog's code editors (any `format: "code"` property, e.g. CreateTable's FreeMarker **JSON Array**). Before, React Flow's page-wide Space key (pan the canvas) blocked it. Backspace in an editor also no longer deletes the selected canvas nodes behind the dialog.
 
+### Loop member nodes display icon and nesting-level background colors
+
+Nodes that are members of a Loop construct now display a small loop icon in the top-left corner with the parent Loop's ID, and inherit a visually distinct background color based on their parent Loop's nesting level. This makes nested loop structures easier to understand at a glance, and helps color-blind users identify loop membership.
+
+- **Loop icon with parent ID**: Each loop member displays a single pill-shaped badge containing the loop icon with the parent Loop ID (e.g., `#loop-1`, monospace) to its right.
+- **Parent ID tooltip**: Hovering over the ID shows "Parent loop: #loop-id" for additional context.
+- **Responsive Loop header**: When a Loop box is narrowed, its header drops items instead of overlapping: first the condition, then `max`, then the `LOOP` label (the node ID stays), and finally the Collapse button becomes an icon.
+- **Accessibility**: The icon and ID combination helps users with color vision deficiency identify loop membership and parent relationships.
+- Background colors use distinct MUI theme palette colors for each nesting depth:
+  - Depth 0: Soft secondary blue (10% `secondary-main`)
+  - Depth 1: Soft primary blue (10% `primary-main`)
+  - Depth 2: Soft info cyan (10% `info-main`)
+  - Depth 3: Soft success green (10% `success-main`)
+- Each nesting level is now visually distinct and clear at a glance.
+- The styling works in both the editor canvas and the run viewer.
+- A new React hook `useLoopMembership` detects membership and nesting depth; it is available for use by custom node components.
+- Theme-compatible: the icon, ID and background colors render correctly in both light and dark themes.
+- **Loop condition box styling:** The condition display in Loop node headers now shrinks to fit content and centers the text. The box uses a subtle badge appearance (12% secondary-color tint background, no border) instead of a text-box style, creating a more cohesive visual theme and better space efficiency.
+
 - `MonacoEditorWrapper` creates the editor with `editContext: false`. Theia's Monaco 1.108 defaults to the native EditContext input, a plain `div.native-edit-context`. React Flow, which only skips inputs, textareas and contenteditable elements, did not recognize it as a text field. With the option off, Monaco uses the classic hidden `textarea`. The wrapper also sets `acceptSuggestionOnCommitCharacter: false`, marks its container `nokey`, and stops `keydown`/`keyup` from bubbling past the editor (no `preventDefault`).
 - `WorkflowEditor` turns off React Flow's `panActivationKeyCode` (Space) and `deleteKeyCode` (Backspace) while the node dialog is open.
 
@@ -120,5 +139,22 @@ Nothing visible changes: none of this was bound, imported or called.
 | (this branch) | CONTNM-177 | Call the platform through typescript-axios clients generated from the OpenAPI specs |
 | (this branch) | CONTNM-177 | Remove the unused Node Repository widget, dead API clients, core types and dependencies |
 | (this branch) | CONTNM-171 | Node Outputs dialog: Flow Variables tab (own and inherited), system keys no longer listed as ports |
+
+### Loop nodes in the workflow editor and viewer
+
+The workbench now supports loop nodes — a container that wraps member nodes running repeatedly until their condition evaluates to false. This covers the end-to-end canvas rendering, properties dialog, run display, and builder support for writing conditions visually or as raw CEL.
+
+- **Canvas rendering**: Loop boxes use a dark, translucent, theme-based purple fill and dashed rounded border. Their header shows the title, a bordered condition pill with the full expression on hover, the iteration limit, central status presentation, and an editor settings button. A collapsed loop shows its member count and a larger expand control; an expanded loop shows compact carried-value chips in a horizontally scrollable row when run data and source attribution are available, with member nodes kept below the run summary. Nested loops use a progressively stronger purple tint, while loop-scope wires use a brighter dashed accent unless central run-status colors apply. Collapsed crossing edges attach to the nearest left or right box edge without changing saved connections.
+- **Loop movement and conditions**: Moving a member beyond any box edge unparents it without changing the saved loop size or shifting it away from the mouse drop point, including when it came from nested loops. Explicit resize updates the box live while dragging and continues to enforce member bounds. The selected Loop's subtle corner controls stay visible while larger transparent grab areas ease resizing. The LOOP label uses bold monospace styling, and deeper loop tints increase only gradually. CEL-only expressions have a visible canvas badge. A negated single comparison can open in the builder when the parser preserves its equivalent comparison operator. Validation requests include default editor-only selection, dragging, and absolute-position fields.
+- **Loop editing**: Dropping the Loop palette item creates a Loop node. Dropping or moving nodes into and out of expanded boxes updates their parent membership and relative positions; loop boxes cannot be connected as graph endpoints, and cross-boundary cycles are refused. Loop boxes can be resized while keeping their members inside the container, and deleting a loop asks whether to delete or keep its members. Collapse and expand controls update saved loop state, hide members, and reattach crossing edges in the display without changing stored connections.
+- **Loop properties dialog**: Double-clicking a loop opens a two-mode editor — CEL text mode (Monaco-based) or a visual query builder for supported comparisons, nested `and`/`or` groups, and group negation over flow variables. Editing in CEL mode stays in that mode; empty conditions remain editable with a required-condition message. CEL-only expressions show why the builder is unavailable, and replacing one requires confirmation.
+- **Loop condition builder**: Builder-compatible CEL conditions open in visual mode; other conditions open in CEL. The builder loads on demand with loading and error feedback. Conditions are validated against the current edited workflow (debounced 500 ms), with issues and service availability shown in the dialog.
+- **Loop editor interaction and theme**: Native double-clicks open properties for standard nodes and Loop nodes; node dragging starts only after a small pointer movement. The visual condition builder uses Theia theme colours in dark and light mode. Loop resize handles remain visually small while transparent corner and edge hit areas make them easier to grab without covering header actions.
+- **Run display**: Loop nodes use the shared node status label, badge, and colour presentation and show `Iteration k of max` while running. Successful completion reads `Finished after N iteration(s)` with correct singular grammar; backend warning and failure details are retained. Expanded loops also show attributed carried values from the current run snapshot. Carried values apply at loop entry members; their available values then propagate to internal children with normal parent precedence. Unrelated loop scopes remain independent.
+- **Loop dialog and canvas polish**: The condition editor renders from its JSONForms UI-schema options. Portless Loop boxes expose no user-connectable handles; collapsed edges use invisible display-only anchors, while edges crossing expanded boxes remain visible above the box background and below member nodes. Expanded run-view boxes retain stored dimensions and grow as needed to contain their members.
+- **Build fix**: Fixed TypeScript compilation issues in the Loop canvas hook and Flow Variables snapshot typing.
+- **Workflow Builder agents**: Both prompt twins (`claude-code/workflow-builder.md` and `WorkflowBuilderPrompt.ts`) now include a loop reference section — nodeId `org.projectcontinuum.core.builtin.Loop`, required properties (condition, maxIterations, onLimit, onNonBooleanResult), CEL semantics, available libraries, limits, examples, and validation rules.
+- **Dependency**: Added `react-querybuilder` ^8.28.0 to `workflow-editor-extension/package.json` for the visual condition builder. The common condition adapter uses its CEL parser/formatter; LoopConditionBuilder is the only UI component that imports the builder.
+- **History gauge in the workflow viewer**: the top-right corner of a run's viewer shows a circular gauge of `historyEventCount / historyEventLimit` from the orchestrator's live updates (green up to 50 %, yellow above 50 %, red above 80 %; the tooltip shows the numbers). It appears once the first update with these fields arrives; a run opened from the history list before then, or from an older orchestrator, shows no gauge.
 
 **Full diff:** `release/0.0.14...HEAD` (53 files changed, 2451 insertions, 381 deletions)

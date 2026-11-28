@@ -11,10 +11,9 @@ import { FlowVariablesView } from './flow-variables-view/FlowVariablesView';
 import {
     dataPortIds,
     flowVariableRows,
-    inheritedFlowVariables,
-    InheritedFlowVariables,
     ownFlowVariables,
 } from '../../../common/FlowVariables';
+import { flowVariableDisplayForNode } from '../../../common/LoopCarriedVariables';
 
 interface StyledDialogProps {
     customWidth?: number;
@@ -92,8 +91,6 @@ function defaultDialogSize(): { width: number; height: number } {
 const OUTPUTS_TAB = 0;
 const FLOW_VARIABLES_TAB = 1;
 
-const NO_INHERITED_VARIABLES: InheritedFlowVariables = { variables: {}, conflicts: [] };
-
 export interface NodeOutputViewerProps {
     open: boolean;
     onClose: (value: any) => void;
@@ -117,13 +114,13 @@ export default function NodeOutputViewer({ onClose, open, nodeOutputs, nodeId, w
     const portData = portId ? nodeOutputs[portId] : undefined;
 
     const flowVariables = React.useMemo(() => {
-        const inherited = nodeId && workflowSnapshot && nodeToOutputsMap
-            ? inheritedFlowVariables(nodeId, workflowSnapshot, nodeToOutputsMap)
-            : NO_INHERITED_VARIABLES;
-        return {
-            rows: flowVariableRows(ownFlowVariables(nodeOutputs), inherited.variables),
-            conflicts: inherited.conflicts,
-        };
+        if (nodeId && workflowSnapshot && nodeToOutputsMap) {
+            return flowVariableDisplayForNode(nodeId, {
+                ...workflowSnapshot,
+                nodeToOutputs: nodeToOutputsMap,
+            }, nodeOutputs);
+        }
+        return { rows: flowVariableRows(ownFlowVariables(nodeOutputs), {}), conflicts: [] };
     }, [nodeId, workflowSnapshot, nodeToOutputsMap, nodeOutputs]);
     const [dialogSize, setDialogSize] = React.useState(defaultDialogSize);
     const [isResizing, setIsResizing] = React.useState(false);

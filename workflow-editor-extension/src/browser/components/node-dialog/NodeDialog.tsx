@@ -22,7 +22,10 @@ import {
 } from '@jsonforms/core';
 import CodeEditorControl, { codeEditorTester } from './CodeEditorRenderer';
 import CredentialControl, { credentialTester } from './CredentialRenderer';
+import QueryConditionRenderer, { queryConditionTester } from './loop-condition/QueryConditionRenderer';
 import { IRetryOptions } from '@continuum/core';
+import { IWorkflow } from '@continuum/core';
+import { ConditionValidationContext } from './loop-condition/useConditionValidation';
 
 /**
  * Custom Tab Panel component for the dialog's own top-level Properties/Retry Policy tabs
@@ -187,17 +190,16 @@ function defaultDialogSize(): { width: number; height: number } {
     };
 }
 
-console.log('[NodeDialog] Registering custom renderers including CredentialControl');
-
+// Custom renderers: CelConditionEditor, Loop query renderer, plus the standard material renderers.
 const customRenderers = [
   { tester: codeEditorTester, renderer: CodeEditorControl },
   { tester: credentialTester, renderer: CredentialControl },
+  { tester: queryConditionTester, renderer: QueryConditionRenderer },
   ...materialRenderers,
 ];
 
 export interface NodeDialogProps {
     open: boolean;
-    // selectedValue: string;
     onClose: (value: any) => void;
     onSave: (data: any, retryOptions?: IRetryOptions) => void;
     initialData?: any;
@@ -205,11 +207,28 @@ export interface NodeDialogProps {
     uiSchema?: UISchemaElement;
     readOnly?: boolean;
     initialRetryOptions?: IRetryOptions;
+    /** Whether the node being edited is a Loop (affects tab visibility and save behaviour). */
+    isLoop?: boolean;
+    /** Current editor snapshot used to validate the condition as it is being edited. */
+    validationWorkflow?: IWorkflow;
+    validationNodeId?: string;
 }
 
 type RetryField = 'maximumAttempts' | 'backoffCoefficient' | 'initialIntervalSeconds' | 'maximumIntervalSeconds';
 
-export default function NodeDialog({ onClose, onSave, readOnly=false, open, initialData, dataSchema, uiSchema, initialRetryOptions }: NodeDialogProps) {
+export default function NodeDialog({
+    onClose,
+    onSave,
+    readOnly = false,
+    open,
+    initialData,
+    dataSchema,
+    uiSchema,
+    initialRetryOptions,
+    isLoop = false,
+    validationWorkflow,
+    validationNodeId,
+}: NodeDialogProps) {
 
     const [data, setData] = React.useState(initialData);
     const [hasErrors, setHasErrors] = React.useState(false);
@@ -245,15 +264,15 @@ export default function NodeDialog({ onClose, onSave, readOnly=false, open, init
         setRetryOptions(r => ({ ...r, maximumAttempts: undefined, backoffCoefficient: undefined, initialIntervalSeconds: undefined, maximumIntervalSeconds: undefined }));
     }, [setOverrides, setRetryOptions]);
 
-    const handleClose = React.useCallback((args: any) => {
-        console.log("handleClose", args);
+    const handleClose = React.useCallback(() => {
         onClose(data);
     }, [data]);
 
-    const onSavePressed = React.useCallback((args: any) => {
-        console.log("onSavePressed", args);
-        onSave(data, retryOptions);
-    }, [data, retryOptions, onSave]);
+    const onSavePressed = React.useCallback((_args: unknown) => {
+        // Loops never use retry options — retry policy is hidden for them.
+        const retryOpts = isLoop ? undefined : retryOptions;
+        onSave(data, retryOpts);
+    }, [data, retryOptions, onSave, isLoop]);
 
     const onDataChange = React.useCallback(({errors, data}: Pick<JsonFormsCore, "data" | "errors">) => {
         setData(data);
@@ -348,7 +367,7 @@ export default function NodeDialog({ onClose, onSave, readOnly=false, open, init
                     onChange={(_, v) => setActiveTopTab(v)}
                     sx={{ minHeight: 'auto', borderBottom: 1, borderColor: 'divider', mb: 1 }}>
                     <Tab label="Properties" />
-                    <Tab icon={<RefreshIcon fontSize="small" />} iconPosition="start" label="Retry Policy" />
+                    {!isLoop && <Tab icon={<RefreshIcon fontSize="small" />} iconPosition="start" label="Retry Policy" />}
                 </Tabs>
                 <TabPanel value={activeTopTab} index={0}>
                     <Box sx={{
@@ -489,13 +508,18 @@ export default function NodeDialog({ onClose, onSave, readOnly=false, open, init
                               whiteSpace: 'nowrap',
                             },
                           }}>
-                            <JsonForms
-                                schema={dataSchema}
-                                uischema={uiSchema}
-                                data={data}
-                                renderers={customRenderers}
-                                cells={materialCells}
-                                onChange={onDataChange}/>
+                            <ConditionValidationContext.Provider value={{
+                                workflow: validationWorkflow,
+                                loopId: validationNodeId,
+                            }}>
+                                <JsonForms
+                                    schema={dataSchema}
+                                    uischema={uiSchema}
+                                    data={data}
+                                    renderers={customRenderers}
+                                    cells={materialCells}
+                                    onChange={onDataChange}/>
+                            </ConditionValidationContext.Provider>
                         </Box>
                     </Box>
                 </TabPanel>

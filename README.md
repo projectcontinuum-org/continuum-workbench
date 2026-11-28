@@ -24,6 +24,7 @@ This is the **frontend** for [Project Continuum](https://github.com/projectconti
 A Turborepo monorepo containing the browser-based workflow editor and IDE for Project Continuum:
 
 - **Drag-and-drop workflow canvas** powered by React Flow — connect nodes visually to build DAGs
+- **Loop containers** — group and repeat workflow nodes in dashed purple boxes with compact collapsed and expanded views, edit CEL conditions visually or as text, resize containers live while dragging, preserve member drop positions when moving nodes out (including nested loops), choose member behavior on deletion, and inspect iteration progress and carried values during runs
 - **Full IDE experience** built on Eclipse Theia — file explorer, editors, terminals, extensions
 - **Real-time execution monitoring** — watch workflows execute step-by-step via MQTT over WebSockets
 - **Dynamic node configuration** — configure any node's properties through auto-generated forms (JSONForms)

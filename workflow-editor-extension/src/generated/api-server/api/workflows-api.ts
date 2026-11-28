@@ -117,7 +117,7 @@ export const WorkflowsApiAxiosParamCreator = function (configuration?: Configura
             };
         },
         /**
-         *  Stops one of the caller\'s runs without waiting for its nodes. The run is signalled at once (it reports `TERMINATED`), and 5 seconds later Temporal terminates it with `reason` (default \"Terminated via API\"); no code of the run executes after that. Prefer `cancel` unless the run is stuck. On a finished run it is a 404.
+         *  Stops one of the caller\'s runs without waiting for its nodes. The run is signalled at once (it reports `TERMINATED`), and 5 seconds later Temporal terminates it with `reason` (default \"Terminated via API\"); no code of the run executes after that. Once Temporal has terminated it, the run record says `TERMINATED`, with `updatedAt` as the end time, also for a stuck run that could not handle the signal. A run that ended on its own within the 5 seconds keeps its status. Prefer `cancel` unless the run is stuck. On a finished run it is a 404.
          * @summary Terminate a running workflow immediately
          * @param {string} workflowId Workflow id returned by &#x60;POST /api/v1/workflow&#x60;.
          * @param {string} [reason] Why the run is terminated; recorded by Temporal.
@@ -233,7 +233,7 @@ export const WorkflowsApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         *  Stops one of the caller\'s runs without waiting for its nodes. The run is signalled at once (it reports `TERMINATED`), and 5 seconds later Temporal terminates it with `reason` (default \"Terminated via API\"); no code of the run executes after that. Prefer `cancel` unless the run is stuck. On a finished run it is a 404.
+         *  Stops one of the caller\'s runs without waiting for its nodes. The run is signalled at once (it reports `TERMINATED`), and 5 seconds later Temporal terminates it with `reason` (default \"Terminated via API\"); no code of the run executes after that. Once Temporal has terminated it, the run record says `TERMINATED`, with `updatedAt` as the end time, also for a stuck run that could not handle the signal. A run that ended on its own within the 5 seconds keeps its status. Prefer `cancel` unless the run is stuck. On a finished run it is a 404.
          * @summary Terminate a running workflow immediately
          * @param {string} workflowId Workflow id returned by &#x60;POST /api/v1/workflow&#x60;.
          * @param {string} [reason] Why the run is terminated; recorded by Temporal.
@@ -289,7 +289,7 @@ export const WorkflowsApiFactory = function (configuration?: Configuration, base
             return localVarFp.startWorkflow(requestParameters.continuumWorkflowModel, options).then((request) => request(axios, basePath));
         },
         /**
-         *  Stops one of the caller\'s runs without waiting for its nodes. The run is signalled at once (it reports `TERMINATED`), and 5 seconds later Temporal terminates it with `reason` (default \"Terminated via API\"); no code of the run executes after that. Prefer `cancel` unless the run is stuck. On a finished run it is a 404.
+         *  Stops one of the caller\'s runs without waiting for its nodes. The run is signalled at once (it reports `TERMINATED`), and 5 seconds later Temporal terminates it with `reason` (default \"Terminated via API\"); no code of the run executes after that. Once Temporal has terminated it, the run record says `TERMINATED`, with `updatedAt` as the end time, also for a stuck run that could not handle the signal. A run that ended on its own within the 5 seconds keeps its status. Prefer `cancel` unless the run is stuck. On a finished run it is a 404.
          * @summary Terminate a running workflow immediately
          * @param {WorkflowsApiTerminateWorkflowRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
@@ -388,7 +388,7 @@ export class WorkflowsApi extends BaseAPI {
     }
 
     /**
-     *  Stops one of the caller\'s runs without waiting for its nodes. The run is signalled at once (it reports `TERMINATED`), and 5 seconds later Temporal terminates it with `reason` (default \"Terminated via API\"); no code of the run executes after that. Prefer `cancel` unless the run is stuck. On a finished run it is a 404.
+     *  Stops one of the caller\'s runs without waiting for its nodes. The run is signalled at once (it reports `TERMINATED`), and 5 seconds later Temporal terminates it with `reason` (default \"Terminated via API\"); no code of the run executes after that. Once Temporal has terminated it, the run record says `TERMINATED`, with `updatedAt` as the end time, also for a stuck run that could not handle the signal. A run that ended on its own within the 5 seconds keeps its status. Prefer `cancel` unless the run is stuck. On a finished run it is a 404.
      * @summary Terminate a running workflow immediately
      * @param {WorkflowsApiTerminateWorkflowRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.

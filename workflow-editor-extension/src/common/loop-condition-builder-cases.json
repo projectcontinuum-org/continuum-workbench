@@ -1,0 +1,120 @@
+[
+  {
+    "id": "hasMore-equals-true",
+    "text": "vars[\"hasMore\"] == true",
+    "fits": true,
+    "emitted": "vars[\"hasMore\"] == true"
+  },
+  {
+    "id": "page-less-than-10",
+    "text": "vars[\"page\"] < 10",
+    "fits": true,
+    "emitted": "vars[\"page\"] < 10"
+  },
+  {
+    "id": "count-greater-equal-1",
+    "text": "vars[\"count\"] >= 1",
+    "fits": true,
+    "emitted": "vars[\"count\"] >= 1"
+  },
+  {
+    "id": "name-equals-string",
+    "text": "vars[\"name\"] == \"hello\"",
+    "fits": true,
+    "emitted": "vars[\"name\"] == \"hello\""
+  },
+  {
+    "id": "dotted-var",
+    "text": "vars[\"restNode_3.durationMs\"] > 0",
+    "fits": true,
+    "emitted": "vars[\"restNode_3.durationMs\"] > 0"
+  },
+  {
+    "id": "escaped-quote-var",
+    "text": "vars[\"x\\\"y\"] == true",
+    "fits": true,
+    "emitted": "vars[\"x\\\"y\"] == true"
+  },
+  {
+    "id": "macro-no-fits",
+    "text": "vars[\"items\"].all(x, x > 0)",
+    "fits": false
+  },
+  {
+    "id": "two-vars-no-fits",
+    "text": "vars[\"a\"] && vars[\"b\"]",
+    "fits": false
+  },
+  {
+    "id": "arith-no-fits",
+    "text": "vars[\"page\"] + 1 < 10",
+    "fits": false
+  },
+  {
+    "id": "in-operator",
+    "text": "\"nextCursor\" in vars",
+    "fits": false
+  },
+  {
+    "id": "not-equals-string",
+    "text": "vars[\"status\"] != \"error\"",
+    "fits": true,
+    "emitted": "vars[\"status\"] != \"error\""
+  },
+  {
+    "id": "not-single-rule",
+    "text": "!(vars[\"c.d\"] == \"ab\")",
+    "fits": true,
+    "emitted": "vars[\"c.d\"] != \"ab\""
+  },
+  {
+    "id": "double-literal",
+    "text": "vars[\"score\"] > 0.5",
+    "fits": true,
+    "emitted": "vars[\"score\"] > 0.5"
+  },
+  {
+    "id": "single-quoted-variable-key",
+    "text": "vars['x'] != \"a\\\"b\"",
+    "fits": true,
+    "emitted": "vars[\"x\"] != \"a\\\"b\""
+  },
+  {
+    "id": "parenthesized-negative-double",
+    "text": "(vars[\"n\"] > -1.5)",
+    "fits": true,
+    "emitted": "vars[\"n\"] > -1.5"
+  },
+  {
+    "id": "nested-groups-with-negation",
+    "query": {
+      "combinator": "and",
+      "rules": [
+        {
+          "field": "restNode_3.durationMs",
+          "operator": ">",
+          "value": 0
+        },
+        {
+          "combinator": "or",
+          "not": true,
+          "rules": [
+            {
+              "field": "x\"y",
+              "operator": "==",
+              "value": "say \"go\"\\now"
+            },
+            {
+              "field": "hasMore",
+              "operator": "==",
+              "value": true
+            }
+          ]
+        }
+      ]
+    },
+    "text": "vars[\"restNode_3.durationMs\"] > 0 && !(vars[\"x\\\"y\"] == \"say \\\"go\\\"\\\\now\" || vars[\"hasMore\"] == true)",
+    "fits": true,
+    "emitted": "vars[\"restNode_3.durationMs\"] > 0 && !(vars[\"x\\\"y\"] == \"say \\\"go\\\"\\\\now\" || vars[\"hasMore\"] == true)"
+  }
+]

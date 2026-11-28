@@ -32,6 +32,10 @@ export interface IBaseNodeData {
     status?: NodeStatus;
     nodeProgress?: INodeProgress;
     retryOptions?: IRetryOptions;
+    /** Editor state: whether the editor shows this loop collapsed (members hidden). Loop nodes only. */
+    collapsed?: boolean | null;
+    /** Id of the innermost loop this node is inside. Top-level nodes have no parent node id. */
+    parentNode?: string | null;
 }
 
 export interface IRetryOptions {
